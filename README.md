@@ -14,6 +14,7 @@
 ### Frontend
 - Next.js 16
 - React 19
+- JavaScript
 
 ### Database
 - Oracle 21c
