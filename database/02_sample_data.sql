@@ -174,3 +174,52 @@ VALUES ( user_role_seq.NEXTVAL, 9, 2 ); -- 일반직원1 USER
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
 VALUES ( user_role_seq.NEXTVAL, 10, 2 ); -- 일반직원2 USER
+
+
+-- 근무 시간 규칙
+INSERT INTO attendance_time_policies
+VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'ALL', 900, 1800, CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO attendance_time_policies
+VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'ALL', 1200, 1300, CURRENT_TIMESTAMP, NULL);
+
+-- 근태 판정 기준
+INSERT INTO attendance_thresholds
+VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'LATE', 10, '10분 이상 지각', CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO attendance_thresholds
+VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'EARLY_LEAVE', 10, '10분 이상 조퇴', CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO attendance_thresholds
+VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'ABSENCE', 240, '4시간 미만 근무 시 결근', CURRENT_TIMESTAMP, NULL);
+
+-- 근무지
+INSERT INTO workplaces
+VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '서울 본사', 100, 37.5665, 126.9780, CURRENT_TIMESTAMP, NULL);
+
+-- 정정 종류
+INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'IN', '출근 정정');
+INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'OUT', '퇴근 정정');
+INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'STATUS', '근태 상태 정정');
+
+-- 정정 사유
+INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'INPUT_ERROR', '단순 입력 오류');
+INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'LATE_DOC', '증빙 지연 제출');
+INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'OTHER', '기타');
+
+-- 결재 상태
+INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'PENDING', '승인 대기');
+INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'APPROVED', '승인 완료');
+INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'REJECTED', '반려');
+
+-- 근태 상태
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'WORK', '근무', 1);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LATE', '지각', 2);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'EARLY_LEAVE', '조퇴', 3);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'ABSENT', '결근', 4);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'VACATION', '휴가', 5);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'NO_CHECKOUT', '미퇴근', 6);
+
+-- 반차 종류
+INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'ANNUAL', '연차');
+INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'HALF', '반차');
