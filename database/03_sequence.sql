@@ -19,16 +19,72 @@ INCREMENT BY 1
 NOCACHE
 NOCYCLE;
 
--- 사용자 역할 매핑 시퀀스
-CREATE SEQUENCE user_role_seq
-START WITH 1
+-- 기본 샘플데이터 다 넣고 마지막에 추가 부서 시퀀스
+CREATE SEQUENCE department_seq
+START WITH 10
 INCREMENT BY 1
 NOCACHE
 NOCYCLE;
 
--- 기본 샘플데이터 다 넣고 마지막에 추가 부서 시퀀스
-CREATE SEQUENCE department_seq
-START WITH 10
+
+-- 근무 시간 규칙 시퀀스
+CREATE SEQUENCE attendance_time_policies_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+-- 근태 판정 기준 시퀀스
+CREATE SEQUENCE attendance_thresholds_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+-- 근무지 시퀀스
+CREATE SEQUENCE workplaces_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+-- 출퇴근 기록 시퀀스
+CREATE SEQUENCE attendance_logs_seq
+START WITH 1
+INCREMENT BY 1
+CACHE 50
+NOCYCLE;
+-- 근태 결과 시퀀스
+CREATE SEQUENCE attendance_results_seq
+START WITH 1
+INCREMENT BY 1
+CACHE 50
+NOCYCLE;
+
+-- 정정 종류 시퀀스
+CREATE SEQUENCE correction_types_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+-- 정정 사유 구분 시퀀스
+CREATE SEQUENCE correction_reason_types_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+-- 결재 상태 시퀀스
+CREATE SEQUENCE approval_statuses_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+-- 근태 상태 시퀀스
+CREATE SEQUENCE attendance_statuses_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+-- 반차 종류 시퀀스
+CREATE SEQUENCE half_day_types_seq
+START WITH 1
 INCREMENT BY 1
 NOCACHE
 NOCYCLE;
