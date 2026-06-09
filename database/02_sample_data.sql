@@ -8,23 +8,32 @@ DELETE FROM departments;
 
 -- 1. 부서 테이블 샘플 데이터
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'EXEC', '경영지원팀', '전사 운영 및 경영지원 업무를 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 1, 'CEO', '대표이사', NULL, '회사 최고 경영자' );
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'HR', '인사팀', '인사정보, 근태, 채용 및 인사 운영을 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 2, 'MGMT', '경영지원본부', 1, '경영지원 업무 총괄' );
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'FIN', '재무회계팀', '급여, 회계, 정산 및 재무 업무를 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 3, 'FIELD', '현장관리본부', 1, '현장 운영 및 공사 관리 총괄' );
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'PUR', '구매팀', '자재 구매 및 협력업체 관리를 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 4, 'HR', '인사팀', 2, '인사 및 채용 담당' );
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'CONST', '공사관리팀', '건설 현장 및 공사 일정 관리를 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 5, 'FIN', '재무회계팀', 2, '재무 및 회계 담당' );
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'SAFE', '안전관리팀', '현장 안전점검 및 산업안전 관리를 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 6, 'PUR', '구매팀', 2, '자재 구매 및 협력업체 관리' );
+
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 7, 'DEV', '개발팀', 2, '사내 시스템 개발 및 유지보수 담당' );
+
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 8, 'CONST', '공사관리팀', 3, '공사 일정 및 현장 관리' );
+
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 9, 'SAFE', '안전관리팀', 3, '산업안전 및 현장 안전관리' );
 
 
 -- 2. 직급 테이블 샘플 데이터
@@ -73,6 +82,7 @@ VALUES ( role_seq.NEXTVAL, 'ATTENDANCE_MANAGER', '근태 관리자', '근태 정
 
 INSERT INTO roles ( role_id, role_code, role_name, description )
 VALUES ( role_seq.NEXTVAL, 'PAYROLL_MANAGER', '급여 관리자', '급여 정보 관리 권한' );
+
 
 -- 4. 사용자 테이블 샘플 데이터
 

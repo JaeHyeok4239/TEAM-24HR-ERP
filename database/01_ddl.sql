@@ -3,6 +3,7 @@ CREATE TABLE departments (
     department_id    NUMBER          NOT NULL,
     department_code  VARCHAR2(50)    NOT NULL,
     department_name  VARCHAR2(100)   NOT NULL,
+    parent_department_id  NUMBER,
     description      VARCHAR2(255),
     is_active        CHAR(1)         DEFAULT 'Y' NOT NULL,
     created_at       TIMESTAMP       DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -10,6 +11,8 @@ CREATE TABLE departments (
 
     CONSTRAINT pk_departments PRIMARY KEY (department_id),
     CONSTRAINT uk_departments_code UNIQUE (department_code),
+    CONSTRAINT fk_departments_parent FOREIGN KEY (parent_department_id)
+        REFERENCES departments(department_id),
     CONSTRAINT chk_departments_active CHECK (is_active IN ('Y', 'N'))
 );
 
