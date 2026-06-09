@@ -8,23 +8,32 @@ DELETE FROM departments;
 
 -- 1. 부서 테이블 샘플 데이터
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'EXEC', '경영지원팀', '전사 운영 및 경영지원 업무를 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 1, 'CEO', '대표이사', NULL, '회사 최고 경영자' );
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'HR', '인사팀', '인사정보, 근태, 채용 및 인사 운영을 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 2, 'MGMT', '경영지원본부', 1, '경영지원 업무 총괄' );
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'FIN', '재무회계팀', '급여, 회계, 정산 및 재무 업무를 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 3, 'FIELD', '현장관리본부', 1, '현장 운영 및 공사 관리 총괄' );
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'PUR', '구매팀', '자재 구매 및 협력업체 관리를 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 4, 'HR', '인사팀', 2, '인사 및 채용 담당' );
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'CONST', '공사관리팀', '건설 현장 및 공사 일정 관리를 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 5, 'FIN', '재무회계팀', 2, '재무 및 회계 담당' );
 
-INSERT INTO departments (department_id, department_code, department_name, description)
-VALUES (department_seq.NEXTVAL, 'SAFE', '안전관리팀', '현장 안전점검 및 산업안전 관리를 담당하는 부서');
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 6, 'PUR', '구매팀', 2, '자재 구매 및 협력업체 관리' );
+
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 7, 'DEV', '개발팀', 2, '사내 시스템 개발 및 유지보수 담당' );
+
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 8, 'CONST', '공사관리팀', 3, '공사 일정 및 현장 관리' );
+
+INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
+VALUES ( 9, 'SAFE', '안전관리팀', 3, '산업안전 및 현장 안전관리' );
 
 
 -- 2. 직급 테이블 샘플 데이터
@@ -73,6 +82,7 @@ VALUES ( role_seq.NEXTVAL, 'ATTENDANCE_MANAGER', '근태 관리자', '근태 정
 
 INSERT INTO roles ( role_id, role_code, role_name, description )
 VALUES ( role_seq.NEXTVAL, 'PAYROLL_MANAGER', '급여 관리자', '급여 정보 관리 권한' );
+
 
 -- 4. 사용자 테이블 샘플 데이터
 
@@ -174,3 +184,149 @@ VALUES ( user_role_seq.NEXTVAL, 9, 2 ); -- 일반직원1 USER
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
 VALUES ( user_role_seq.NEXTVAL, 10, 2 ); -- 일반직원2 USER
+
+
+-- 근무 시간 규칙
+INSERT INTO attendance_time_policies
+VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'ALL', 900, 1800, CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO attendance_time_policies
+VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'ALL', 1200, 1300, CURRENT_TIMESTAMP, NULL);
+
+-- 근태 판정 기준
+INSERT INTO attendance_thresholds
+VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'LATE', 10, '10분 이상 지각', CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO attendance_thresholds
+VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'EARLY_LEAVE', 10, '10분 이상 조퇴', CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO attendance_thresholds
+VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'ABSENCE', 240, '4시간 미만 근무 시 결근', CURRENT_TIMESTAMP, NULL);
+
+-- 근무지
+INSERT INTO workplaces
+VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '서울 본사', 100, 37.5665, 126.9780, CURRENT_TIMESTAMP, NULL);
+
+-- 정정 종류
+INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'IN', '출근 정정');
+INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'OUT', '퇴근 정정');
+INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'STATUS', '근태 상태 정정');
+
+-- 정정 사유
+INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'INPUT_ERROR', '단순 입력 오류');
+INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'LATE_DOC', '증빙 지연 제출');
+INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'OTHER', '기타');
+
+-- 결재 상태
+INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'PENDING', '승인 대기');
+INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'APPROVED', '승인 완료');
+INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'REJECTED', '반려');
+
+-- 근태 상태
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'WORK', '근무', 1);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LATE', '지각', 2);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'EARLY_LEAVE', '조퇴', 3);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'ABSENT', '결근', 4);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'VACATION', '휴가', 5);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'NO_CHECKOUT', '미퇴근', 6);
+
+-- 반차 종류
+INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'ANNUAL', '연차');
+INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'HALF', '반차');
+
+-- 전자결재 샘플 데이터
+-- 기존 사용자 테이블 참조
+-- 플로우: 기안(TMP/REQ) → 결재(APR/REJ) → 처리(PRC→COM)
+
+-- 0. 삭제 (필요 시)
+DELETE FROM leave;
+DELETE FROM approval_delegate;
+DELETE FROM document_attach_mapping;
+DELETE FROM attachment;
+DELETE FROM document;
+DELETE FROM approval_line;
+DELETE FROM document_process;
+DELETE FROM document_type;
+DELETE FROM leave_type;
+
+
+-- 1. 문서 유형
+INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '연차신청서', 'leave');
+INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '반차신청서', 'leave');
+INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '조퇴신청서', 'leave');
+INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '지출결의서', NULL);
+INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '구매요청서', NULL);
+
+
+-- 2. 휴가 유형
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '연차',    'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '반차',    'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '조퇴',    'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '무급휴가', 'N');
+
+
+-- 3. 결재선 (문서유형별 기본 결재자)
+-- 연차/반차/조퇴 → 인사팀장(2)
+-- 지출결의서/구매요청서 → 대표이사(1)
+INSERT INTO approval_line (approval_line_id, document_type, default_approver) VALUES (approval_line_seq.NEXTVAL, 1, 2);
+INSERT INTO approval_line (approval_line_id, document_type, default_approver) VALUES (approval_line_seq.NEXTVAL, 2, 2);
+INSERT INTO approval_line (approval_line_id, document_type, default_approver) VALUES (approval_line_seq.NEXTVAL, 3, 2);
+INSERT INTO approval_line (approval_line_id, document_type, default_approver) VALUES (approval_line_seq.NEXTVAL, 4, 1);
+INSERT INTO approval_line (approval_line_id, document_type, default_approver) VALUES (approval_line_seq.NEXTVAL, 5, 1);
+
+
+-- 4. 문서 처리 부서
+-- 연차/반차/조퇴 → 인사팀(4)
+-- 지출결의서    → 재무회계팀(5)
+-- 구매요청서    → 구매팀(6)
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 1, 4, 'ALL');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 2, 4, 'ALL');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 3, 4, 'ALL');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 4, 5, 'ADMIN');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 5, 6, 'ADMIN');
+
+
+-- 5. 결재 문서
+-- [COM] 일반직원1(9) 연차 → 인사팀장(2) 승인 → 인사실무자(3) 처리완료
+INSERT INTO document (document_id, document_type, requester_id, approver_id, processor_id, document_title, status, created_at, requested_at, approved_at, processed_at)
+VALUES (approval_document_seq.NEXTVAL, 1, 9, 2, 3, '연차 신청', 'COM', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- [PRC] 일반직원2(10) 반차 → 인사팀장(2) 승인 → 인사실무자(3) 처리 중
+INSERT INTO document (document_id, document_type, requester_id, approver_id, processor_id, document_title, status, created_at, requested_at, approved_at, processed_at)
+VALUES (approval_document_seq.NEXTVAL, 2, 10, 2, 3, '반차 신청', 'PRC', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- [REJ] 인사실무자(3) 조퇴 → 인사팀장(2) 반려 (processor 없음)
+INSERT INTO document (document_id, document_type, requester_id, approver_id, processor_id, document_title, status, created_at, requested_at, reject_reason)
+VALUES (approval_document_seq.NEXTVAL, 3, 3, 2, NULL, '조퇴 신청', 'REJ', SYSTIMESTAMP, SYSTIMESTAMP, '당일 마감 업무로 인해 반려합니다.');
+
+-- [REQ] 구매팀장(6) 구매요청서 → 대표이사(1) 결재 대기 중 (processor 없음)
+INSERT INTO document (document_id, document_type, requester_id, approver_id, processor_id, document_title, status, created_at, requested_at)
+VALUES (approval_document_seq.NEXTVAL, 5, 6, 1, NULL, '현장 자재 구매 요청', 'REQ', SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- [TMP] 근태담당자(4) 지출결의서 임시저장 (processor 없음)
+INSERT INTO document (document_id, document_type, requester_id, approver_id, processor_id, document_title, status, created_at)
+VALUES (approval_document_seq.NEXTVAL, 4, 4, 1, NULL, '출장 교통비 지출결의', 'TMP', SYSTIMESTAMP);
+
+-- [REQ] 공사관리팀장(7) 연차 → 인사팀장(2) 결재 대기 중 (processor 없음)
+INSERT INTO document (document_id, document_type, requester_id, approver_id, processor_id, document_title, status, created_at, requested_at)
+VALUES (approval_document_seq.NEXTVAL, 1, 7, 2, NULL, '연차 신청', 'REQ', SYSTIMESTAMP, SYSTIMESTAMP);
+
+
+-- 6. 결재 위임
+-- 인사팀장(2) → 인사실무자(3), 기간 만료(N)
+INSERT INTO approval_delegate (approval_delegate_id, approver_id, delegate_id, start_date, end_date, reason, is_active)
+VALUES (approval_delegate_seq.NEXTVAL, 2, 3, DATE '2025-06-01', DATE '2025-06-07', '출장으로 인한 결재 위임', 'N');
+
+-- 대표이사(1) → 인사팀장(2), 현재 활성(Y)
+INSERT INTO approval_delegate (approval_delegate_id, approver_id, delegate_id, start_date, end_date, reason, is_active)
+VALUES (approval_delegate_seq.NEXTVAL, 1, 2, DATE '2025-06-20', DATE '2025-06-25', '연차 휴가로 인한 결재 위임', 'Y');
+
+
+-- 7. 휴가 데이터 (APR 이상 상태 문서만)
+-- 일반직원1(9) 연차 1일 (document_id=1, COM)
+INSERT INTO leave (leave_id, leave_type, document_id, start_date, end_date, leave_cnt)
+VALUES (leave_seq.NEXTVAL, 1, 1, DATE '2025-06-10', DATE '2025-06-10', 1.00);
+
+-- 일반직원2(10) 반차 0.5일 (document_id=2, PRC)
+INSERT INTO leave (leave_id, leave_type, document_id, start_date, end_date, leave_cnt)
+VALUES (leave_seq.NEXTVAL, 2, 2, DATE '2025-06-11', DATE '2025-06-11', 0.50);
