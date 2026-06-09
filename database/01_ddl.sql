@@ -257,7 +257,8 @@ CREATE TABLE
 CREATE TABLE
     document_type (
         type_id NUMBER PRIMARY KEY, -- 문서유형 ID (document_type_seq)
-        type_name VARCHAR2 (100 CHAR) NOT NULL -- 문서유형명
+        type_name VARCHAR2 (100 CHAR) NOT NULL, -- 문서유형명
+        detail_table VARCHAR2(50) -- 'leave', 'expenditure', 'purchase' 등
     );
 
 -- 휴가 유형 (연차, 반차, 조퇴 등)
@@ -299,17 +300,20 @@ CREATE TABLE
         document_type NUMBER NOT NULL, -- 문서유형 ID (FK → document_type)
         requester_id NUMBER NOT NULL, -- 기안자 ID (FK → users)
         approver_id NUMBER NOT NULL, -- 결재자 ID (FK → users)
+        processor_id NUMBER,
         document_title VARCHAR2 (200 CHAR) NOT NULL, -- 문서 제목
-        document_content VARCHAR2 (4000 CHAR) NOT NULL, -- 문서 본문
         status CHAR(3) DEFAULT 'REQ' NOT NULL, -- 결재 상태
         created_at TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL, -- 생성일시
         updated_at TIMESTAMP, -- 수정일시
         requested_at TIMESTAMP, -- 결재 요청일시
         approved_at TIMESTAMP, -- 결재 처리일시
+        processed_at TIMESTAMP,
         reject_reason VARCHAR2 (500 CHAR), -- 반려 사유
         CONSTRAINT document_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type (type_id),
         CONSTRAINT document_fk_requester FOREIGN KEY (requester_id) REFERENCES users (employee_id),
         CONSTRAINT document_fk_approver FOREIGN KEY (approver_id) REFERENCES users (employee_id),
+        CONSTRAINT document_fk_processor
+        FOREIGN KEY (processor_id) REFERENCES users(employee_id),
         CONSTRAINT document_ck_status CHECK (
             status IN ('TMP', 'REQ', 'APR', 'REJ', 'PRC', 'COM')
         )
@@ -354,18 +358,17 @@ CREATE TABLE
         CONSTRAINT delegate_ck_is_active CHECK (is_active IN ('Y', 'N'))
     );
 
--- 휴가 신청 (연차/반차/조퇴 등 휴가 신청 내역)
+-- 휴가 신청 (연차/반차/조퇴 등 휴가 신청 데이터)
 -- leave_cnt: 사용 휴가 일수 (0.5 단위, 예: 반차=0.5, 조퇴=0.25)
 CREATE TABLE
     leave (
         leave_id NUMBER PRIMARY KEY, -- 휴가신청 ID (leave_seq)
         leave_type NUMBER NOT NULL, -- 휴가유형 ID (FK → leave_type)
         document_id NUMBER NOT NULL, -- 연결 결재문서 ID (FK → document)
-        user_id NUMBER (10) NOT NULL, -- 신청자 ID (FK → users)
         start_date DATE NOT NULL, -- 휴가 시작일
         end_date DATE NOT NULL, -- 휴가 종료일
         leave_cnt NUMBER (3, 2) NOT NULL, -- 사용 일수
         CONSTRAINT leave_fk_document FOREIGN KEY (document_id) REFERENCES document (document_id),
-        CONSTRAINT leave_fk_user FOREIGN KEY (user_id) REFERENCES users (employee_id),
-        CONSTRAINT leave_fk_type FOREIGN KEY (leave_type) REFERENCES leave_type (type_id)
+        CONSTRAINT leave_fk_type FOREIGN KEY (leave_type) REFERENCES leave_type (type_id),
+        CONSTRAINT leave_uq_document UNIQUE (document_id)
     );
