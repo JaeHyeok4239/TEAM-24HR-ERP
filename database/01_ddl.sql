@@ -155,7 +155,7 @@ CREATE TABLE
 CREATE TABLE
     attendance_logs (
         attendance_log_id NUMBER NOT NULL,
-        employee_id VARCHAR2 (30) NOT NULL,
+        employee_id NUMBER NOT NULL,
         log_type VARCHAR2 (10) NOT NULL,
         log_time TIMESTAMP NOT NULL,
         latitude NUMBER (10, 7) NOT NULL,
