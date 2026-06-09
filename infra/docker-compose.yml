@@ -1,0 +1,20 @@
+services:
+  oracle:
+    image: gvenzl/oracle-xe:21-slim
+    container_name: 24hr-oracle
+
+    ports:
+      - "1522:1521"
+
+    environment:
+      ORACLE_PASSWORD: oracle
+      APP_USER: hr24
+      APP_USER_PASSWORD: hr24
+
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+
+    restart: unless-stopped
+
+volumes:
+  oracle-data:
