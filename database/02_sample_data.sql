@@ -233,3 +233,104 @@ INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'NO_CHE
 -- 반차 종류
 INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'ANNUAL', '연차');
 INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'HALF', '반차');
+
+-- 전자 결재 샘플 데이터
+-- 기존 사용자 테이블 참조
+-- 플로우: 기안 → approval_line 결재자 결재 → document_process 처리
+
+-- 0. 삭제 (필요 시)
+DELETE FROM leave;
+DELETE FROM approval_delegate;
+DELETE FROM document_attach_mapping;
+DELETE FROM attachment;
+DELETE FROM document;
+DELETE FROM approval_line;
+DELETE FROM document_process;
+DELETE FROM document_type;
+DELETE FROM leave_type;
+
+-- 1. 문서 유형
+-- type_id 1: 연차신청서
+-- type_id 2: 반차신청서
+-- type_id 3: 조퇴신청서
+-- type_id 4: 지출결의서
+-- type_id 5: 구매요청서
+INSERT INTO document_type (type_id, type_name) VALUES (document_type_seq.NEXTVAL, '연차신청서');
+INSERT INTO document_type (type_id, type_name) VALUES (document_type_seq.NEXTVAL, '반차신청서');
+INSERT INTO document_type (type_id, type_name) VALUES (document_type_seq.NEXTVAL, '조퇴신청서');
+INSERT INTO document_type (type_id, type_name) VALUES (document_type_seq.NEXTVAL, '지출결의서');
+INSERT INTO document_type (type_id, type_name) VALUES (document_type_seq.NEXTVAL, '구매요청서');
+
+
+-- 2. 휴가 유형
+-- type_id 1: 연차, 2: 반차, 3: 조퇴, 4: 무급휴가
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '연차',   'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '반차',   'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '조퇴',   'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '무급휴가', 'N');
+
+
+-- 3. 결재선 (문서유형별 기본 결재자)
+-- 연차/반차/조퇴 → 인사팀장(2)
+-- 지출결의서/구매요청서 → 대표이사(1)
+INSERT INTO approval_line (approval_line_id, document_type, default_approver) VALUES (approval_line_seq.NEXTVAL, 1, 2);
+INSERT INTO approval_line (approval_line_id, document_type, default_approver) VALUES (approval_line_seq.NEXTVAL, 2, 2);
+INSERT INTO approval_line (approval_line_id, document_type, default_approver) VALUES (approval_line_seq.NEXTVAL, 3, 2);
+INSERT INTO approval_line (approval_line_id, document_type, default_approver) VALUES (approval_line_seq.NEXTVAL, 4, 1);
+INSERT INTO approval_line (approval_line_id, document_type, default_approver) VALUES (approval_line_seq.NEXTVAL, 5, 1);
+
+
+-- 4. 문서 처리 부서 (결재 완료 후 처리 담당)
+-- 연차/반차/조퇴 → 인사팀(4), ALL
+-- 지출결의서    → 재무회계팀(5), ADMIN
+-- 구매요청서    → 구매팀(6), ADMIN
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 1, 4, 'ALL');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 2, 4, 'ALL');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 3, 4, 'ALL');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 4, 5, 'ADMIN');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 5, 6, 'ADMIN');
+
+
+-- 5. 결재 문서
+-- document_id 1: 일반직원1(9) 연차 → 인사팀장(2) 결재 → 승인완료 → 인사팀 처리완료
+INSERT INTO document (document_id, document_type, requester_id, approver_id, document_title, document_content, status, created_at, requested_at, approved_at)
+VALUES (approval_document_seq.NEXTVAL, 1, 9, 2, '연차 신청', '개인 사정으로 연차를 신청합니다.', 'COM', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- document_id 2: 일반직원2(10) 반차 → 인사팀장(2) 결재 → 승인완료 → 인사팀 처리 중
+INSERT INTO document (document_id, document_type, requester_id, approver_id, document_title, document_content, status, created_at, requested_at, approved_at)
+VALUES (approval_document_seq.NEXTVAL, 2, 10, 2, '반차 신청', '오전 반차를 신청합니다.', 'PRC', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- document_id 3: 인사실무자(3) 조퇴 → 인사팀장(2) 결재 → 반려
+INSERT INTO document (document_id, document_type, requester_id, approver_id, document_title, document_content, status, created_at, requested_at, reject_reason)
+VALUES (approval_document_seq.NEXTVAL, 3, 3, 2, '조퇴 신청', '몸이 좋지 않아 조퇴를 신청합니다.', 'REJ', SYSTIMESTAMP, SYSTIMESTAMP, '당일 마감 업무로 인해 반려합니다.');
+
+-- document_id 4: 구매팀장(6) 구매요청서 → 대표이사(1) 결재 → 결재 요청 중
+INSERT INTO document (document_id, document_type, requester_id, approver_id, document_title, document_content, status, created_at, requested_at)
+VALUES (approval_document_seq.NEXTVAL, 5, 6, 1, '현장 자재 구매 요청', '공사 현장 자재 구매를 요청합니다. 예상 금액: 3,500,000원', 'REQ', SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- document_id 5: 근태담당자(4) 지출결의서 → 대표이사(1) 결재 → 임시저장
+INSERT INTO document (document_id, document_type, requester_id, approver_id, document_title, document_content, status, created_at)
+VALUES (approval_document_seq.NEXTVAL, 4, 4, 1, '출장 교통비 지출결의', '출장 교통비 지출을 요청합니다.', 'TMP', SYSTIMESTAMP);
+
+-- document_id 6: 공사관리팀장(7) 연차 → 인사팀장(2) 결재 → 승인 대기
+INSERT INTO document (document_id, document_type, requester_id, approver_id, document_title, document_content, status, created_at, requested_at)
+VALUES (approval_document_seq.NEXTVAL, 1, 7, 2, '연차 신청', '연차 휴가를 신청합니다.', 'REQ', SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- 6. 결재 위임
+-- 인사팀장(2) → 인사실무자(3) 위임, 기간 만료
+INSERT INTO approval_delegate (approval_delegate_id, approver_id, delegate_id, start_date, end_date, reason, is_active)
+VALUES (approval_delegate_seq.NEXTVAL, 2, 3, DATE '2025-06-01', DATE '2025-06-07', '출장으로 인한 결재 위임', 'N');
+
+-- 대표이사(1) → 인사팀장(2) 위임, 현재 활성
+INSERT INTO approval_delegate (approval_delegate_id, approver_id, delegate_id, start_date, end_date, reason, is_active)
+VALUES (approval_delegate_seq.NEXTVAL, 1, 2, DATE '2025-06-20', DATE '2025-06-25', '연차 휴가로 인한 결재 위임', 'Y');
+
+
+-- 7. 휴가 신청 (결재 완료된 문서만)
+-- 일반직원1(9) 연차 1일 (document_id=1, COM)
+INSERT INTO leave (leave_id, leave_type, document_id, user_id, start_date, end_date, leave_cnt)
+VALUES (leave_seq.NEXTVAL, 1, 1, 9, DATE '2025-06-10', DATE '2025-06-10', 1.00);
+
+-- 일반직원2(10) 반차 0.5일 (document_id=2, PRC)
+INSERT INTO leave (leave_id, leave_type, document_id, user_id, start_date, end_date, leave_cnt)
+VALUES (leave_seq.NEXTVAL, 2, 2, 10, DATE '2025-06-11', DATE '2025-06-11', 0.50);
