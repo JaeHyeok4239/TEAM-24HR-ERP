@@ -384,3 +384,199 @@ CREATE TABLE
         CONSTRAINT leave_fk_type FOREIGN KEY (leave_type) REFERENCES leave_type (type_id),
         CONSTRAINT leave_uq_document UNIQUE (document_id)
     );
+
+
+
+
+
+---------------------------------------------------------------------------------------
+-- 회의실
+CREATE TABLE meeting_room (
+    room_id     NUMBER          NOT NULL,
+    room_name   VARCHAR2(100)   NOT NULL,
+    capacity    NUMBER          NOT NULL,
+    location    VARCHAR2(200)   NULL,
+    status      VARCHAR2(20)    DEFAULT 'ACTIVE' NOT NULL,
+    CONSTRAINT pk_meeting_room PRIMARY KEY (room_id),
+    CONSTRAINT ck_meeting_room_status CHECK (status IN ('ACTIVE', 'INACTIVE'))
+);
+
+COMMENT ON TABLE  meeting_room          IS '회의실';
+COMMENT ON COLUMN meeting_room.room_id  IS '회의실 PK';
+COMMENT ON COLUMN meeting_room.room_name IS '회의실명';
+COMMENT ON COLUMN meeting_room.capacity IS '수용 인원';
+COMMENT ON COLUMN meeting_room.location IS '위치';
+COMMENT ON COLUMN meeting_room.status   IS 'ACTIVE/INACTIVE';
+
+
+-- 회의실 예약
+CREATE TABLE room_reservation (
+    reservation_id  NUMBER          NOT NULL,
+    room_id         NUMBER          NOT NULL,
+    user_id         NUMBER          NOT NULL,
+    title           VARCHAR2(200)   NOT NULL,
+    rsv_date        DATE            NOT NULL,
+    start_time      VARCHAR2(5)     NOT NULL,
+    end_time        VARCHAR2(5)     NOT NULL,
+    status          VARCHAR2(20)    DEFAULT 'CONFIRMED' NOT NULL,
+    purpose         VARCHAR2(500)   NULL,
+    create_at       TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
+    CONSTRAINT pk_room_reservation PRIMARY KEY (reservation_id),
+    CONSTRAINT fk_rsvn_room FOREIGN KEY (room_id) REFERENCES meeting_room (room_id),
+    CONSTRAINT fk_rsvn_user FOREIGN KEY (user_id) REFERENCES users (employee_id),
+    CONSTRAINT ck_rsvn_status CHECK (status IN ('CONFIRMED', 'CANCELLED'))
+);
+
+COMMENT ON TABLE  room_reservation                  IS '회의실 예약';
+COMMENT ON COLUMN room_reservation.reservation_id   IS '예약 PK';
+COMMENT ON COLUMN room_reservation.room_id          IS '회의실 FK';
+COMMENT ON COLUMN room_reservation.user_id          IS '예약자 FK';
+COMMENT ON COLUMN room_reservation.title            IS '예약 제목';
+COMMENT ON COLUMN room_reservation.rsv_date         IS '예약 날짜';
+COMMENT ON COLUMN room_reservation.start_time       IS '시작 시간 HH:MM';
+COMMENT ON COLUMN room_reservation.end_time         IS '종료 시간 HH:MM';
+COMMENT ON COLUMN room_reservation.status           IS 'CONFIRMED/CANCELLED';
+COMMENT ON COLUMN room_reservation.purpose          IS '이용 목적';
+COMMENT ON COLUMN room_reservation.create_at        IS '등록일시';
+
+
+-- 예약 참석자
+CREATE TABLE reservation_participant (
+    participant_id  NUMBER      NOT NULL,
+    reservation_id  NUMBER      NOT NULL,
+    user_id         NUMBER      NOT NULL,
+    is_organizer    NUMBER(1)   DEFAULT 0 NOT NULL,
+    CONSTRAINT pk_reservation_participant PRIMARY KEY (participant_id),
+    CONSTRAINT fk_part_rsvn FOREIGN KEY (reservation_id) REFERENCES room_reservation (reservation_id),
+    CONSTRAINT fk_part_user FOREIGN KEY (user_id)        REFERENCES users (employee_id),
+    CONSTRAINT ck_part_organizer CHECK (is_organizer IN (0, 1))
+);
+
+COMMENT ON TABLE  reservation_participant                IS '예약 참석자';
+COMMENT ON COLUMN reservation_participant.participant_id IS '참석자 PK';
+COMMENT ON COLUMN reservation_participant.reservation_id IS '예약 FK';
+COMMENT ON COLUMN reservation_participant.user_id        IS '참석자 FK';
+COMMENT ON COLUMN reservation_participant.is_organizer   IS '0=참석자, 1=주최자';
+
+
+-- 사내메일
+CREATE TABLE mail (
+    mail_id         NUMBER          NOT NULL,
+    user_id         NUMBER          NOT NULL,
+    parent_mail_id  NUMBER          NULL,
+    title           VARCHAR2(300)   NOT NULL,
+    content         CLOB            NOT NULL,
+    create_at       TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
+    CONSTRAINT pk_mail PRIMARY KEY (mail_id),
+    CONSTRAINT fk_mail_user   FOREIGN KEY (user_id)        REFERENCES users (employee_id),
+    CONSTRAINT fk_mail_parent FOREIGN KEY (parent_mail_id) REFERENCES mail (mail_id)
+);
+
+COMMENT ON TABLE  mail                IS '사내메일';
+COMMENT ON COLUMN mail.mail_id        IS '메일 PK';
+COMMENT ON COLUMN mail.user_id        IS '발신자 FK';
+COMMENT ON COLUMN mail.parent_mail_id IS '답장 원본 FK (자기참조, 최초메일은 NULL)';
+COMMENT ON COLUMN mail.title          IS '메일 제목';
+COMMENT ON COLUMN mail.content        IS '메일 본문';
+COMMENT ON COLUMN mail.create_at      IS '발송일시';
+
+
+-- 메일 수신자
+CREATE TABLE mail_receiver (
+    receiver_id NUMBER      NOT NULL,
+    mail_id     NUMBER      NOT NULL,
+    user_id     NUMBER      NOT NULL,
+    is_read     NUMBER(1)   DEFAULT 0 NOT NULL,
+    is_deleted  NUMBER(1)   DEFAULT 0 NOT NULL,
+    CONSTRAINT pk_mail_receiver PRIMARY KEY (receiver_id),
+    CONSTRAINT fk_rcvr_mail FOREIGN KEY (mail_id) REFERENCES mail (mail_id),
+    CONSTRAINT fk_rcvr_user FOREIGN KEY (user_id) REFERENCES users (employee_id),
+    CONSTRAINT ck_rcvr_read    CHECK (is_read    IN (0, 1)),
+    CONSTRAINT ck_rcvr_deleted CHECK (is_deleted IN (0, 1))
+);
+
+COMMENT ON TABLE  mail_receiver             IS '메일 수신자';
+COMMENT ON COLUMN mail_receiver.receiver_id IS '수신 PK';
+COMMENT ON COLUMN mail_receiver.mail_id     IS '메일 FK';
+COMMENT ON COLUMN mail_receiver.user_id     IS '수신자 FK';
+COMMENT ON COLUMN mail_receiver.is_read     IS '0=안읽음, 1=읽음';
+COMMENT ON COLUMN mail_receiver.is_deleted  IS '0=미삭제, 1=삭제';
+
+
+-- 메일 첨부파일
+CREATE TABLE mail_attachment (
+    attachment_id   NUMBER          NOT NULL,
+    mail_id         NUMBER          NOT NULL,
+    original_name   VARCHAR2(300)   NOT NULL,
+    saved_name      VARCHAR2(300)   NOT NULL,
+    file_path       VARCHAR2(500)   NOT NULL,
+    file_size       NUMBER          NOT NULL,
+    file_type       VARCHAR2(100)   NOT NULL,
+    create_at       TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
+    CONSTRAINT pk_mail_attachment PRIMARY KEY (attachment_id),
+    CONSTRAINT fk_attach_mail FOREIGN KEY (mail_id) REFERENCES mail (mail_id)
+);
+
+COMMENT ON TABLE  mail_attachment               IS '메일 첨부파일';
+COMMENT ON COLUMN mail_attachment.attachment_id IS '첨부파일 PK';
+COMMENT ON COLUMN mail_attachment.mail_id       IS '메일 FK';
+COMMENT ON COLUMN mail_attachment.original_name IS '원본 파일명';
+COMMENT ON COLUMN mail_attachment.saved_name    IS 'UUID 저장 파일명';
+COMMENT ON COLUMN mail_attachment.file_path     IS '서버 저장 경로';
+COMMENT ON COLUMN mail_attachment.file_size     IS '파일 크기(byte)';
+COMMENT ON COLUMN mail_attachment.file_type     IS 'MIME 타입';
+COMMENT ON COLUMN mail_attachment.create_at     IS '업로드일시';
+
+
+-- 일정
+CREATE TABLE schedule (
+    schedule_id     NUMBER          NOT NULL,
+    user_id         NUMBER          NOT NULL,
+    dept_id         NUMBER          NULL,
+    title           VARCHAR2(200)   NOT NULL,
+    schedule_type   VARCHAR2(20)    NOT NULL,
+    start_dt        DATE            NOT NULL,
+    end_dt          DATE            NOT NULL,
+    location        VARCHAR2(200)   NULL,
+    memo            CLOB            NULL,
+    created_at      TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
+    CONSTRAINT pk_schedule PRIMARY KEY (schedule_id),
+    CONSTRAINT fk_sched_user FOREIGN KEY (user_id)  REFERENCES users (employee_id),
+    CONSTRAINT fk_sched_dept FOREIGN KEY (dept_id)  REFERENCES departments (department_id),
+    CONSTRAINT ck_sched_type CHECK (schedule_type IN ('PERSONAL', 'DEPT', 'COMPANY', 'PROJECT'))
+);
+
+COMMENT ON TABLE  schedule              IS '일정';
+COMMENT ON COLUMN schedule.schedule_id  IS '일정 PK';
+COMMENT ON COLUMN schedule.user_id      IS '작성자 FK';
+COMMENT ON COLUMN schedule.dept_id      IS '부서 FK (부서일정일 때)';
+COMMENT ON COLUMN schedule.title        IS '일정 제목';
+COMMENT ON COLUMN schedule.schedule_type IS 'PERSONAL/DEPT/COMPANY/PROJECT';
+COMMENT ON COLUMN schedule.start_dt     IS '시작일';
+COMMENT ON COLUMN schedule.end_dt       IS '종료일';
+COMMENT ON COLUMN schedule.location     IS '장소';
+COMMENT ON COLUMN schedule.memo         IS '메모';
+COMMENT ON COLUMN schedule.created_at   IS '등록일시';
+
+
+-- 공휴일
+CREATE TABLE holidays (
+    holiday_id      NUMBER          NOT NULL,
+    holiday_year    NUMBER(4)       NOT NULL,
+    holiday_date    DATE            NOT NULL,
+    holiday_name    VARCHAR2(100)   NOT NULL,
+    is_substitute   NUMBER(1)       DEFAULT 0 NOT NULL,
+    CONSTRAINT pk_holidays PRIMARY KEY (holiday_id),
+    CONSTRAINT uq_holidays_date UNIQUE (holiday_date),
+    CONSTRAINT ck_holidays_substitute CHECK (is_substitute IN (0, 1))
+);
+
+COMMENT ON TABLE  holidays              IS '공휴일';
+COMMENT ON COLUMN holidays.holiday_id   IS '공휴일 PK';
+COMMENT ON COLUMN holidays.holiday_year IS '연도 (API 캐싱 체크용)';
+COMMENT ON COLUMN holidays.holiday_date IS '공휴일 날짜 (UNIQUE)';
+COMMENT ON COLUMN holidays.holiday_name IS '공휴일명';
+COMMENT ON COLUMN holidays.is_substitute IS '0=일반, 1=대체공휴일';
+
+
+----------------------------------------------------------------------------------------

@@ -360,3 +360,241 @@ VALUES (leave_seq.NEXTVAL, 1, 1, DATE '2025-06-10', DATE '2025-06-10', 1.00);
 
 INSERT INTO leave (leave_id, leave_type, document_id, start_date, end_date, leave_cnt)
 VALUES (leave_seq.NEXTVAL, 2, 2, DATE '2025-06-11', DATE '2025-06-11', 0.50);
+
+
+
+
+---------------------------------업무관리------------------------
+
+DELETE FROM mail_attachment;
+DELETE FROM mail_receiver;
+DELETE FROM mail;
+DELETE FROM reservation_participant;
+DELETE FROM room_reservation;
+DELETE FROM meeting_room;
+DELETE FROM schedule;
+DELETE FROM holidays;
+
+
+
+-- 1. 공휴일
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-01-01', '신정', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-01-28', '설날', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-01-29', '설날 연휴', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-01-30', '설날 연휴', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-03-01', '삼일절', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-05-05', '어린이날', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-05-06', '어린이날 대체공휴일', 1);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-06-06', '현충일', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-08-15', '광복절', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-10-03', '개천절', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-10-05', '추석', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-10-06', '추석 연휴', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-10-07', '추석 연휴', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-10-09', '한글날', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-12-25', '크리스마스', 0);
+
+
+-- 2. 회의실
+
+INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '대회의실', 20, '본사 3층', 'ACTIVE');
+
+INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '소회의실A', 6, '본사 2층', 'ACTIVE');
+
+INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '소회의실B', 6, '본사 2층', 'ACTIVE');
+
+INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '임원회의실', 10, '본사 5층', 'ACTIVE');
+
+INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '교육실', 30, '본사 4층', 'INACTIVE');
+
+
+
+-- 3. 회의실 예약
+
+INSERT INTO room_reservation (reservation_id, room_id, user_id, title, rsv_date, start_time, end_time, status, purpose, create_at)
+VALUES (room_reservation_seq.NEXTVAL, 2, 2, '신규입사자 면접', DATE '2025-06-12', '10:00', '11:00', 'CONFIRMED', '신규입사자 최종 면접', SYSTIMESTAMP);
+
+INSERT INTO room_reservation (reservation_id, room_id, user_id, title, rsv_date, start_time, end_time, status, purpose, create_at)
+VALUES (room_reservation_seq.NEXTVAL, 4, 1, '경영진 월간 보고', DATE '2025-06-15', '14:00', '16:00', 'CONFIRMED', '6월 경영현황 보고', SYSTIMESTAMP);
+
+INSERT INTO room_reservation (reservation_id, room_id, user_id, title, rsv_date, start_time, end_time, status, purpose, create_at)
+VALUES (room_reservation_seq.NEXTVAL, 1, 7, '현장 안전교육', DATE '2025-06-18', '09:00', '12:00', 'CONFIRMED', '하반기 현장 안전교육', SYSTIMESTAMP);
+
+INSERT INTO room_reservation (reservation_id, room_id, user_id, title, rsv_date, start_time, end_time, status, purpose, create_at)
+VALUES (room_reservation_seq.NEXTVAL, 3, 4, '근태시스템 교육', DATE '2025-06-20', '13:00', '14:00', 'CANCELLED', '근태 시스템 사용자 교육', SYSTIMESTAMP);
+
+INSERT INTO room_reservation (reservation_id, room_id, user_id, title, rsv_date, start_time, end_time, status, purpose, create_at)
+VALUES (room_reservation_seq.NEXTVAL, 2, 3, '팀 주간 회의', DATE '2025-06-23', '09:00', '10:00', 'CONFIRMED', '주간 업무 보고', SYSTIMESTAMP);
+
+
+
+-- 4. 예약 참석자
+
+-- 예약1: 인사팀장(2) 주최, 인사실무자(3) 참석
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 1, 2, 1);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 1, 3, 0);
+
+-- 예약2: 대표이사(1) 주최, 인사팀장(2), 공사관리팀장(7), 안전관리팀장(8) 참석
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 2, 1, 1);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 2, 2, 0);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 2, 7, 0);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 2, 8, 0);
+
+-- 예약3: 공사관리팀장(7) 주최, 안전관리팀장(8), 일반직원1(9), 일반직원2(10) 참석
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 3, 7, 1);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 3, 8, 0);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 3, 9, 0);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 3, 10, 0);
+
+-- 예약5: 인사실무자(3) 주최, 근태담당자(4) 참석
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 5, 3, 1);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 5, 4, 0);
+
+
+
+-- 5. 사내메일
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 1, NULL, '6월 전사 공지사항', '안녕하세요. 6월 전사 공지사항을 안내드립니다.', SYSTIMESTAMP);
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 2, NULL, '신규입사자 온보딩 준비 요청', '이번 주 신규입사자 온보딩 자료를 준비해주세요.', SYSTIMESTAMP);
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 3, 2, 'RE: 신규입사자 온보딩 준비 요청', '네, 금요일까지 준비하겠습니다.', SYSTIMESTAMP);
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 7, NULL, '현장 안전점검 일정 조율', '이번 달 현장 안전점검 일정을 조율하고자 합니다.', SYSTIMESTAMP);
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 8, 4, 'RE: 현장 안전점검 일정 조율', '6월 25일로 잡는 게 좋을 것 같습니다.', SYSTIMESTAMP);
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 5, NULL, '6월 급여 처리 일정 안내', '6월 급여 처리는 25일 진행 예정입니다.', SYSTIMESTAMP);
+
+
+
+-- 6. 메일 수신자
+
+-- 메일1 수신: 인사팀장(2), 공사관리팀장(7), 안전관리팀장(8)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 1, 2, 1, 0);
+
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 1, 7, 1, 0);
+
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 1, 8, 0, 0);
+
+-- 메일2 수신: 인사실무자(3)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 2, 3, 1, 0);
+
+-- 메일3 수신: 인사팀장(2)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 3, 2, 1, 0);
+
+-- 메일4 수신: 안전관리팀장(8)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 4, 8, 1, 0);
+
+-- 메일5 수신: 공사관리팀장(7)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 5, 7, 0, 0);
+
+-- 메일6 수신: 인사팀장(2)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 6, 2, 0, 0);
+
+
+
+-- 7. 첨부파일
+
+INSERT INTO mail_attachment (attachment_id, mail_id, original_name, saved_name, file_path, file_size, file_type, create_at)
+VALUES (mail_attachment_seq.NEXTVAL, 1, '6월공지사항.pdf', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890.pdf', '/uploads/mail/2025/06/', 204800, 'application/pdf', SYSTIMESTAMP);
+
+INSERT INTO mail_attachment (attachment_id, mail_id, original_name, saved_name, file_path, file_size, file_type, create_at)
+VALUES (mail_attachment_seq.NEXTVAL, 4, '안전점검_체크리스트.xlsx', 'b2c3d4e5-f6a7-8901-bcde-f12345678901.xlsx', '/uploads/mail/2025/06/', 51200, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', SYSTIMESTAMP);
+
+INSERT INTO mail_attachment (attachment_id, mail_id, original_name, saved_name, file_path, file_size, file_type, create_at)
+VALUES (mail_attachment_seq.NEXTVAL, 6, '6월급여처리일정.docx', 'c3d4e5f6-a7b8-9012-cdef-123456789012.docx', '/uploads/mail/2025/06/', 32768, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', SYSTIMESTAMP);
+
+
+
+-- 8. 일정
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 2, NULL, '외부 채용박람회 참가', 'PERSONAL', DATE '2025-06-14', DATE '2025-06-14', '코엑스', '채용박람회 부스 운영', SYSTIMESTAMP);
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 2, 4, '인사팀 월간 회의', 'DEPT', DATE '2025-06-16', DATE '2025-06-16', '소회의실A', '6월 인사팀 월간 업무 보고', SYSTIMESTAMP);
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 1, NULL, '창립기념일', 'COMPANY', DATE '2025-07-01', DATE '2025-07-01', '전사', '회사 창립 15주년 기념행사', SYSTIMESTAMP);
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 7, NULL, 'A현장 공사 착공', 'PROJECT', DATE '2025-06-23', DATE '2025-08-31', 'A현장', '1단계 골조공사 일정', SYSTIMESTAMP);
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 4, NULL, '근태시스템 교육 수강', 'PERSONAL', DATE '2025-06-25', DATE '2025-06-26', '교육실', '신규 근태시스템 사용자 교육', SYSTIMESTAMP);
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 7, 3, '하반기 현장 안전교육', 'DEPT', DATE '2025-06-18', DATE '2025-06-18', '대회의실', '전 현장 직원 안전교육 필수 참석', SYSTIMESTAMP);
+
+
+COMMIT;
