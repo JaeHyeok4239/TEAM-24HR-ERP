@@ -304,6 +304,7 @@ CREATE TABLE document (
     processor_id   NUMBER,                      -- 처리자 ID (FK → users)
     document_title VARCHAR2(200 CHAR) NOT NULL, -- 문서 제목
     status         CHAR(3) DEFAULT 'REQ' NOT NULL, -- 결재 상태
+    current_step   NUMBER DEFAULT 1 NOT NULL, -- 현재 결재 단계 (1부터 시작)
     created_at     TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL, -- 생성일시
     updated_at     TIMESTAMP,                   -- 수정일시
     requested_at   TIMESTAMP,                   -- 결재 요청일시
