@@ -233,3 +233,368 @@ INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'NO_CHE
 -- 반차 종류
 INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'ANNUAL', '연차');
 INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'HALF', '반차');
+
+-- 전자결재 샘플 데이터
+-- 기존 사용자 테이블 참조
+-- 플로우: 기안(TMP/REQ) → 결재(APR/REJ) → 처리(PRC→COM)
+-- 결재 방식 : 다단계 승인(approval_history 에서 처리)
+
+-- 0. 삭제
+DELETE FROM leave;
+DELETE FROM approval_delegate;
+DELETE FROM approval_history;
+DELETE FROM document_attach_mapping;
+DELETE FROM attachment;
+DELETE FROM document;
+DELETE FROM approval_line;
+DELETE FROM document_process;
+DELETE FROM document_type;
+DELETE FROM leave_type;
+
+
+-- 1. 문서 유형
+INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '연차신청서', 'leave');
+INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '반차신청서', 'leave');
+INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '조퇴신청서', 'leave');
+INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '지출결의서', NULL);
+INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '구매요청서', NULL);
+
+
+-- 2. 휴가 유형
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '연차',    'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '반차',    'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '조퇴',    'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '무급휴가', 'N');
+
+
+-- 3. 결재선 (step_order 포함)
+-- 연차/반차/조퇴: 1단계 인사팀장(2)
+-- 지출결의서:    1단계 인사팀장(2) → 2단계 대표이사(1)
+-- 구매요청서:    1단계 구매팀장(6) → 2단계 대표이사(1)
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 1, 1, 2);
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 2, 1, 2);
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 3, 1, 2);
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 4, 1, 2); -- 지출결의 1차: 인사팀장
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 4, 2, 1); -- 지출결의 2차: 대표이사
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 5, 1, 6); -- 구매요청 1차: 구매팀장
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 5, 2, 1); -- 구매요청 2차: 대표이사
+
+
+-- 4. 문서 처리 부서
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 1, 4, 'ALL');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 2, 4, 'ALL');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 3, 4, 'ALL');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 4, 5, 'ADMIN');
+INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 5, 6, 'ADMIN');
+
+
+-- 5. 결재 문서
+-- [COM] 일반직원1(9) 연차 → 1단계 승인 → 인사실무자(3) 처리완료
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at, processed_at)
+VALUES (approval_document_seq.NEXTVAL, 1, 9, 3, '연차 신청', 'COM', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- [PRC] 일반직원2(10) 반차 → 1단계 승인 → 인사실무자(3) 처리 중
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at, processed_at)
+VALUES (approval_document_seq.NEXTVAL, 2, 10, 3, '반차 신청', 'PRC', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- [REJ] 인사실무자(3) 조퇴 → 1단계 반려
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at, reject_reason)
+VALUES (approval_document_seq.NEXTVAL, 3, 3, NULL, '조퇴 신청', 'REJ', SYSTIMESTAMP, SYSTIMESTAMP, '당일 마감 업무로 인해 반려합니다.');
+
+-- [REQ] 구매팀장(6) 구매요청서 → 1단계 결재 대기
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at)
+VALUES (approval_document_seq.NEXTVAL, 5, 6, NULL, '현장 자재 구매 요청', 'REQ', SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- [TMP] 근태담당자(4) 지출결의서 임시저장
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at)
+VALUES (approval_document_seq.NEXTVAL, 4, 4, NULL, '출장 교통비 지출결의', 'TMP', SYSTIMESTAMP);
+
+-- [REQ] 공사관리팀장(7) 연차 → 1단계 결재 대기
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at)
+VALUES (approval_document_seq.NEXTVAL, 1, 7, NULL, '연차 신청', 'REQ', SYSTIMESTAMP, SYSTIMESTAMP);
+
+-- [APR] 근태담당자(4) 구매요청서 → 1단계 승인 → 2단계 대기
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at)
+VALUES (approval_document_seq.NEXTVAL, 5, 4, NULL, '사무용품 구매 요청', 'REQ', SYSTIMESTAMP, SYSTIMESTAMP);
+
+
+-- 6. 결재 이력 (approval_history)
+-- document_id=1 (연차, COM) → 1단계 승인완료
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
+VALUES (approval_history_seq.NEXTVAL, 1, 1, 2, 'APR', '승인합니다.', SYSTIMESTAMP);
+
+-- document_id=2 (반차, PRC) → 1단계 승인완료
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
+VALUES (approval_history_seq.NEXTVAL, 2, 1, 2, 'APR', '승인합니다.', SYSTIMESTAMP);
+
+-- document_id=3 (조퇴, REJ) → 1단계 반려
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
+VALUES (approval_history_seq.NEXTVAL, 3, 1, 2, 'REJ', '당일 마감 업무로 인해 반려합니다.', SYSTIMESTAMP);
+
+-- document_id=4 (구매요청, REQ) → 1단계 대기
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
+VALUES (approval_history_seq.NEXTVAL, 4, 1, 6, 'PND', NULL, NULL);
+
+-- document_id=6 (연차, REQ) → 1단계 대기
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
+VALUES (approval_history_seq.NEXTVAL, 6, 1, 2, 'PND', NULL, NULL);
+
+-- document_id=7 (구매요청 2단계) → 1단계 승인 → 2단계 대기
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
+VALUES (approval_history_seq.NEXTVAL, 7, 1, 6, 'APR', '구매 필요성 확인. 승인합니다.', SYSTIMESTAMP);
+
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
+VALUES (approval_history_seq.NEXTVAL, 7, 2, 1, 'PND', NULL, NULL);
+
+-- 7. 결재 위임
+INSERT INTO approval_delegate (approval_delegate_id, approver_id, delegate_id, start_date, end_date, reason, is_active)
+VALUES (approval_delegate_seq.NEXTVAL, 2, 3, DATE '2025-06-01', DATE '2025-06-07', '출장으로 인한 결재 위임', 'N');
+
+INSERT INTO approval_delegate (approval_delegate_id, approver_id, delegate_id, start_date, end_date, reason, is_active)
+VALUES (approval_delegate_seq.NEXTVAL, 1, 2, DATE '2025-06-20', DATE '2025-06-25', '연차 휴가로 인한 결재 위임', 'Y');
+
+
+-- 8. 휴가 데이터
+INSERT INTO leave (leave_id, leave_type, document_id, start_date, end_date, leave_cnt)
+VALUES (leave_seq.NEXTVAL, 1, 1, DATE '2025-06-10', DATE '2025-06-10', 1.00);
+
+INSERT INTO leave (leave_id, leave_type, document_id, start_date, end_date, leave_cnt)
+VALUES (leave_seq.NEXTVAL, 2, 2, DATE '2025-06-11', DATE '2025-06-11', 0.50);
+
+
+
+
+---------------------------------업무관리------------------------
+
+DELETE FROM mail_attachment;
+DELETE FROM mail_receiver;
+DELETE FROM mail;
+DELETE FROM reservation_participant;
+DELETE FROM room_reservation;
+DELETE FROM meeting_room;
+DELETE FROM schedule;
+DELETE FROM holidays;
+
+
+
+-- 1. 공휴일
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-01-01', '신정', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-01-28', '설날', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-01-29', '설날 연휴', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-01-30', '설날 연휴', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-03-01', '삼일절', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-05-05', '어린이날', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-05-06', '어린이날 대체공휴일', 1);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-06-06', '현충일', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-08-15', '광복절', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-10-03', '개천절', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-10-05', '추석', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-10-06', '추석 연휴', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-10-07', '추석 연휴', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-10-09', '한글날', 0);
+
+INSERT INTO holidays (holiday_id, holiday_year, holiday_date, holiday_name, is_substitute)
+VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-12-25', '크리스마스', 0);
+
+
+-- 2. 회의실
+
+INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '대회의실', 20, '본사 3층', 'ACTIVE');
+
+INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '소회의실A', 6, '본사 2층', 'ACTIVE');
+
+INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '소회의실B', 6, '본사 2층', 'ACTIVE');
+
+INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '임원회의실', 10, '본사 5층', 'ACTIVE');
+
+INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '교육실', 30, '본사 4층', 'INACTIVE');
+
+
+
+-- 3. 회의실 예약
+
+INSERT INTO room_reservation (reservation_id, room_id, user_id, title, rsv_date, start_time, end_time, status, purpose, create_at)
+VALUES (room_reservation_seq.NEXTVAL, 2, 2, '신규입사자 면접', DATE '2025-06-12', '10:00', '11:00', 'CONFIRMED', '신규입사자 최종 면접', SYSTIMESTAMP);
+
+INSERT INTO room_reservation (reservation_id, room_id, user_id, title, rsv_date, start_time, end_time, status, purpose, create_at)
+VALUES (room_reservation_seq.NEXTVAL, 4, 1, '경영진 월간 보고', DATE '2025-06-15', '14:00', '16:00', 'CONFIRMED', '6월 경영현황 보고', SYSTIMESTAMP);
+
+INSERT INTO room_reservation (reservation_id, room_id, user_id, title, rsv_date, start_time, end_time, status, purpose, create_at)
+VALUES (room_reservation_seq.NEXTVAL, 1, 7, '현장 안전교육', DATE '2025-06-18', '09:00', '12:00', 'CONFIRMED', '하반기 현장 안전교육', SYSTIMESTAMP);
+
+INSERT INTO room_reservation (reservation_id, room_id, user_id, title, rsv_date, start_time, end_time, status, purpose, create_at)
+VALUES (room_reservation_seq.NEXTVAL, 3, 4, '근태시스템 교육', DATE '2025-06-20', '13:00', '14:00', 'CANCELLED', '근태 시스템 사용자 교육', SYSTIMESTAMP);
+
+INSERT INTO room_reservation (reservation_id, room_id, user_id, title, rsv_date, start_time, end_time, status, purpose, create_at)
+VALUES (room_reservation_seq.NEXTVAL, 2, 3, '팀 주간 회의', DATE '2025-06-23', '09:00', '10:00', 'CONFIRMED', '주간 업무 보고', SYSTIMESTAMP);
+
+
+
+-- 4. 예약 참석자
+
+-- 예약1: 인사팀장(2) 주최, 인사실무자(3) 참석
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 1, 2, 1);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 1, 3, 0);
+
+-- 예약2: 대표이사(1) 주최, 인사팀장(2), 공사관리팀장(7), 안전관리팀장(8) 참석
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 2, 1, 1);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 2, 2, 0);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 2, 7, 0);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 2, 8, 0);
+
+-- 예약3: 공사관리팀장(7) 주최, 안전관리팀장(8), 일반직원1(9), 일반직원2(10) 참석
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 3, 7, 1);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 3, 8, 0);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 3, 9, 0);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 3, 10, 0);
+
+-- 예약5: 인사실무자(3) 주최, 근태담당자(4) 참석
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 5, 3, 1);
+
+INSERT INTO reservation_participant (participant_id, reservation_id, user_id, is_organizer)
+VALUES (reservation_participant_seq.NEXTVAL, 5, 4, 0);
+
+
+
+-- 5. 사내메일
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 1, NULL, '6월 전사 공지사항', '안녕하세요. 6월 전사 공지사항을 안내드립니다.', SYSTIMESTAMP);
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 2, NULL, '신규입사자 온보딩 준비 요청', '이번 주 신규입사자 온보딩 자료를 준비해주세요.', SYSTIMESTAMP);
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 3, 2, 'RE: 신규입사자 온보딩 준비 요청', '네, 금요일까지 준비하겠습니다.', SYSTIMESTAMP);
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 7, NULL, '현장 안전점검 일정 조율', '이번 달 현장 안전점검 일정을 조율하고자 합니다.', SYSTIMESTAMP);
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 8, 4, 'RE: 현장 안전점검 일정 조율', '6월 25일로 잡는 게 좋을 것 같습니다.', SYSTIMESTAMP);
+
+INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
+VALUES (mail_seq.NEXTVAL, 5, NULL, '6월 급여 처리 일정 안내', '6월 급여 처리는 25일 진행 예정입니다.', SYSTIMESTAMP);
+
+
+
+-- 6. 메일 수신자
+
+-- 메일1 수신: 인사팀장(2), 공사관리팀장(7), 안전관리팀장(8)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 1, 2, 1, 0);
+
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 1, 7, 1, 0);
+
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 1, 8, 0, 0);
+
+-- 메일2 수신: 인사실무자(3)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 2, 3, 1, 0);
+
+-- 메일3 수신: 인사팀장(2)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 3, 2, 1, 0);
+
+-- 메일4 수신: 안전관리팀장(8)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 4, 8, 1, 0);
+
+-- 메일5 수신: 공사관리팀장(7)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 5, 7, 0, 0);
+
+-- 메일6 수신: 인사팀장(2)
+INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
+VALUES (mail_receiver_seq.NEXTVAL, 6, 2, 0, 0);
+
+
+
+-- 7. 첨부파일
+
+INSERT INTO mail_attachment (attachment_id, mail_id, original_name, saved_name, file_path, file_size, file_type, create_at)
+VALUES (mail_attachment_seq.NEXTVAL, 1, '6월공지사항.pdf', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890.pdf', '/uploads/mail/2025/06/', 204800, 'application/pdf', SYSTIMESTAMP);
+
+INSERT INTO mail_attachment (attachment_id, mail_id, original_name, saved_name, file_path, file_size, file_type, create_at)
+VALUES (mail_attachment_seq.NEXTVAL, 4, '안전점검_체크리스트.xlsx', 'b2c3d4e5-f6a7-8901-bcde-f12345678901.xlsx', '/uploads/mail/2025/06/', 51200, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', SYSTIMESTAMP);
+
+INSERT INTO mail_attachment (attachment_id, mail_id, original_name, saved_name, file_path, file_size, file_type, create_at)
+VALUES (mail_attachment_seq.NEXTVAL, 6, '6월급여처리일정.docx', 'c3d4e5f6-a7b8-9012-cdef-123456789012.docx', '/uploads/mail/2025/06/', 32768, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', SYSTIMESTAMP);
+
+
+
+-- 8. 일정
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 2, NULL, '외부 채용박람회 참가', 'PERSONAL', DATE '2025-06-14', DATE '2025-06-14', '코엑스', '채용박람회 부스 운영', SYSTIMESTAMP);
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 2, 4, '인사팀 월간 회의', 'DEPT', DATE '2025-06-16', DATE '2025-06-16', '소회의실A', '6월 인사팀 월간 업무 보고', SYSTIMESTAMP);
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 1, NULL, '창립기념일', 'COMPANY', DATE '2025-07-01', DATE '2025-07-01', '전사', '회사 창립 15주년 기념행사', SYSTIMESTAMP);
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 7, NULL, 'A현장 공사 착공', 'PROJECT', DATE '2025-06-23', DATE '2025-08-31', 'A현장', '1단계 골조공사 일정', SYSTIMESTAMP);
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 4, NULL, '근태시스템 교육 수강', 'PERSONAL', DATE '2025-06-25', DATE '2025-06-26', '교육실', '신규 근태시스템 사용자 교육', SYSTIMESTAMP);
+
+INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
+VALUES (schedule_seq.NEXTVAL, 7, 3, '하반기 현장 안전교육', 'DEPT', DATE '2025-06-18', DATE '2025-06-18', '대회의실', '전 현장 직원 안전교육 필수 참석', SYSTIMESTAMP);
+
+
+COMMIT;
