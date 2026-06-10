@@ -78,6 +78,11 @@ CREATE SEQUENCE approval_document_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
+-- 결재 이력 PK
+CREATE SEQUENCE approval_history_seq START
+WITH
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
 -- 문서유형 PK
 CREATE SEQUENCE document_type_seq START
 WITH

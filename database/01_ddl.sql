@@ -253,6 +253,8 @@ CREATE TABLE
         CONSTRAINT pk_half_day_types PRIMARY KEY (half_day_type_id)
     );
 
+-- ------------결재 -----------------
+
 -- 문서 유형 (연차신청서, 지출결의서 등 결재 문서의 종류)
 CREATE TABLE
     document_type (
@@ -271,14 +273,15 @@ CREATE TABLE
     );
 
 -- 결재선 (문서유형별 기본 결재자 지정)
-CREATE TABLE
-    approval_line (
-        approval_line_id NUMBER PRIMARY KEY, -- 결재선 ID (approval_line_seq)
-        document_type NUMBER NOT NULL, -- 문서유형 ID (FK → document_type)
-        default_approver NUMBER NOT NULL, -- 기본 결재자 (FK → users)
-        CONSTRAINT line_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type (type_id),
-        CONSTRAINT line_fk_approver FOREIGN KEY (default_approver) REFERENCES users (employee_id)
-    );
+CREATE TABLE approval_line (
+    approval_line_id NUMBER PRIMARY KEY,    -- 결재선 ID (approval_line_seq)
+    document_type    NUMBER NOT NULL,       -- 문서유형 ID (FK → document_type)
+    step_order       NUMBER NOT NULL,       -- 결재 단계
+    default_approver NUMBER NOT NULL,       -- 기본 결재자 (FK → users)
+    CONSTRAINT line_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
+    CONSTRAINT line_fk_approver FOREIGN KEY (default_approver) REFERENCES users(employee_id),
+    CONSTRAINT line_uq_step UNIQUE (document_type, step_order) -- 유형별 단계 중복 방지
+);
 
 -- 문서 처리 부서 (문서유형별 처리 가능 부서 및 권한 설정)
 CREATE TABLE
@@ -294,31 +297,40 @@ CREATE TABLE
 
 -- 결재 문서 (기안서 본문 및 상태 관리)
 -- status: TMP(임시저장), REQ(결재요청), APR(승인), REJ(반려), PRC(처리중), COM(완료)
-CREATE TABLE
-    document (
-        document_id NUMBER PRIMARY KEY, -- 문서 ID (approval_document_seq)
-        document_type NUMBER NOT NULL, -- 문서유형 ID (FK → document_type)
-        requester_id NUMBER NOT NULL, -- 기안자 ID (FK → users)
-        approver_id NUMBER NOT NULL, -- 결재자 ID (FK → users)
-        processor_id NUMBER,
-        document_title VARCHAR2 (200 CHAR) NOT NULL, -- 문서 제목
-        status CHAR(3) DEFAULT 'REQ' NOT NULL, -- 결재 상태
-        created_at TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL, -- 생성일시
-        updated_at TIMESTAMP, -- 수정일시
-        requested_at TIMESTAMP, -- 결재 요청일시
-        approved_at TIMESTAMP, -- 결재 처리일시
-        processed_at TIMESTAMP,
-        reject_reason VARCHAR2 (500 CHAR), -- 반려 사유
-        CONSTRAINT document_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type (type_id),
-        CONSTRAINT document_fk_requester FOREIGN KEY (requester_id) REFERENCES users (employee_id),
-        CONSTRAINT document_fk_approver FOREIGN KEY (approver_id) REFERENCES users (employee_id),
-        CONSTRAINT document_fk_processor
-        FOREIGN KEY (processor_id) REFERENCES users(employee_id),
-        CONSTRAINT document_ck_status CHECK (
-            status IN ('TMP', 'REQ', 'APR', 'REJ', 'PRC', 'COM')
-        )
-    );
+CREATE TABLE document (
+    document_id    NUMBER PRIMARY KEY,          -- 문서 ID (approval_document_seq)
+    document_type  NUMBER NOT NULL,             -- 문서유형 ID (FK → document_type)
+    requester_id   NUMBER NOT NULL,             -- 기안자 ID (FK → users)
+    processor_id   NUMBER,                      -- 처리자 ID (FK → users)
+    document_title VARCHAR2(200 CHAR) NOT NULL, -- 문서 제목
+    status         CHAR(3) DEFAULT 'REQ' NOT NULL, -- 결재 상태
+    created_at     TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL, -- 생성일시
+    updated_at     TIMESTAMP,                   -- 수정일시
+    requested_at   TIMESTAMP,                   -- 결재 요청일시
+    processed_at   TIMESTAMP,                   -- 처리일시
+    reject_reason  VARCHAR2(500 CHAR),          -- 반려 사유 (최종 반려 단계 기준)
+    CONSTRAINT document_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
+    CONSTRAINT document_fk_requester FOREIGN KEY (requester_id) REFERENCES users(employee_id),
+    CONSTRAINT document_fk_processor FOREIGN KEY (processor_id) REFERENCES users(employee_id),
+    CONSTRAINT document_ck_status CHECK (status IN ('TMP', 'REQ', 'APR', 'REJ', 'PRC', 'COM'))
+);
 
+-- 결재 이력 (단계별 결재 처리 내역)
+-- status: APR(승인), REJ(반려), PND(대기)
+CREATE TABLE approval_history (
+    history_id       NUMBER PRIMARY KEY,
+    document_id      NUMBER NOT NULL,
+    step_order       NUMBER NOT NULL,
+    approver_id      NUMBER NOT NULL,
+    status           CHAR(3) DEFAULT 'PND' NOT NULL,
+    approver_comment VARCHAR2(500 CHAR),
+    acted_at         TIMESTAMP,
+    created_at       TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
+    CONSTRAINT history_fk_document FOREIGN KEY (document_id) REFERENCES document(document_id),
+    CONSTRAINT history_fk_approver FOREIGN KEY (approver_id) REFERENCES users(employee_id),
+    CONSTRAINT history_ck_status CHECK (status IN ('APR', 'REJ', 'PND')),
+    CONSTRAINT history_uq_step UNIQUE (document_id, step_order)
+);
 -- 첨부파일 (업로드된 파일 메타정보 관리)
 CREATE TABLE
     attachment (
