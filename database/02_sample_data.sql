@@ -186,6 +186,23 @@ INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
 VALUES ( user_role_seq.NEXTVAL, 10, 2 ); -- 일반직원2 USER
 
 
+
+
+
+-- 테이블 삭제
+DELETE FROM attendance_logs;
+DELETE FROM attendance_results;
+DELETE FROM attendance_time_policies;
+DELETE FROM attendance_thresholds;
+DELETE FROM workplaces;
+
+-- 코드 테이블 삭제
+DELETE FROM correction_types;
+DELETE FROM correction_reason_types;
+DELETE FROM approval_statuses;
+DELETE FROM attendance_statuses;
+DELETE FROM half_day_types;
+
 -- 근무 시간 규칙
 INSERT INTO attendance_time_policies
 VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'ALL', 900, 1800, CURRENT_TIMESTAMP, NULL);
@@ -233,6 +250,10 @@ INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'NO_CHE
 -- 반차 종류
 INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'ANNUAL', '연차');
 INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'HALF', '반차');
+
+
+
+
 
 -- 전자결재 샘플 데이터
 -- 기존 사용자 테이블 참조

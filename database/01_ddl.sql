@@ -103,15 +103,19 @@ CREATE TABLE
         CONSTRAINT uk_user_roles_user_role UNIQUE (employee_id, role_id)
     );
 
+
+
+
+
 -- 근태관리: 근무 시간 규칙
 CREATE TABLE
     attendance_time_policies (
         attendance_time_policy_id NUMBER NOT NULL,
-        employment_type VARCHAR2 (20) NOT NULL,
-        policy_type VARCHAR2 (20) NOT NULL,
-        day_of_week VARCHAR2 (10) NOT NULL,
-        start_time NUMBER (4) NOT NULL,
-        end_time NUMBER (4) NOT NULL,
+        employment_type VARCHAR2 (20) NOT NULL, -- 직원 구분(REGULAR/DAILY)
+        policy_type VARCHAR2 (20) NOT NULL, -- 규칙 타입(WORK/BREAK/HALF_AM/HALF_PM)
+        day_of_week VARCHAR2 (10) NOT NULL, -- 요일 코드(MON~SUN)
+        start_time NUMBER (4) NOT NULL, -- 규칙 시작 시간(HHMM)
+        end_time NUMBER (4) NOT NULL, -- 규칙 종료 시간(HHMM) ex. 오전 9시는 0900
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
         CONSTRAINT pk_attendance_time_policies PRIMARY KEY (attendance_time_policy_id),
@@ -126,10 +130,10 @@ CREATE TABLE
 CREATE TABLE
     attendance_thresholds (
         attendance_threshold_id NUMBER NOT NULL,
-        employment_type VARCHAR2 (20) NOT NULL,
-        threshold_type VARCHAR2 (20) NOT NULL,
-        threshold_minutes NUMBER NOT NULL,
-        threshold_description VARCHAR2 (255) NULL,
+        employment_type VARCHAR2 (20) NOT NULL, -- 직원 구분(REGULAR/DAILY)
+        threshold_type VARCHAR2 (20) NOT NULL, -- 기준 타입(LATE/EARLY_LEAVE/ABSENCE)
+        threshold_minutes NUMBER NOT NULL, -- 판정 기준 시간(분 단위)
+        threshold_description VARCHAR2 (255) NULL, -- 기준 설명
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
         CONSTRAINT pk_attendance_thresholds PRIMARY KEY (attendance_threshold_id),
@@ -143,9 +147,9 @@ CREATE TABLE
         workplace_code VARCHAR2 (30) NOT NULL,
         workplace_name VARCHAR2 (100) NOT NULL,
         workplace_address VARCHAR2 (255) NULL,
-        radius_meter NUMBER NOT NULL,
-        latitude NUMBER (10, 7) NOT NULL,
-        longitude NUMBER (10, 7) NOT NULL,
+        radius_meter NUMBER NOT NULL, -- 출퇴근 허용 반경(m)
+        latitude NUMBER (10, 7) NOT NULL, -- 근무지 위도
+        longitude NUMBER (10, 7) NOT NULL, -- 근무지 경도
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
         CONSTRAINT pk_workplaces PRIMARY KEY (workplace_id)
@@ -156,11 +160,11 @@ CREATE TABLE
     attendance_logs (
         attendance_log_id NUMBER NOT NULL,
         employee_id NUMBER NOT NULL,
-        log_type VARCHAR2 (10) NOT NULL,
-        log_time TIMESTAMP NOT NULL,
-        latitude NUMBER (10, 7) NOT NULL,
-        longitude NUMBER (10, 7) NOT NULL,
-        is_location_valid CHAR(1) DEFAULT 'N' NOT NULL,
+        log_type VARCHAR2 (10) NOT NULL, -- 출퇴근 구분(IN/OUT)
+        log_time TIMESTAMP NOT NULL, -- 출퇴근 기록 시간
+        latitude NUMBER (10, 7) NOT NULL, -- GPS 위도
+        longitude NUMBER (10, 7) NOT NULL, -- GPS 경도
+        is_location_valid CHAR(1) DEFAULT 'N' NOT NULL, -- 위치 인증 여부(Y/N)
         workplace_id NUMBER NULL,
         memo VARCHAR2 (255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -180,19 +184,19 @@ CREATE TABLE
         half_day_type_id NUMBER NULL,
         holiday_id NUMBER NULL,
         correction_type_id NUMBER NOT NULL,
-        correction_reason_type_id NUMBER NOT NULL,
-        employee_id NUMBER NOT NULL,
-        work_date DATE NOT NULL,
-        check_in_time TIMESTAMP NULL,
-        check_out_time TIMESTAMP NULL,
-        total_work_minutes NUMBER NULL,
-        actual_work_minutes NUMBER NULL,
-        overtime_minutes NUMBER NULL,
-        is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL,
-        is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL,
-        is_correction_required CHAR(1) DEFAULT 'N' NOT NULL,
-        processing_status VARCHAR2 (30) DEFAULT 'NORMAL' NOT NULL,
-        correction_reason VARCHAR2 (255) NULL,
+        correction_reason_type_id NUMBER NOT NULL, -- 
+        employee_id NUMBER NOT NULL, -- 사번
+        work_date DATE NOT NULL, -- 근무 기준 날짜
+        check_in_time TIMESTAMP NULL, -- 출근 시간
+        check_out_time TIMESTAMP NULL, -- 퇴근 시간
+        total_work_minutes NUMBER NULL, -- 총 근무 시간(분)
+        actual_work_minutes NUMBER NULL, -- 휴게 제외 실 근무 시간(분)
+        overtime_minutes NUMBER NULL, -- 초과 근무 시간(분)
+        is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
+        is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
+        is_correction_required CHAR(1) DEFAULT 'N' NOT NULL, -- 정정 필요 여부(Y/N)
+        processing_status VARCHAR2 (30) DEFAULT 'NORMAL' NOT NULL, -- 처리 상태(NORMAL/CORRECTION_REQUIRED/CORRECTED)
+        correction_reason VARCHAR2 (255) NULL, -- 근태 정정 사유
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
@@ -211,8 +215,8 @@ CREATE TABLE
 CREATE TABLE
     correction_types (
         correction_type_id NUMBER NOT NULL,
-        type_code VARCHAR2 (10) NOT NULL,
-        type_name VARCHAR2 (30) NOT NULL,
+        type_code VARCHAR2 (10) NOT NULL, -- 타입 코드(IN/OUT/STATUS)
+        type_name VARCHAR2 (30) NOT NULL, -- 타입 이름(출근 정정/퇴근 정정/근태 상태 정정)
         CONSTRAINT pk_correction_types PRIMARY KEY (correction_type_id)
     );
 
@@ -220,8 +224,8 @@ CREATE TABLE
 CREATE TABLE
     correction_reason_types (
         correction_reason_type_id NUMBER NOT NULL,
-        reason_code VARCHAR2 (30) NOT NULL,
-        reason_name VARCHAR2 (50) NOT NULL,
+        reason_code VARCHAR2 (30) NOT NULL, -- 사유 코드(SIMPLE/DELAY_DOCUMENT/ETC)
+        reason_name VARCHAR2 (50) NOT NULL, -- 사유 이름(단순 입력 오류/증빙 지연 제출/기타 사유)
         CONSTRAINT pk_correction_reason_types PRIMARY KEY (correction_reason_type_id)
     );
 
@@ -229,8 +233,8 @@ CREATE TABLE
 CREATE TABLE
     approval_statuses (
         approval_status_id NUMBER NOT NULL,
-        status_code VARCHAR2 (30) NOT NULL,
-        status_name VARCHAR2 (30) NOT NULL,
+        status_code VARCHAR2 (30) NOT NULL, -- 상태 코드(PENDING/APPROVED/REJECTED)
+        status_name VARCHAR2 (30) NOT NULL, -- 상태 이름(승인 대기/승인 완료/반려)
         CONSTRAINT pk_approval_statuses PRIMARY KEY (approval_status_id)
     );
 
@@ -238,9 +242,9 @@ CREATE TABLE
 CREATE TABLE
     attendance_statuses (
         attendance_status_id NUMBER NOT NULL,
-        status_code VARCHAR2 (30) NOT NULL,
-        status_name VARCHAR2 (50) NOT NULL,
-        status_priority NUMBER NOT NULL,
+        status_code VARCHAR2 (30) NOT NULL, -- 상태 코드(WORK/LATE/EARLY_LEAVE/ABSENT/LEAVE/MISSING_CHECKOUT)
+        status_name VARCHAR2 (50) NOT NULL, -- 상태 이름(근무/지각/조퇴/결근/휴가/미퇴근)
+        status_priority NUMBER NOT NULL, -- 상태 판정 우선순위(휴가(연차>반차)>결근>반차>조퇴>지각>근무)
         CONSTRAINT pk_attendance_statues PRIMARY KEY (attendance_status_id)
     );
 
@@ -248,10 +252,14 @@ CREATE TABLE
 CREATE TABLE
     half_day_types (
         half_day_type_id NUMBER NOT NULL,
-        type_code VARCHAR2 (10) NOT NULL,
-        type_name VARCHAR2 (30) NOT NULL,
+        type_code VARCHAR2 (10) NOT NULL, -- 타입 코드(NONE/AM/PM)
+        type_name VARCHAR2 (30) NOT NULL, -- 타입 이름(미사용/오전 반차/오후 반차)
         CONSTRAINT pk_half_day_types PRIMARY KEY (half_day_type_id)
     );
+
+
+
+
 
 -- ------------결재 -----------------
 
