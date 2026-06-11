@@ -25,7 +25,7 @@ public class DocumentType {
 	@Id
 	@Column(name = "type_id")
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "document_type_seq")
-	@SequenceGenerator(name = "document_seq", sequenceName = "document_type_seq", allocationSize = 1)
+	@SequenceGenerator(name = "document_type_seq", sequenceName = "document_type_seq", allocationSize = 1)
 	private Long typeId;
 	
 	@Column(name = "type_name")
