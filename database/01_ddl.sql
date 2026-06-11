@@ -173,7 +173,7 @@ CREATE TABLE
         CONSTRAINT pk_attendance_logs PRIMARY KEY (attendance_log_id),
         CONSTRAINT fk_att_logs_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
         CONSTRAINT fk_att_logs_workplace FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id)
-        CONSTRAINT uf_att_logs UNIQUE (employee_id, work_date, log_type)
+        CONSTRAINT uk_att_logs UNIQUE (employee_id, work_date, log_type)
     );
 
 -- 근태관리: 근태 결과
