@@ -18,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
 
 //공통 파일 Entity
@@ -31,24 +32,24 @@ import lombok.Setter;
 public class Attachment {
 	
 	@Id
-	@Column(name = "attachment_id")
+	@Column(name = "attachment_id", nullable = false)
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "attachment_seq")
 	@SequenceGenerator(name = "attachment_seq", sequenceName = "attachment_seq", initialValue = 1, allocationSize = 1 )
 	private Long attachmentId;
 	
-	@Column(name = "original_name")
+	@Column(name = "original_name", nullable = false)
 	private String originalName;
 	
-	@Column(name = "storedName")
+	@Column(name = "stored_name", nullable = false)
 	private String storedName;
 	
-	@Column(name = "attachment_type")
+	@Column(name = "attachment_type", nullable = false)
 	private String attachmentType;
 	
-	@Column(name = "upload_time")
+	@Column(name = "upload_time", nullable = false)
 	private LocalDateTime uploadTime;
 	
-	@Column(name = "attachment_size")
+	@Column(name = "attachment_size", nullable = false)
 	private Long attachmentSize;
 	
 	@ManyToOne(fetch = FetchType.LAZY)

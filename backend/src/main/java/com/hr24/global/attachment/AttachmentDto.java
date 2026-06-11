@@ -2,10 +2,12 @@ package com.hr24.global.attachment;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 
 @Getter
 @Builder
 public class AttachmentDto {
+	
 	private Long   attachmentId;
     private String originalName;
     private String storedName;
