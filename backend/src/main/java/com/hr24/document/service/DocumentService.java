@@ -17,10 +17,10 @@ public interface DocumentService {
 	//Long createReDraft(Long rejectedDocumentId)
 	
 	//내 문서함 조회(기본)
-	//Page<DocumentDto> myDocList(Long currentId, Pageable pageable);
+	Page<DocumentDto> myDocList(Long currentId, Pageable pageable);
 	
 	//임시 저장함 조회(기본)
-	//Page<DocumentDto> myTmpDocList(Long currentId, Pageable pageable);
+	Page<DocumentDto> myTmpDocList(Long currentId, Pageable pageable);
 	
 	//문서 상세 조회
 	DocumentDto view(Long documentId);

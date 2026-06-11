@@ -6,11 +6,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.hr24.document.dto.DocumentDto;
-import com.hr24.document.entity.Document;
 import com.hr24.document.repository.DocumentAttachMappingRepository;
 import com.hr24.document.repository.DocumentRepository;
 import com.hr24.global.attachment.service.AttachmentService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -22,26 +22,24 @@ public class DocumentServiceImpl implements DocumentService {
 	private final AttachmentService attachmentService;
 	
 	// 문서 작성
-//	@Override
-//	public void write(DocumentDto documentDto) {
-//	}
+	
 
 	// 문서 수정
 //	@Override
 //	public void modify(DocumentDto documentDto) {
 //	}
 
-	// 내 문서함 조회(기본) - user 연동 후 구현
-//	@Override
-//	public Page<DocumentDto> myDocList(Long currentId, Pageable pageable) {
-//		return documentRepository.myDocList(currentId, pageable);
-//	}
-//
-//	// 임시 저장함 조회(기본)
-//	@Override
-//	public Page<DocumentDto> myTmpDocList(Long currentId, Pageable pageable) {
-//		return documentRepository.myTmpDocList(currentId, pageable);
-//	}
+	//내 문서함 조회(기본)
+	@Override
+	public Page<DocumentDto> myDocList(Long currentId, Pageable pageable) {
+		return documentRepository.myDocList(currentId, pageable);
+	}
+
+	// 임시 저장함 조회(기본)
+	@Override
+	public Page<DocumentDto> myTmpDocList(Long currentId, Pageable pageable) {
+		return documentRepository.myTmpDocList(currentId, pageable);
+	}
 
 	// 문서 상세 조회
 	@Override
