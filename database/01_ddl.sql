@@ -165,13 +165,15 @@ CREATE TABLE
         latitude NUMBER (10, 7) NOT NULL, -- GPS 위도
         longitude NUMBER (10, 7) NOT NULL, -- GPS 경도
         is_location_valid CHAR(1) DEFAULT 'N' NOT NULL, -- 위치 인증 여부(Y/N)
-        workplace_id NUMBER NULL,
+        workplace_id NUMBER NULL, -- 근무지
+        work_date DATE NOT NULL, -- 근무 날짜
         memo VARCHAR2 (255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
         CONSTRAINT pk_attendance_logs PRIMARY KEY (attendance_log_id),
         CONSTRAINT fk_att_logs_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
         CONSTRAINT fk_att_logs_workplace FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id)
+        CONSTRAINT uk_att_logs UNIQUE (employee_id, work_date, log_type)
     );
 
 -- 근태관리: 근태 결과
@@ -184,8 +186,8 @@ CREATE TABLE
         half_day_type_id NUMBER NULL,
         holiday_id NUMBER NULL,
         correction_type_id NUMBER NOT NULL,
-        correction_reason_type_id NUMBER NOT NULL, -- 
-        employee_id NUMBER NOT NULL, -- 사번
+        correction_reason_type_id NUMBER NOT NULL, 
+        employee_id NUMBER NOT NULL, 
         work_date DATE NOT NULL, -- 근무 기준 날짜
         check_in_time TIMESTAMP NULL, -- 출근 시간
         check_out_time TIMESTAMP NULL, -- 퇴근 시간
