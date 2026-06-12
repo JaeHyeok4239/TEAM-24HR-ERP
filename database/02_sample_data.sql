@@ -205,10 +205,10 @@ DELETE FROM half_day_types;
 
 -- 근무 시간 규칙
 INSERT INTO attendance_time_policies
-VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'ALL', 900, 1800, CURRENT_TIMESTAMP, NULL);
+VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'MON', 900, 1800, CURRENT_TIMESTAMP, NULL);
 
 INSERT INTO attendance_time_policies
-VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'ALL', 1200, 1300, CURRENT_TIMESTAMP, NULL);
+VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'THU', 1200, 1300, CURRENT_TIMESTAMP, NULL);
 
 -- 근태 판정 기준
 INSERT INTO attendance_thresholds
@@ -248,8 +248,8 @@ INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'VACATI
 INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'NO_CHECKOUT', '미퇴근', 6);
 
 -- 반차 종류
-INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'ANNUAL', '연차');
-INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'HALF', '반차');
+INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'AM', '오전 반차');
+INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'PM', '오후 반차');
 
 
 
