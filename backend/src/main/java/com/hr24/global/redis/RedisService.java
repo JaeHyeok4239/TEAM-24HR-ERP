@@ -19,15 +19,20 @@ public class RedisService {
 			long timeout,
 			TimeUnit timeUnit
 	) {
-		redisTemplate.opsForValue().set(key, value,timeout, timeUnit);
+		redisTemplate.opsForValue().set(
+		        key,
+		        value,
+		        timeout,
+		        timeUnit
+		);
 	}
 	
-	public String get(String Key) {
-		return redisTemplate.opsForValue().get(Key);
+	public String get(String key) {
+	    return redisTemplate.opsForValue().get(key);
 	}
-	
-	public void delete(String Key) {
-		redisTemplate.delete(Key);
+
+	public void delete(String key) {
+	    redisTemplate.delete(key);
 	}
 	
 	public void save(String key, String value) {

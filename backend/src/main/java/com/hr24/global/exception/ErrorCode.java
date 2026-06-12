@@ -2,6 +2,9 @@ package com.hr24.global.exception;
 
 import org.springframework.http.HttpStatus;
 
+import lombok.Getter;
+
+@Getter
 public enum ErrorCode {
 
 	// 공통
@@ -36,16 +39,9 @@ public enum ErrorCode {
 	private final HttpStatus status;
 	private final String message;
 	
-	ErrorCode(HttpStatus status, String Message) {
-		this.status = status;
-		this.message = Message;
+	ErrorCode(HttpStatus status, String message) {
+	    this.status = status;
+	    this.message = message;
 	}
-	
-	public HttpStatus getStatus() {
-		return status;
-	}
-	
-	public String getMessage() {
-		return message;
-	}
+
 }
