@@ -6,12 +6,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hr24.auth.jwt.JwtProvider;
-import com.hr24.document.dto.DocumentDto;
+import com.hr24.document.dto.DocumentResponseDto;
 import com.hr24.document.service.DocumentService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,8 +45,8 @@ public class DocumentController {
 //		return ResponseEntity.ok(result);
 //	}
 	
-	@GetMapping("/view")
-	public ResponseEntity<DocumentDto> getView(@RequestParam("documentId") Long documentId){
+	@GetMapping("/{documentId}")
+	public ResponseEntity<DocumentResponseDto> getView(@PathVariable("documentId") Long documentId){
 		return ResponseEntity.ok().body(documentService.view(documentId));
 	}
 }
