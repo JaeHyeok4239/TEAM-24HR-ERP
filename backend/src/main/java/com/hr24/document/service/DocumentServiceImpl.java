@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.hr24.document.dto.DocumentResponseDto;
+import com.hr24.document.entity.Document;
 import com.hr24.document.repository.DocumentRepository;
 import com.hr24.global.attachment.service.AttachmentService;
 

@@ -45,8 +45,8 @@ public class DocumentController {
 //		return ResponseEntity.ok(result);
 //	}
 	
-	@GetMapping("/{documentId}")
-	public ResponseEntity<DocumentResponseDto> getView(@PathVariable("documentId") Long documentId){
-		return ResponseEntity.ok().body(documentService.view(documentId));
-	}
+//	@GetMapping("/{documentId}")
+//	public ResponseEntity<DocumentResponseDto> getView(@PathVariable("documentId") Long documentId){
+//		return ResponseEntity.ok().body(documentService.view(documentId));
+//	}
 }

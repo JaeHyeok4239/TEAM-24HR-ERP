@@ -25,6 +25,8 @@ public class DocumentResponseDto {
 		private Long documentType;
 		private Long requesterId;
 		private Long processorId;
+		private String requester;
+		private String processor;
 		private String documentTitle;
 		private String status;
 		private Integer currentStep;
@@ -33,7 +35,15 @@ public class DocumentResponseDto {
 		//from(A) : A로부터 1:1 변환
 		public static DocumentListDto from(Document document) {
 			return DocumentListDto.builder()
-					
+					.documentId(document.getDocumentId())
+					.documentType(document.getDocumentType().getTypeId())
+					.requesterId(document.getRequester().getEmployeeId())
+					.processorId(document.getProcessor().getEmployeeId())
+					.requester(document.getRequester().getName())
+					.processor(document.getProcessor().getName())
+					.documentTitle(document.getDocumentTitle())
+					.currentStep(document.getCurrentStep())
+					.createdAt(document.getCreatedAt())
 					.build();
 		}
 	}
