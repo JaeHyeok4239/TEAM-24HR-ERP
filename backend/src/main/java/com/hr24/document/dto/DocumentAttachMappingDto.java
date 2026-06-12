@@ -12,12 +12,17 @@ public class DocumentAttachMappingDto {
 	private Long docMappingId;
 	private Long documentId;
 	private Long attachmentId;
+	private String fileName;
+	private String fileType;
 	
 	public static DocumentAttachMappingDto from(DocumentAttachMapping documentAttachMapping) {
 		return DocumentAttachMappingDto.builder()
 				.docMappingId(documentAttachMapping.getDocMappingId())
-				.documentId(documentAttachMapping.getDocumentId())
-				.attachmentId(documentAttachMapping.getAttachmentId())
+				.documentId(documentAttachMapping.getDocument().getDocumentId())
+				.attachmentId(documentAttachMapping.getAttachment().getAttachmentId())
+				.fileName(documentAttachMapping.getOriginalFileName())
+				.fileType(documentAttachMapping.getFileType())
 				.build();
+	
 	}
 }
