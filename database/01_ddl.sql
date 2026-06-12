@@ -405,7 +405,6 @@ CREATE TABLE
 CREATE TABLE meeting_room (
     room_id     NUMBER          NOT NULL,
     room_name   VARCHAR2(100)   NOT NULL,
-    capacity    NUMBER          NOT NULL,
     location    VARCHAR2(200)   NULL,
     status      VARCHAR2(20)    DEFAULT 'ACTIVE' NOT NULL,
     CONSTRAINT pk_meeting_room PRIMARY KEY (room_id),
@@ -415,7 +414,6 @@ CREATE TABLE meeting_room (
 COMMENT ON TABLE  meeting_room          IS '회의실';
 COMMENT ON COLUMN meeting_room.room_id  IS '회의실 PK';
 COMMENT ON COLUMN meeting_room.room_name IS '회의실명';
-COMMENT ON COLUMN meeting_room.capacity IS '수용 인원';
 COMMENT ON COLUMN meeting_room.location IS '위치';
 COMMENT ON COLUMN meeting_room.status   IS 'ACTIVE/INACTIVE';
 
