@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Clock, DollarSign, Users, CheckCircle } from 'lucide-react';
 
+import { logoutRequest } from '@/services/authService';
+import { useAuthStore } from '@/store/authStore';
+
 // 메뉴 props 영역(링크, 아이콘, 라벨)
 const NAV_ITEMS = [
   { href: '/', icon: Home,        label: '홈' },
@@ -15,6 +18,19 @@ const NAV_ITEMS = [
 
 export default function Menu() {
   const pathname = usePathname();
+
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const authLogout = useAuthStore((state) => state.logout);
+
+  const handleLogout = async () => {
+    try {
+      await logoutRequest(accessToken);
+    } catch (error) {
+      console.error("로그아웃 API 호출 실패", error);
+    } finally {
+      authLogout();
+    }
+  };
 
   return (
     <aside className="fixed w-36 left-0 top-0 h-screen bg-[#1a2f4e] flex flex-col z-50">
@@ -49,6 +65,7 @@ export default function Menu() {
           <Users size={28} className="text-white" strokeWidth={1.5} />
         </div>
         <p className="text-white text-sm">김철수(팀장)</p>
+        <button onClick={handleLogout} className="px-3 py-1 text-xs bg-red-500 text-white rounded">로그아웃</button>
       </div>
 
     </aside>
