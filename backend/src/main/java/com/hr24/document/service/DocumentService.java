@@ -3,7 +3,7 @@ package com.hr24.document.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.hr24.document.dto.DocumentDto;
+import com.hr24.document.dto.DocumentResponseDto;
 
 //문서 작업에 필요한 기능 정의
 public interface DocumentService {
@@ -17,13 +17,13 @@ public interface DocumentService {
 	//Long createReDraft(Long rejectedDocumentId)
 	
 	//내 문서함 조회(기본)
-	Page<DocumentDto> myDocList(Long currentId, Pageable pageable);
+	Page<DocumentResponseDto> myDocList(Long currentId, Pageable pageable);
 	
 	//임시 저장함 조회(기본)
-	Page<DocumentDto> myTmpDocList(Long currentId, Pageable pageable);
+	Page<DocumentResponseDto> myTmpDocList(Long currentId, Pageable pageable);
 	
 	//문서 상세 조회
-	DocumentDto view(Long documentId);
+	//DocumentResponseDto view(Long documentId);
 	
 	//문서 삭제(임시 저장 상태일 때만 가능 / 문서 삭제 시 매핑 데이터 삭제 -> 파일 데이터 삭제 -> 실제 파일 삭제 Transactional 처리)
 	//void delete(Long documentId);
