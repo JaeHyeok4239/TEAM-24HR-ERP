@@ -21,9 +21,6 @@ public class MeetingRoom {
     @Column(name = "room_name")
     private String roomName;
 
-    @Column(name = "capacity")
-    private Integer capacity;
-
     @Column(name = "location")
     private String location;
 

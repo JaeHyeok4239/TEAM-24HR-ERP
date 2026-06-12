@@ -448,20 +448,23 @@ VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-12-25', '크리스마스', 0);
 
 -- 2. 회의실
 
-INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
-VALUES (meeting_room_seq.NEXTVAL, '대회의실', 20, '본사 3층', 'ACTIVE');
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실1', '본사 3층', 'ACTIVE');
 
-INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
-VALUES (meeting_room_seq.NEXTVAL, '소회의실A', 6, '본사 2층', 'ACTIVE');
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실2', '본사 2층', 'ACTIVE');
 
-INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
-VALUES (meeting_room_seq.NEXTVAL, '소회의실B', 6, '본사 2층', 'ACTIVE');
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실3', '본사 2층', 'ACTIVE');
 
-INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
-VALUES (meeting_room_seq.NEXTVAL, '임원회의실', 10, '본사 5층', 'ACTIVE');
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실4', '본사 5층', 'ACTIVE');
 
-INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
-VALUES (meeting_room_seq.NEXTVAL, '교육실', 30, '본사 4층', 'INACTIVE');
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실5', '본사 4층', 'ACTIVE');
+
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실6', '본사 1층', 'ACTIVE');
 
 
 

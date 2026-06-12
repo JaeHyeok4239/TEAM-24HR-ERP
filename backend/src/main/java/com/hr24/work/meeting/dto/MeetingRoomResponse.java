@@ -11,7 +11,6 @@ public class MeetingRoomResponse {
 
     private Long roomId;
     private String roomName;
-    private Integer capacity;
     private String location;
     private String status;
 
@@ -19,7 +18,6 @@ public class MeetingRoomResponse {
         return MeetingRoomResponse.builder()
                 .roomId(meetingRoom.getRoomId())
                 .roomName(meetingRoom.getRoomName())
-                .capacity(meetingRoom.getCapacity())
                 .location(meetingRoom.getLocation())
                 .status(meetingRoom.getStatus())
                 .build();
