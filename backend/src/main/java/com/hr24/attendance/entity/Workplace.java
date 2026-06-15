@@ -19,51 +19,44 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 
 @Entity
-@Table(name = "attendance_logs")
+@Table(name = "workplaces")
 @SequenceGenerator(
-		name="attendance_logs_seq",
-		sequenceName = "attendance_logs_seq",
+		name="workplaces_seq",
+		sequenceName = "workplaces_seq",
 		initialValue = 1,
 		allocationSize = 1
 		)
 
-public class AttendanceLog{
+public class Workplace{
 	@Id
-	@Column(name="attendance_log_id")
+	@Column(name="workplace_id")
 	@GeneratedValue(
 			strategy = GenerationType.SEQUENCE,
-			generator = "attendance_logs_seq")
-	private Long attendanceLogId;
-	
-	@Column(name="employee_id")
-	private Long employeeId;
-	
-	@Column(name="log_type")
-	private String logType;
-	
-	@Column(name="log_time")
-	private LocalDateTime logTime;
-	
-	@Column(name="latitude")
-	private Double latitude;
-	
-	@Column(name="longitude")
-	private Double longitude;
-	
-	@Column(name="is_location_valid")
-	private String isLocationValid;
-	
-	@Column(name="workplace_id")
+			generator = "workplaces_seq")
 	private Long workplaceId;
 	
-	@Column(name="work_date")
-	private LocalDate workDate;
+	@Column(name="workplace_code")
+	private Long workplaceCode;
+	
+	@Column(name="workplace_name")
+	private Long workplaceName;
+	
+	@Column(name="workplace_address")
+	private Long workplaceAddress;
+	
+	@Column(name="radius_meter")
+	private Long radiusMeter;
+	
+	@Column(name="latitude")
+	private Long latitude;
+	
+	@Column(name="longitude")
+	private Long longitude;
 	
 	@Column(name="created_at")
 	private LocalDateTime createdAt;
 	
 	@Column(name="updated_at")
 	private LocalDateTime updatedAt;
-	
 	
 }
