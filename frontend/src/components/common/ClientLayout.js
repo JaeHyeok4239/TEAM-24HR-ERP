@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Menu from "@/components/Menu";
 import LoginForm from "@/components/auth/LoginForm";
 import { useAuthStore } from "@/store/authStore";
+import { SidebarProvider } from "../ui/sidebar";
 
 export default function ClientLayout({ children }) {
   const { isLogin, initializeAuth } = useAuthStore();
@@ -18,10 +19,12 @@ export default function ClientLayout({ children }) {
 
   return (
     <div className="flex h-screen bg-slate-100">
+      <SidebarProvider>
       <Menu />
-      <main className="ml-36 flex-1">
+      <main className="flex-1">
         {children}
       </main>
+      </SidebarProvider>
     </div>
   );
 }

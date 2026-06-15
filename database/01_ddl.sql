@@ -123,7 +123,8 @@ CREATE TABLE
         CONSTRAINT chk_att_time_end_range CHECK (end_time BETWEEN 0 AND 2359),
         CONSTRAINT chk_att_time_start_minute CHECK (MOD(start_time, 100) < 60),
         CONSTRAINT chk_att_time_end_minute CHECK (MOD(end_time, 100) < 60),
-        CONSTRAINT chk_att_time_emp_type CHECK (employment_type IN ('REGULAR', 'DAILY'))
+        CONSTRAINT chk_att_time_emp_type CHECK (employment_type IN ('REGULAR', 'DAILY')),
+        CONSTRAINT chk_att_time_day_week CHECK (day_of_week IN ('MON','TUE','WED','THU','FRI','SAT','SUN'))
     );
 
 -- 근태관리: 근태 판정 기준
@@ -167,12 +168,11 @@ CREATE TABLE
         is_location_valid CHAR(1) DEFAULT 'N' NOT NULL, -- 위치 인증 여부(Y/N)
         workplace_id NUMBER NULL, -- 근무지
         work_date DATE NOT NULL, -- 근무 날짜
-        memo VARCHAR2 (255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
         CONSTRAINT pk_attendance_logs PRIMARY KEY (attendance_log_id),
         CONSTRAINT fk_att_logs_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
-        CONSTRAINT fk_att_logs_workplace FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id)
+        CONSTRAINT fk_att_logs_workplace FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
         CONSTRAINT uk_att_logs UNIQUE (employee_id, work_date, log_type)
     );
 
@@ -185,8 +185,8 @@ CREATE TABLE
         approval_status_id NUMBER NOT NULL,
         half_day_type_id NUMBER NULL,
         holiday_id NUMBER NULL,
-        correction_type_id NUMBER NOT NULL,
-        correction_reason_type_id NUMBER NOT NULL, 
+        correction_type_id NUMBER NULL,
+        correction_reason_type_id NUMBER NULL, 
         employee_id NUMBER NOT NULL, 
         work_date DATE NOT NULL, -- 근무 기준 날짜
         check_in_time TIMESTAMP NULL, -- 출근 시간
@@ -247,7 +247,7 @@ CREATE TABLE
         status_code VARCHAR2 (30) NOT NULL, -- 상태 코드(WORK/LATE/EARLY_LEAVE/ABSENT/LEAVE/MISSING_CHECKOUT)
         status_name VARCHAR2 (50) NOT NULL, -- 상태 이름(근무/지각/조퇴/결근/휴가/미퇴근)
         status_priority NUMBER NOT NULL, -- 상태 판정 우선순위(휴가(연차>반차)>결근>반차>조퇴>지각>근무)
-        CONSTRAINT pk_attendance_statues PRIMARY KEY (attendance_status_id)
+        CONSTRAINT pk_attendance_statuses PRIMARY KEY (attendance_status_id)
     );
 
 -- 근태관리: 반차 종류(연차/반차)

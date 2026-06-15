@@ -55,7 +55,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String loginId = jwtProvider.getLoginId(token);
         
         User user = userRepository.findByLoginId(loginId)
-        		.orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+        		.orElse(null);
+
+        if (user == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         List<UserRole> userRoles =
                 userRoleRepository.findByEmployeeId(user.getEmployeeId());

@@ -19,31 +19,30 @@ public class GlobalExceptionHandler {
                 .status(errorCode.getStatus())
                 .body(response);
     }
-	
-	@ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        
-		e.printStackTrace();
-		
-		ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            AccessDeniedException e
+    ) {
+        ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
         ErrorResponse response = ErrorResponse.from(errorCode);
 
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(response);
     }
-	
-	@ExceptionHandler(AccessDeniedException.class)
-	public ResponseEntity<ErrorResponse> handleAccessDeniedException(
-	        AccessDeniedException e
-	) {
-	    ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
-	    ErrorResponse response = ErrorResponse.from(errorCode);
 
-	    return ResponseEntity
-	            .status(errorCode.getStatus())
-	            .body(response);
-	}
-	
-	
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(
+            Exception e
+    ) {
+        e.printStackTrace();
+
+        ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+        ErrorResponse response = ErrorResponse.from(errorCode);
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(response);
+    }
 }

@@ -26,7 +26,7 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(name="document_attach_mapping")
-public class DocumentAttachMapping {
+public class DocumentFile {
 	
 	@Id
 	@Column(name = "doc_mapping_id")
@@ -41,13 +41,5 @@ public class DocumentAttachMapping {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "attachment_id")
 	private Attachment attachment;
-	
-	public String getOriginalFileName() {
-		return this.attachment.getOriginalName();
-	}
-	
-	public String getFileType() {
-		return this.attachment.getAttachmentType();
-	}
 
 }

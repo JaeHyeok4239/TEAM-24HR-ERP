@@ -1,5 +1,10 @@
 package com.hr24.approval.repository;
 
-public interface ApprovalRepository {
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.hr24.approval.entity.ApprovalHistory;
+
+public interface ApprovalRepository extends JpaRepository<ApprovalHistory, Long>{
 
 }

@@ -48,17 +48,7 @@ public class AuthService {
 			throw new BusinessException(ErrorCode.INVALID_PASSWORD);
 		}
 		
-		List<UserRole> userRoles = 
-				userRoleRepository.findByEmployeeId(user.getEmployeeId());
-		
-		List<Long> roleIds = userRoles.stream()
-				.map(UserRole::getRoleId)
-				.toList();
-		
-		List<String> roles = roleRepository.findByRoleIdIn(roleIds)
-				.stream()
-				.map(Role::getRoleCode)
-				.toList(); 
+		List<String> roles = getRoleCodes(user.getEmployeeId());
 		
 		String accessToken = jwtProvider.createAccessToken(
 		        user.getEmployeeId(),
@@ -72,7 +62,7 @@ public class AuthService {
 				);
 		
 		redisService.save(
-		        "RT:" + user.getEmployeeId(),
+				getRefreshTokenKey(user.getEmployeeId()),
 		        refreshToken,
 		        7,
 		        TimeUnit.DAYS
@@ -99,28 +89,22 @@ public class AuthService {
 		
 		Long employeeId = jwtProvider.getEmployeeId(refreshToken);
 		
-		String redisKey = "RT:" + employeeId;
+		String redisKey = getRefreshTokenKey(employeeId);
 		
 		String savedRefreshToken = redisService.get(redisKey);
 		
+		if (savedRefreshToken == null) {
+		    throw new BusinessException(ErrorCode.INVALID_TOKEN);
+		}
+
 		if (!savedRefreshToken.equals(refreshToken)) {
-			throw new BusinessException(ErrorCode.INVALID_TOKEN);
+		    throw new BusinessException(ErrorCode.INVALID_TOKEN);
 		}
 		
 		User user = userRepository.findById(employeeId)
 				.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 		
-		List<UserRole> userRoles =
-				userRoleRepository.findByEmployeeId(user.getEmployeeId());
-		
-		List<Long> roleIds = userRoles.stream()
-				.map(UserRole::getRoleId)
-				.toList();
-		
-		List<String> roles = roleRepository.findByRoleIdIn(roleIds)
-				.stream()
-				.map(Role::getRoleCode)
-				.toList();
+		List<String> roles = getRoleCodes(user.getEmployeeId());
 		
 		String newAccessToken = jwtProvider.createAccessToken(
 		        user.getEmployeeId(),
@@ -137,8 +121,27 @@ public class AuthService {
 				jwtProvider.getEmployeeId(accessToken);
 		
 		redisService.delete(
-				"RT:" + employeeId
+		        getRefreshTokenKey(employeeId)
 		);
+	}
+	
+	private List<String> getRoleCodes(Long employeeId) {
+
+	    List<UserRole> userRoles =
+	            userRoleRepository.findByEmployeeId(employeeId);
+
+	    List<Long> roleIds = userRoles.stream()
+	            .map(UserRole::getRoleId)
+	            .toList();
+
+	    return roleRepository.findByRoleIdIn(roleIds)
+	            .stream()
+	            .map(Role::getRoleCode)
+	            .toList();
+	}
+
+	private String getRefreshTokenKey(Long employeeId) {
+	    return "RT:" + employeeId;
 	}
 	
 }
