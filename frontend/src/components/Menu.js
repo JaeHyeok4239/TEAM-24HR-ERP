@@ -35,6 +35,8 @@ const NAV_ITEMS = [
   { href: '/attendance', icon: Clock, label: '근태 관리' },
   { href: '/payroll', icon: DollarSign, label: '급여 관리' },
   { href: '/hr', icon: Users, label: '인사 관리' },
+  { href: '/work', icon: Users, label: '업무 관리' },
+
   {
     href: '/approval',
     icon: CheckCircle,
