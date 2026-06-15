@@ -3,6 +3,14 @@
 :root {
   --background: #ffffff;
   --foreground: #133C63;
+  --sidebar: #1a2f4e;
+  --sidebar-foreground: rgba(255, 255, 255, 0.8);
+  --sidebar-primary: #a4e6d2;
+  --sidebar-primary-foreground: #1a2f4e;
+  --sidebar-accent: #a4e6d2;
+  --sidebar-accent-foreground: #1a2f4e;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #a4e6d2;
 }
 
 @media (prefers-color-scheme: dark) {
