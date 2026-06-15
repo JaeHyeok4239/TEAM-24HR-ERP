@@ -2,6 +2,11 @@ package com.hr24.document.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.util.ArrayList;
 
 import com.hr24.employee.entity.User;
@@ -35,8 +40,8 @@ public class Document {
 	
 	@Id
 	@Column(name = "document_id")
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "document_seq")
-	@SequenceGenerator(name = "document_seq", sequenceName = "document_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "approval_document_seq")
+	@SequenceGenerator(name = "approval_document_seq", sequenceName = "approval_document_seq", allocationSize = 1)
 	private Long documentId;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -54,13 +59,17 @@ public class Document {
 	@Column(name = "document_title")
 	private String documentTitle;
 	
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(name = "document_content")
+	private Map<String, Object> documentContent;
+	
 	@Column(name = "status")	
 	private String status;
 	
-	@Column(name = "current_step")
+	@Column(name = "current_step", insertable = false, updatable = false)
 	private Integer currentStep;
 	
-	@Column(name = "created_at")
+	@Column(name = "created_at", insertable = false, updatable = false)
 	private LocalDateTime createdAt;
 	
 	@Column(name = "updated_at")
@@ -75,11 +84,4 @@ public class Document {
 	@Column(name = "reject_reason")
 	private String rejectReason;
 	
-    //@OneToMany : 1:N 관계
-	//cascade : 영속성 전달
-	//orphanRemoval = true : 고아 객체 제거
-	// = new ArrayList<>(); : null 에러 방지를 위해 초기화
-	@OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
-	@Builder.Default
-	private List<DocumentFile> documentFileList = new ArrayList<>();
 }

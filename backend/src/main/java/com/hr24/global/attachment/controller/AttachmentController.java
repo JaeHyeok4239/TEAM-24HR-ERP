@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.hr24.global.attachment.Attachment;
 import com.hr24.global.attachment.AttachmentDownloadDto;
 import com.hr24.global.attachment.AttachmentDto;
 import com.hr24.global.attachment.service.AttachmentService;
@@ -34,7 +35,7 @@ public class AttachmentController {
 
     // 업로드
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public List<AttachmentDto> upload(
+    public List<Attachment> upload(
             @RequestPart("files") List<MultipartFile> files,
             @RequestParam("uploader") Long uploader
     ) {
