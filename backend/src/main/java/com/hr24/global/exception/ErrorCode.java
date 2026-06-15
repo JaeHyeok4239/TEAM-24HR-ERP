@@ -17,6 +17,10 @@ public enum ErrorCode {
 			"잘못된 요청입니다."),
 	
 	// 인증
+	AUTHENTICATION_REQUIRED(
+	        HttpStatus.UNAUTHORIZED,
+	        "인증이 필요합니다."),
+	
 	USER_NOT_FOUND(
 			HttpStatus.NOT_FOUND,
 			"존재하지 않는 사용자입니다."),

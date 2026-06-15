@@ -1,6 +1,6 @@
 package com.hr24.employee.entity;
 
-import java.time.LocalDateTime;
+import com.hr24.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,7 +21,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "departments")
-public class Department {
+public class Department extends BaseTimeEntity {
 
 	@Id
 	@GeneratedValue(
@@ -51,11 +51,5 @@ public class Department {
 
 	@Column(name = "is_active", nullable = false, length = 1)
 	private String isActive = "Y";
-
-	@Column(name = "created_at", nullable = false)
-	private LocalDateTime createdAt;
-
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
 
 }

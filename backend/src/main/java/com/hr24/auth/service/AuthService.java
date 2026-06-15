@@ -128,10 +128,12 @@ public class AuthService {
 	private List<String> getRoleCodes(Long employeeId) {
 
 	    List<UserRole> userRoles =
-	            userRoleRepository.findByEmployeeId(employeeId);
+	            userRoleRepository.findAllWithRoleByEmployeeId(employeeId);
 
 	    List<Long> roleIds = userRoles.stream()
-	            .map(UserRole::getRoleId)
+	            .map(userRole ->
+                		userRole.getRole().getRoleId()
+	            )
 	            .toList();
 
 	    return roleRepository.findByRoleIdIn(roleIds)

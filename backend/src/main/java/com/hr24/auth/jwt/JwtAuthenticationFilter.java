@@ -52,6 +52,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
         
+        String tokenType = jwtProvider.getTokenType(token);
+
+        if (!"ACCESS".equals(tokenType)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         String loginId = jwtProvider.getLoginId(token);
         
         User user = userRepository.findByLoginId(loginId)
@@ -63,10 +70,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         List<UserRole> userRoles =
-                userRoleRepository.findByEmployeeId(user.getEmployeeId());
+                userRoleRepository.findAllWithRoleByEmployeeId(user.getEmployeeId());
 
         List<Long> roleIds = userRoles.stream()
-                .map(UserRole::getRoleId)
+                .map(userRole ->
+                        userRole.getRole().getRoleId()
+                )
                 .toList();
 
         List<String> roles = roleRepository.findByRoleIdIn(roleIds)
