@@ -1,6 +1,7 @@
 package com.hr24.document.dto;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,12 +66,12 @@ public class DocumentResponseDto {
 		@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private LocalDateTime processedAt;
 		private List<DocumentApprovalDto> approvalHistories;
-		private List<DocumentFileDto> documentFileList;
+		private List<DocumentFileResponseDto> documentFileList;
 		
 		//of(A,B...) : 매개변수가 여러 개일 때 합쳐서 하나의 객체로 생성
 		public static DocumentDto of(Document document, 
 				List<DocumentApprovalDto> approvalHistories, 
-				List<DocumentFileDto> documentFileList) {
+				List<DocumentFileResponseDto> documentFileList) {
 			return DocumentDto.builder()
 					.documentId(document.getDocumentId())
 					.documentType(document.getDocumentType().getTypeName())
@@ -82,7 +83,7 @@ public class DocumentResponseDto {
 					.processedAt(document.getUpdatedAt())
 					.rejectReason(document.getRejectReason())
 					.approvalHistories(approvalHistories)
-					.documentFileList(documentFileList != null && !documentFileList.isEmpty() ? documentFileList : null)
+					.documentFileList(documentFileList == null ? Collections.emptyList() : documentFileList)
 					.build();
 		}
 	}
@@ -112,15 +113,15 @@ public class DocumentResponseDto {
 	//문서 첨부파일
 	@Getter
     @Builder
-	public static class DocumentFileDto{
+	public static class DocumentFileResponseDto{
 		private Long docMappingId;
 		private Long documentId;
 		private Long attachmentId;
 		private String fileName;
 		private String fileType;
 		
-		public static DocumentFileDto from(DocumentFile documentFile) {
-			return DocumentFileDto.builder()
+		public static DocumentFileResponseDto from(DocumentFile documentFile) {
+			return DocumentFileResponseDto.builder()
 					.docMappingId(documentFile.getDocMappingId())
 					.documentId(documentFile.getDocument().getDocumentId())
 					.attachmentId(documentFile.getAttachment().getAttachmentId())

@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/refresh").permitAll()
                 .requestMatchers("/api/auth/logout").permitAll()
                 .requestMatchers(
+                		"/api.html",
                 	    "/swagger-ui/**",
                 	    "/swagger-ui.html",
                 	    "/v3/api-docs/**"
