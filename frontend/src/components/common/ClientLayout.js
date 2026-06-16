@@ -6,7 +6,7 @@ import Menu from "@/components/Menu";
 import LoginForm from "@/components/auth/LoginForm";
 import { SidebarProvider } from "../ui/sidebar";
 
-import { getMyInfoRequest } from "@/services/authService";
+import { getMyInfoRequest } from "@/services/userService";
 import { useAuthStore } from "@/store/authStore";
 
 export default function ClientLayout({ children }) {

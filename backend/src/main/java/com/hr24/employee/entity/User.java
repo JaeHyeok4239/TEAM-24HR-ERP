@@ -108,5 +108,18 @@ public class User extends BaseTimeEntity {
 
     @Column(name = "resignation_date")
     private LocalDateTime resignationDate;
-
+    
+    public void updateMyInfo(
+            String email,
+            String phone,
+            String zipcode,
+            String address,
+            String addressDetail
+    ) {
+        this.email = email;
+        this.phone = phone;
+        this.zipcode = zipcode;
+        this.address = address;
+        this.addressDetail = addressDetail;
+    }
 }
