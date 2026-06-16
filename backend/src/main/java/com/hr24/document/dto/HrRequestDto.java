@@ -14,9 +14,9 @@ public class HrRequestDto {
 		@Setter
 		public static class LeaveDto {
 		    private Long leaveType;
-		    @JsonFormat(pattern = "yyyy-MM-dd")
+		    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 		    private LocalDate startDate;
-		    @JsonFormat(pattern = "yyyy-MM-dd")
+		    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 		    private LocalDate endDate;
 		    private Double leaveCnt;
 		}
