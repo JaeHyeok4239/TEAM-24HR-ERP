@@ -11,10 +11,7 @@ import com.hr24.auth.dto.LoginResponseDto;
 import com.hr24.auth.dto.RefreshTokenRequestDto;
 import com.hr24.auth.dto.RefreshTokenResponseDto;
 import com.hr24.auth.jwt.JwtProvider;
-import com.hr24.employee.entity.Role;
 import com.hr24.employee.entity.User;
-import com.hr24.employee.entity.UserRole;
-import com.hr24.employee.repository.RoleRepository;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.employee.repository.UserRoleRepository;
 import com.hr24.global.exception.BusinessException;
@@ -30,7 +27,6 @@ public class AuthService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final UserRoleRepository userRoleRepository;
-	private final RoleRepository roleRepository;
 	private final JwtProvider jwtProvider;
 	private final RedisService redisService;
 	
@@ -116,27 +112,37 @@ public class AuthService {
 	}
 	
 	public void logout(String accessToken) {
-		
-		Long employeeId =
-				jwtProvider.getEmployeeId(accessToken);
-		
-		redisService.delete(
-		        getRefreshTokenKey(employeeId)
-		);
+
+	    if (!jwtProvider.validateToken(accessToken)) {
+	        throw new BusinessException(
+	                ErrorCode.INVALID_TOKEN
+	        );
+	    }
+
+	    if (!"ACCESS".equals(
+	            jwtProvider.getTokenType(accessToken)
+	    )) {
+	        throw new BusinessException(
+	                ErrorCode.INVALID_TOKEN
+	        );
+	    }
+
+	    Long employeeId =
+	            jwtProvider.getEmployeeId(accessToken);
+
+	    redisService.delete(
+	    		getRefreshTokenKey(employeeId)
+	    );
 	}
 	
 	private List<String> getRoleCodes(Long employeeId) {
 
-	    List<UserRole> userRoles =
-	            userRoleRepository.findByEmployeeId(employeeId);
-
-	    List<Long> roleIds = userRoles.stream()
-	            .map(UserRole::getRoleId)
-	            .toList();
-
-	    return roleRepository.findByRoleIdIn(roleIds)
+	    return userRoleRepository
+	            .findAllWithRoleByEmployeeId(employeeId)
 	            .stream()
-	            .map(Role::getRoleCode)
+	            .map(userRole ->
+	                    userRole.getRole().getRoleCode()
+	            )
 	            .toList();
 	}
 

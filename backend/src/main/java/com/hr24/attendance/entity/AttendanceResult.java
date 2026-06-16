@@ -55,6 +55,9 @@ public class AttendanceResult{
 	@Column(name="work_date")
 	private LocalDate workDate;
 	
+	@Column(name="workplace_id")
+	private String workplaceId;
+	
 	@Column(name="check_in_time")
 	private LocalDateTime checkInTime;
 	

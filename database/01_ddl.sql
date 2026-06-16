@@ -144,7 +144,7 @@ CREATE TABLE
 -- 근태관리: 근무지
 CREATE TABLE
     workplaces (
-        workplace_id NUMBER NOT NULL,
+        workplace_id NUMBER NOT NULL, -- 1 본사(정규직) 2 근무지1(일용직) 3 근무지2(일용직)
         workplace_code VARCHAR2 (30) NOT NULL,
         workplace_name VARCHAR2 (100) NOT NULL,
         workplace_address VARCHAR2 (255) NULL,
@@ -189,15 +189,16 @@ CREATE TABLE
         correction_reason_type_id NUMBER NULL, 
         employee_id NUMBER NOT NULL, 
         work_date DATE NOT NULL, -- 근무 기준 날짜
+        workplace_id NUMBER NULL, -- 근무지
         check_in_time TIMESTAMP NULL, -- 출근 시간
         check_out_time TIMESTAMP NULL, -- 퇴근 시간
-        total_work_minutes NUMBER NULL, -- 총 근무 시간(분)
-        actual_work_minutes NUMBER NULL, -- 휴게 제외 실 근무 시간(분)
+        total_work_minutes NUMBER NULL, -- 총 출근 시간(휴게 포함)
+        actual_work_minutes NUMBER NULL, -- 기본 근무 시간(휴게, 초과 근무 제외)
         overtime_minutes NUMBER NULL, -- 초과 근무 시간(분)
         is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
         is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
         is_correction_required CHAR(1) DEFAULT 'N' NOT NULL, -- 정정 필요 여부(Y/N)
-        processing_status VARCHAR2 (30) DEFAULT 'NORMAL' NOT NULL, -- 처리 상태(NORMAL/CORRECTION_REQUIRED/CORRECTED)
+        processing_status VARCHAR2 (30) DEFAULT 'NORMAL' NOT NULL, -- 처리 상태(NORMAL/CORRECTION_REQUIRED/CORRECTED) (미퇴근) 정상/정정 필요/정정 완료
         correction_reason VARCHAR2 (255) NULL, -- 근태 정정 사유
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
@@ -320,6 +321,7 @@ CREATE TABLE document (
     requested_at   TIMESTAMP,                   -- 결재 요청일시
     processed_at   TIMESTAMP,                   -- 처리일시
     reject_reason  VARCHAR2(500 CHAR),          -- 반려 사유 (최종 반려 단계 기준)
+    document_content JSON DEFAULT '{}' NOT NULL, -- 문서 본문 (JSON 형태로 다양한 필드 저장)
     CONSTRAINT document_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT document_fk_requester FOREIGN KEY (requester_id) REFERENCES users(employee_id),
     CONSTRAINT document_fk_processor FOREIGN KEY (processor_id) REFERENCES users(employee_id),
