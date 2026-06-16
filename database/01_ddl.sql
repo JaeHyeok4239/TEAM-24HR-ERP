@@ -112,7 +112,7 @@ CREATE TABLE
     attendance_time_policies (
         attendance_time_policy_id NUMBER NOT NULL,
         employment_type VARCHAR2 (20) NOT NULL, -- 직원 구분(REGULAR/DAILY)
-        policy_type VARCHAR2 (20) NOT NULL, -- 규칙 타입(WORK/BREAK/HALF_AM/HALF_PM)
+        policy_type VARCHAR2 (20) NOT NULL, -- 규칙 타입(WORK/BREAK)
         day_of_week VARCHAR2 (10) NOT NULL, -- 요일 코드(MON~SUN)
         start_time NUMBER (4) NOT NULL, -- 규칙 시작 시간(HHMM)
         end_time NUMBER (4) NOT NULL, -- 규칙 종료 시간(HHMM) ex. 오전 9시는 0900
@@ -123,6 +123,7 @@ CREATE TABLE
         CONSTRAINT chk_att_time_end_range CHECK (end_time BETWEEN 0 AND 2359),
         CONSTRAINT chk_att_time_start_minute CHECK (MOD(start_time, 100) < 60),
         CONSTRAINT chk_att_time_end_minute CHECK (MOD(end_time, 100) < 60),
+        CONSTRAINT chk_att_policy_type CHECK (policy_type IN ('WORK', 'BREAK')),
         CONSTRAINT chk_att_time_emp_type CHECK (employment_type IN ('REGULAR', 'DAILY')),
         CONSTRAINT chk_att_time_day_week CHECK (day_of_week IN ('MON','TUE','WED','THU','FRI','SAT','SUN'))
     );
@@ -179,15 +180,14 @@ CREATE TABLE
 -- 근태관리: 근태 결과
 CREATE TABLE
     attendance_results (
-        attendance_result_id NUMBER NOT NULL,
-        attendance_status_id NUMBER NOT NULL,
-        attendance_threshold_id NUMBER NOT NULL,
-        approval_status_id NUMBER NOT NULL,
-        half_day_type_id NUMBER NULL,
-        holiday_id NUMBER NULL,
-        correction_type_id NUMBER NULL,
-        correction_reason_type_id NUMBER NULL, 
-        employee_id NUMBER NOT NULL, 
+        attendance_result_id NUMBER NOT NULL, -- PK
+        attendance_status_id NUMBER NOT NULL, -- FK 근태 상태
+        attendance_threshold_id NUMBER NOT NULL, -- FK 근태 판정 기준
+        holiday_id NUMBER NULL, -- FK 공휴일
+        employee_id NUMBER NOT NULL, -- FK 유저 테이블
+        attendance_correction_id NUMBER NULL, -- FK 정정 이력 테이블
+        leave_id NUMBER NOT NULL, -- FK 연차/반차/조퇴 등 휴가 신청 데이터 테이블
+
         work_date DATE NOT NULL, -- 근무 기준 날짜
         workplace_id NUMBER NULL, -- 근무지
         check_in_time TIMESTAMP NULL, -- 출근 시간
@@ -197,49 +197,33 @@ CREATE TABLE
         overtime_minutes NUMBER NULL, -- 초과 근무 시간(분)
         is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
         is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
-        is_correction_required CHAR(1) DEFAULT 'N' NOT NULL, -- 정정 필요 여부(Y/N)
-        processing_status VARCHAR2 (30) DEFAULT 'NORMAL' NOT NULL, -- 처리 상태(NORMAL/CORRECTION_REQUIRED/CORRECTED) (미퇴근) 정상/정정 필요/정정 완료
-        correction_reason VARCHAR2 (255) NULL, -- 근태 정정 사유
+        is_fixed CHAR(1) DEFAULT 'N' NOT NULL --(Y/N) 정정 여부
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
+
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
+        CONSTRAINT fk_attendance_correction_id FOREIGN KEY (attendance_correction_id) REFERENCES attendance_correction(attendance_correction_id),
         CONSTRAINT fk_att_attendance_status_id FOREIGN KEY (attendance_status_id) REFERENCES attendance_statuses (attendance_status_id),
         CONSTRAINT fk_att_attendance_threshold_id FOREIGN KEY (attendance_threshold_id) REFERENCES attendance_thresholds (attendance_threshold_id),
         CONSTRAINT fk_att_employee_id FOREIGN KEY (employee_id) REFERENCES users (employee_id),
-        CONSTRAINT fk_att_half_day_type_id FOREIGN KEY (half_day_type_id) REFERENCES half_day_types (half_day_type_id),
-        CONSTRAINT fk_att_correction_type_id FOREIGN KEY (correction_type_id) REFERENCES correction_types (correction_type_id),
-        CONSTRAINT fk_att_correction_reason_type_id FOREIGN KEY (correction_reason_type_id) REFERENCES correction_reason_types (correction_reason_type_id),
-        CONSTRAINT fk_att_approval_status_id FOREIGN KEY (approval_status_id) REFERENCES approval_statuses (approval_status_id),
         CONSTRAINT fk_att_holiday_id FOREIGN KEY (holiday_id) REFERENCES holidays (holiday_id),
         CONSTRAINT uq_att_attendance_results UNIQUE (employee_id, work_date)
     );
 
--- 근태관리: 정정 종류(출근 정정/퇴근 정정/근태 상태 정정)
-CREATE TABLE
-    correction_types (
-        correction_type_id NUMBER NOT NULL,
-        type_code VARCHAR2 (10) NOT NULL, -- 타입 코드(IN/OUT/STATUS)
-        type_name VARCHAR2 (30) NOT NULL, -- 타입 이름(출근 정정/퇴근 정정/근태 상태 정정)
-        CONSTRAINT pk_correction_types PRIMARY KEY (correction_type_id)
-    );
+-- 근태관리: 정정 이력 테이블(정정 종류/정정 사유/결재 상태)
+create table attendance_correction(
+	attendance_correction_id number primary key,
+	correction_target number not null, -- FK 근태 결과
+	correction_type varchar2(3char) not null, -- (IN/OUT) 출근/퇴근 정정 종류
+	is_processed CHAR(1) DEFAULT 'N' not null, -- (Y/N) results 테이블 수정해서 근태 정정 처리 되었는지 나타냄
+	correction_reason varchar2(300char) NOT NULL, -- 정정 사유
+	document_id NOT NULL, -- FK document 
 
--- 근태관리: 정정 사유 구분(단순 입력 오류/증빙 지연 제출/기타 사유)
-CREATE TABLE
-    correction_reason_types (
-        correction_reason_type_id NUMBER NOT NULL,
-        reason_code VARCHAR2 (30) NOT NULL, -- 사유 코드(SIMPLE/DELAY_DOCUMENT/ETC)
-        reason_name VARCHAR2 (50) NOT NULL, -- 사유 이름(단순 입력 오류/증빙 지연 제출/기타 사유)
-        CONSTRAINT pk_correction_reason_types PRIMARY KEY (correction_reason_type_id)
-    );
-
--- 근태관리: 결재 상태(승인 대기/승인 완료/반려)
-CREATE TABLE
-    approval_statuses (
-        approval_status_id NUMBER NOT NULL,
-        status_code VARCHAR2 (30) NOT NULL, -- 상태 코드(PENDING/APPROVED/REJECTED)
-        status_name VARCHAR2 (30) NOT NULL, -- 상태 이름(승인 대기/승인 완료/반려)
-        CONSTRAINT pk_approval_statuses PRIMARY KEY (approval_status_id)
-    );
+	CONSTRAINT correction_fk_correction_target FOREIGN KEY (correction_target) REFERENCES attendance_results(attendance_result_id),
+	CONSTRAINT correction_fk_doc_id FOREIGN KEY (document_id) REFERENCES document(document_id),
+	CONSTRAINT correction_ck_type CHECK (correction_type IN ('IN', 'OUT')),
+	CONSTRAINT correction_ck_is_processed CHECK (is_processed IN ('Y', 'N'))
+)
 
 -- 근태관리: 근태 상태(근무/지각/조퇴/결근/휴가/미퇴근)
 CREATE TABLE
@@ -249,15 +233,6 @@ CREATE TABLE
         status_name VARCHAR2 (50) NOT NULL, -- 상태 이름(근무/지각/조퇴/결근/휴가/미퇴근)
         status_priority NUMBER NOT NULL, -- 상태 판정 우선순위(휴가(연차>반차)>결근>반차>조퇴>지각>근무)
         CONSTRAINT pk_attendance_statuses PRIMARY KEY (attendance_status_id)
-    );
-
--- 근태관리: 반차 종류(연차/반차)
-CREATE TABLE
-    half_day_types (
-        half_day_type_id NUMBER NOT NULL,
-        type_code VARCHAR2 (10) NOT NULL, -- 타입 코드(NONE/AM/PM)
-        type_name VARCHAR2 (30) NOT NULL, -- 타입 이름(미사용/오전 반차/오후 반차)
-        CONSTRAINT pk_half_day_types PRIMARY KEY (half_day_type_id)
     );
 
 
