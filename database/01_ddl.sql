@@ -393,6 +393,8 @@ CREATE TABLE
         start_date DATE NOT NULL, -- 휴가 시작일
         end_date DATE NOT NULL, -- 휴가 종료일
         leave_cnt NUMBER (3, 2) NOT NULL, -- 사용 일수
+        is_processed CHAR(1) DEFAULT 'N' NOT NULL, -- 처리 여부 (Y/N)
+        CONSTRAINT leave_ck_is_processed CHECK (is_processed IN ('Y', 'N')),
         CONSTRAINT leave_fk_document FOREIGN KEY (document_id) REFERENCES document (document_id),
         CONSTRAINT leave_fk_type FOREIGN KEY (leave_type) REFERENCES leave_type (type_id),
         CONSTRAINT leave_uq_document UNIQUE (document_id)
@@ -548,6 +550,8 @@ CREATE TABLE schedule (
     schedule_type   VARCHAR2(20)    NOT NULL,
     start_dt        DATE            NOT NULL,
     end_dt          DATE            NOT NULL,
+    start_time      VARCHAR2(5)     NULL,
+    end_time        VARCHAR2(5)     NULL,
     location        VARCHAR2(200)   NULL,
     memo            CLOB            NULL,
     created_at      TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
@@ -565,6 +569,8 @@ COMMENT ON COLUMN schedule.title        IS '일정 제목';
 COMMENT ON COLUMN schedule.schedule_type IS 'PERSONAL/DEPT/COMPANY/PROJECT';
 COMMENT ON COLUMN schedule.start_dt     IS '시작일';
 COMMENT ON COLUMN schedule.end_dt       IS '종료일';
+COMMENT ON COLUMN schedule.start_time   IS '시작 시간 (HH:MM)';
+COMMENT ON COLUMN schedule.end_time     IS '종료 시간 (HH:MM)';
 COMMENT ON COLUMN schedule.location     IS '장소';
 COMMENT ON COLUMN schedule.memo         IS '메모';
 COMMENT ON COLUMN schedule.created_at   IS '등록일시';
@@ -607,7 +613,7 @@ CREATE TABLE payrolls (
 	updated_at TIMESTAMP NULL,	
 	CONSTRAINT pk_payrolls PRIMARY KEY (payroll_id),
 	CONSTRAINT fk_payrolls FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE,
+	REFERENCES users(employee_id),
     CONSTRAINT chk_pay_month CHECK (LENGTH(pay_month) = 6 AND REGEXP_LIKE(pay_month, '^[0-9]+$'))
 );
 
@@ -624,7 +630,7 @@ CREATE TABLE payroll_details (
 	updated_at TIMESTAMP NULL,
 	CONSTRAINT pk_payroll_details PRIMARY KEY (payroll_details_id),
 	CONSTRAINT fk_payroll_details FOREIGN KEY(payroll_id)
-	REFERENCES payrolls(payroll_id) ON DELETE CASCADE
+	REFERENCES payrolls(payroll_id)
 );
 
 
@@ -638,7 +644,7 @@ CREATE TABLE payslips (
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT pk_payslips PRIMARY KEY (payslip_id),
 	CONSTRAINT fk_payslips FOREIGN KEY(payroll_id)
-	REFERENCES payrolls(payroll_id) ON DELETE CASCADE
+	REFERENCES payrolls(payroll_id)
 );
 
 -- 4. 기본급 정보 테이블 생성
@@ -650,7 +656,7 @@ CREATE TABLE salary (
 	updated_at TIMESTAMP NULL,
 	CONSTRAINT pk_salary PRIMARY KEY (salary_id),
 	CONSTRAINT fk_salary FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE
+	REFERENCES users(employee_id)
 );
 
 
@@ -671,9 +677,9 @@ CREATE TABLE employee_allowance (
 	amount NUMBER NOT NULL,
 	CONSTRAINT pk_employee_allowance PRIMARY KEY (employee_allowance_id),
 	CONSTRAINT fk_employee_allowance_employee_id FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE,
+	REFERENCES users(employee_id),
 	CONSTRAINT fk_employee_allowance_allowance_item_id FOREIGN KEY(allowance_item_id)
-	REFERENCES allowance_items(allowance_item_id) ON DELETE CASCADE
+	REFERENCES allowance_items(allowance_item_id)
 );
 
 
@@ -694,9 +700,9 @@ CREATE TABLE employee_deduction (
 	amount NUMBER NOT NULL,
 	CONSTRAINT pk_employee_deduction PRIMARY KEY (employee_deduction_id),
 	CONSTRAINT fk_employee_deduction_employee_id FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE,
+	REFERENCES users(employee_id),
 	CONSTRAINT fk_employee_deduction_deduction_item_id FOREIGN KEY(deduction_item_id)
-	REFERENCES deduction_items(deduction_item_id) ON DELETE CASCADE
+	REFERENCES deduction_items(deduction_item_id)
 );
 
 
@@ -711,5 +717,5 @@ CREATE TABLE employee_tax_info (
 	updated_at TIMESTAMP NULL,
 	CONSTRAINT pk_employee_tax_info PRIMARY KEY (tax_info_id),
 	CONSTRAINT fk_employee_tax_info FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE
+	REFERENCES users(employee_id)
 );

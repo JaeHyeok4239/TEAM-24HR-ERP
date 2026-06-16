@@ -3,6 +3,7 @@ package com.hr24.document.dto;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -50,6 +51,25 @@ public class DocumentResponseDto {
 		}
 	}
 	
+	//Map -> List 변환 메소드
+	private static List<DocumentContentDto> toContentList(Map<String, Object> contentMap) {
+	    if (contentMap == null || contentMap.isEmpty()) {
+	        return Collections.emptyList();
+	    }
+	    return contentMap.entrySet().stream()
+	            .map(entry -> DocumentContentDto.builder()
+	                    .field(entry.getKey())
+	                    .data(entry.getValue())
+	                    .build())
+	            .toList();
+	}
+	
+	@Getter
+	@Builder
+	public static class DocumentContentDto {
+	    private String field;
+	    private Object data;
+	}
 	
 	//문서 상세
 	@Getter
@@ -62,6 +82,7 @@ public class DocumentResponseDto {
 		private String requester;
 		private String processor;
 		private String rejectReason;
+		private List<DocumentContentDto> content;
 		@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private LocalDateTime requestedAt;
 		@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -83,6 +104,7 @@ public class DocumentResponseDto {
 					.requestedAt(document.getCreatedAt())
 					.processedAt(document.getUpdatedAt())
 					.rejectReason(document.getRejectReason())
+					.content(toContentList(document.getDocumentContent()))
 					.approvalHistories(approvalHistories)
 					.documentFileList(documentFileList == null ? Collections.emptyList() : documentFileList)
 					.build();

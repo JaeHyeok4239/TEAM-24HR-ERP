@@ -144,4 +144,8 @@ public class DocumentController {
 
 	    return ResponseEntity.ok(documentService.viewDocument(documentId, authInfo.getName()));
 	}
+	
+	//결재함
+	
+	//업무 처리함
 }
