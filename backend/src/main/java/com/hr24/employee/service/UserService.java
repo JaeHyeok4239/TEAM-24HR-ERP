@@ -50,18 +50,30 @@ public class UserService {
 		        )
 		        .toList();
 
-        return new MyInfoResponseDto(
-                user.getEmployeeId(),
-                user.getEmployeeNo(),
-                user.getLoginId(),
-                user.getName(),
-                department != null
-                		? department.getDepartmentName()
-                		: null,
-                position != null
-						? position.getPositionName()
-						: null,
-                roles
-        );
+		return new MyInfoResponseDto(
+		        user.getEmployeeNo(),
+		        user.getLoginId(),
+		        user.getName(),
+
+		        department != null
+		                ? department.getDepartmentName()
+		                : null,
+
+		        position != null
+		                ? position.getPositionName()
+		                : null,
+
+		        user.getHireDate() != null
+		                ? user.getHireDate().toLocalDate()
+		                : null,
+
+		        user.getEmail(),
+		        user.getPhone(),
+		        user.getZipcode(),
+		        user.getAddress(),
+		        user.getAddressDetail(),
+
+		        roles
+		);
 	}
 }

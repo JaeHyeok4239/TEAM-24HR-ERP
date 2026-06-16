@@ -10,7 +10,7 @@ import com.hr24.payroll.entity.Payroll;
 
 public interface PayrollRepository extends JpaRepository<Payroll, Long> {
 
-	List<Payroll> findByPayMonth(LocalDate payMonth);
+	List<Payroll> findByPayMonth(String payMonth);
 
     List<Payroll> findByUser_EmployeeId(Long employeeId);
 

@@ -28,13 +28,32 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { useState } from 'react';
 
 // 메뉴 props 영역(링크, 아이콘, 라벨, 하위메뉴)
 const NAV_ITEMS = [
   { href: '/', icon: Home, label: '홈' },
   { href: '/attendance', icon: Clock, label: '근태 관리' },
   { href: '/payroll', icon: DollarSign, label: '급여 관리' },
-  { href: '/hr', icon: Users, label: '인사 관리' },
+  { 
+    href: '/hr',
+    icon: Users,
+    label: '인사 관리',
+    children: [
+      { href: '/hr/employees', label: '직원 목록' },
+      { href: '/hr/employees/new', label: '직원 등록' },
+      { href: '/hr/master-data', label: '기준정보 관리' },
+    ],
+  },
+  {
+    href: '/work',
+    icon: Users,
+    label: '업무 관리',
+    children: [
+      { href: '/work/schedule', label: '일정 관리' },
+    ],
+  },
+
   {
     href: '/approval',
     icon: CheckCircle,
@@ -55,6 +74,9 @@ export default function Menu() {
 
   const accessToken = useAuthStore((state) => state.accessToken);
   const authLogout = useAuthStore((state) => state.logout);
+
+  const userInfo = useAuthStore((state) => state.userInfo);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -158,18 +180,59 @@ export default function Menu() {
       </SidebarContent>
 
       {/* 유저 정보(추후 수정) */}
+      {/* 로그인 사용자 영역 */}
       <SidebarFooter>
-        <div className="flex flex-col items-center gap-2 pb-2">
-          <div className="w-8 h-8 rounded-full bg-[#8a9bb0] flex items-center justify-center">
-            <Users size={20} className="text-white" strokeWidth={1.5} />
-          </div>
-          <p className="text-white text-sm">김철수(팀장)</p>
+        <div className="relative w-full pb-2">
+
+          {/* 프로필 메뉴 */}
+          {isProfileMenuOpen && (
+            <div className="absolute bottom-full left-2 right-2 mb-2 bg-white border">
+              <Link
+                href="/my-info"
+                onClick={() => setIsProfileMenuOpen(false)}
+                className="block px-3 py-2 text-sm text-black"
+              >
+                내 정보 수정
+              </Link>
+
+              <Link
+                href="/change-password"
+                onClick={() => setIsProfileMenuOpen(false)}
+                className="block px-3 py-2 text-sm text-black"
+              >
+                비밀번호 변경
+              </Link>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full px-3 py-2 text-left text-sm text-red-500"
+              >
+                로그아웃
+              </button>
+            </div>
+          )}
+
+          {/* 프로필 메뉴 열기 버튼 */}
           <button
-            onClick={handleLogout}
-            className="px-3 py-1 text-xs bg-red-500 text-white rounded flex items-center gap-1"
+            type="button"
+            onClick={() =>
+              setIsProfileMenuOpen((previous) => !previous)
+            }
+            className="flex w-full flex-col items-center gap-2"
           >
-            <LogOut size={12} />
-            로그아웃
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#8a9bb0]">
+              <Users
+                size={20}
+                className="text-white"
+                strokeWidth={1.5}
+              />
+            </div>
+
+            <p className="text-sm text-white">
+              {userInfo?.name ?? '사용자'}
+              {userInfo?.positionName && `(${userInfo.positionName})`}
+            </p> 
           </button>
         </div>
       </SidebarFooter>

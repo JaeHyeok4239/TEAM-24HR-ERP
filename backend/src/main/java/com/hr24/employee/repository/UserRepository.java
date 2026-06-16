@@ -24,5 +24,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	            @Param("loginId") String loginId
 	    );
 
-    List<User> findByDepartment_DepartmentId(Long departmentId);
 }

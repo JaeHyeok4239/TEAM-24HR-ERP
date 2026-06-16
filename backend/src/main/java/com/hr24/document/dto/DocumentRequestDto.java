@@ -26,6 +26,11 @@ public class DocumentRequestDto {
 		private List<DocumentContentDto> documentContent;
 		@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private LocalDateTime requestAt;
+		private List<Long> deleteAttachmentIds;
+		private HrRequestDto.LeaveDto leaveDto;
+		//추후 데이터 필요한 테이블 생성 후 추가
+		//private HrRequestDto.AttendanceFixDto attendanceFix;
+		//private HrRequestDto.PurchaseDto purchase;
 	}
 	
 }

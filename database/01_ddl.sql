@@ -573,7 +573,7 @@ COMMENT ON COLUMN holidays.is_substitute IS '0=일반, 1=대체공휴일';
 CREATE TABLE payrolls (
 	payroll_id NUMBER NOT NULL,
 	employee_id NUMBER,
-	pay_month DATE NOT NULL,
+	pay_month VARCHAR2(6) NOT NULL,
 	total_pay NUMBER NOT NULL,
     total_deduction NUMBER NOT NULL,
     net_salary NUMBER NOT NULL,
@@ -582,7 +582,8 @@ CREATE TABLE payrolls (
 	updated_at TIMESTAMP NULL,	
 	CONSTRAINT pk_payrolls PRIMARY KEY (payroll_id),
 	CONSTRAINT fk_payrolls FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE
+	REFERENCES users(employee_id),
+    CONSTRAINT chk_pay_month CHECK (LENGTH(pay_month) = 6 AND REGEXP_LIKE(pay_month, '^[0-9]+$'))
 );
 
 
@@ -598,7 +599,7 @@ CREATE TABLE payroll_details (
 	updated_at TIMESTAMP NULL,
 	CONSTRAINT pk_payroll_details PRIMARY KEY (payroll_details_id),
 	CONSTRAINT fk_payroll_details FOREIGN KEY(payroll_id)
-	REFERENCES payrolls(payroll_id) ON DELETE CASCADE
+	REFERENCES payrolls(payroll_id)
 );
 
 
@@ -612,7 +613,7 @@ CREATE TABLE payslips (
 	created_at TIMESTAMP NOT NULL,
 	CONSTRAINT pk_payslips PRIMARY KEY (payslip_id),
 	CONSTRAINT fk_payslips FOREIGN KEY(payroll_id)
-	REFERENCES payrolls(payroll_id) ON DELETE CASCADE
+	REFERENCES payrolls(payroll_id)
 );
 
 -- 4. 기본급 정보 테이블 생성
@@ -624,7 +625,7 @@ CREATE TABLE salary (
 	updated_at TIMESTAMP NULL,
 	CONSTRAINT pk_salary PRIMARY KEY (salary_id),
 	CONSTRAINT fk_salary FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE
+	REFERENCES users(employee_id)
 );
 
 
@@ -645,9 +646,9 @@ CREATE TABLE employee_allowance (
 	amount NUMBER NOT NULL,
 	CONSTRAINT pk_employee_allowance PRIMARY KEY (employee_allowance_id),
 	CONSTRAINT fk_employee_allowance_employee_id FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE,
+	REFERENCES users(employee_id),
 	CONSTRAINT fk_employee_allowance_allowance_item_id FOREIGN KEY(allowance_item_id)
-	REFERENCES allowance_items(allowance_item_id) ON DELETE CASCADE
+	REFERENCES allowance_items(allowance_item_id)
 );
 
 
@@ -668,9 +669,9 @@ CREATE TABLE employee_deduction (
 	amount NUMBER NOT NULL,
 	CONSTRAINT pk_employee_deduction PRIMARY KEY (employee_deduction_id),
 	CONSTRAINT fk_employee_deduction_employee_id FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE,
+	REFERENCES users(employee_id),
 	CONSTRAINT fk_employee_deduction_deduction_item_id FOREIGN KEY(deduction_item_id)
-	REFERENCES deduction_items(deduction_item_id) ON DELETE CASCADE
+	REFERENCES deduction_items(deduction_item_id)
 );
 
 
@@ -685,5 +686,5 @@ CREATE TABLE employee_tax_info (
 	updated_at TIMESTAMP NULL,
 	CONSTRAINT pk_employee_tax_info PRIMARY KEY (tax_info_id),
 	CONSTRAINT fk_employee_tax_info FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE
+	REFERENCES users(employee_id)
 );
