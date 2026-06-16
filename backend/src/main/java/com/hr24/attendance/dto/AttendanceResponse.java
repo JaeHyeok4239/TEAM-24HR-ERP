@@ -1,22 +1,20 @@
 package com.hr24.attendance.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import com.hr24.attendance.entity.AttendanceResult;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class AttendanceResponse {
 
-    private LocalDateTime checkInTime;
-    private String message;
-
-    public AttendanceResponse(LocalDateTime checkInTime, String message) {
-        this.checkInTime = checkInTime;
-        this.message = message;
-    }
-
-    public LocalDateTime getCheckInTime() {
-        return checkInTime;
-    }
-
-    public String getMessage() {
-        return message;
-    }
+	// (출근/지각/결근) 선언 및 초기화
+	private int workCount = 0;
+	private int lateCount = 0;
+	private int absentCount = 0;
+	private List<AttendanceResult> attendance;
 }
