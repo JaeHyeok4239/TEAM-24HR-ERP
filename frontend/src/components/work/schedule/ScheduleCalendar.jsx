@@ -26,6 +26,8 @@ export default function ScheduleCalendar() {
   const [userId, setUserId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // JWT 토큰에서 employeeId 직접 추출 (API 호출 불필요)
   useEffect(() => {
@@ -83,6 +85,35 @@ export default function ScheduleCalendar() {
     const calApi = calendarRef.current.getApi();
     calApi.changeView("dayGridMonth");
     setCurrentView("dayGridMonth");
+  };
+
+  // 일정 클릭 → 상세 모달
+  const handleEventClick = (info) => {
+    setSelectedEvent({
+      id: info.event.id,
+      title: info.event.title,
+      start: info.event.startStr?.slice(0, 10),
+      end: info.event.endStr?.slice(0, 10),
+      color: info.event.backgroundColor,
+    });
+  };
+
+  // 삭제
+  const handleDelete = async () => {
+    if (!selectedEvent) return;
+    setDeleting(true);
+    try {
+      await apiRequest(`/api/schedule/${selectedEvent.id}`, { method: "DELETE" });
+      setSelectedEvent(null);
+      const calApi = calendarRef.current.getApi();
+      const start = calApi.view.activeStart.toISOString().slice(0, 10);
+      const end   = calApi.view.activeEnd.toISOString().slice(0, 10);
+      fetchSchedules(start, end);
+    } catch {
+      alert("삭제에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleOpenAdd = () => {
@@ -169,6 +200,7 @@ export default function ScheduleCalendar() {
           events={events}
           dateClick={handleDateClick}
           datesSet={handleDatesSet}
+          eventClick={handleEventClick}
           slotMinTime="07:00:00"
           slotMaxTime="20:00:00"
           allDaySlot={false}
@@ -176,6 +208,40 @@ export default function ScheduleCalendar() {
           dayMaxEvents={3}
         />
       </div>
+
+      {/* 일정 상세/삭제 모달 */}
+      {selectedEvent && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80 shadow-xl">
+            <h2 className="text-lg font-semibold mb-4">일정 상세</h2>
+            <div className="flex flex-col gap-2 text-sm text-gray-700">
+              <div className="flex gap-2">
+                <span
+                  className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
+                  style={{ backgroundColor: selectedEvent.color }}
+                />
+                <span className="font-medium text-base">{selectedEvent.title}</span>
+              </div>
+              <p className="text-gray-500 ml-5">{selectedEvent.start}</p>
+            </div>
+            <div className="flex justify-between mt-6">
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+              >
+                {deleting ? "삭제 중..." : "삭제"}
+              </button>
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 일정 추가 모달 */}
       {showAddModal && (

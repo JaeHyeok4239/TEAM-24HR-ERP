@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +14,8 @@ import com.hr24.employee.entity.Department;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.repository.DepartmentRepository;
 import com.hr24.employee.repository.UserRepository;
+import com.hr24.global.exception.BusinessException;
+import com.hr24.global.exception.ErrorCode;
 import com.hr24.work.schedule.dto.HolidayResponse;
 import com.hr24.work.schedule.dto.ScheduleRequest;
 import com.hr24.work.schedule.dto.ScheduleResponse;
@@ -30,27 +34,48 @@ public class ScheduleService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
 
-    // 특정 기간에 걸치는 일정 목록 조회 (달력 렌더링용)
+    // 기간 내 일정 조회 - 관리자는 전체, 일반 직원은 본인 관련 일정만
     public List<ScheduleResponse> getSchedules(LocalDate startDt, LocalDate endDt) {
-        return scheduleRepository.findByStartDtLessThanEqualAndEndDtGreaterThanEqual(endDt, startDt).stream()
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String loginId = auth.getName();
+
+        User user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            return scheduleRepository.findAllInRange(startDt, endDt).stream()
+                    .map(ScheduleResponse::from)
+                    .collect(Collectors.toList());
+        }
+
+        Long deptId = user.getDepartment() != null ? user.getDepartment().getDepartmentId() : null;
+
+        return scheduleRepository.findSchedulesForUser(
+                startDt, endDt,
+                user.getEmployeeId(),
+                deptId
+        ).stream()
                 .map(ScheduleResponse::from)
                 .collect(Collectors.toList());
     }
 
-    // 연도별 공휴일 목록 조회 - DB에 없으면 빈 리스트 반환
+    // 연도별 공휴일 목록 조회
     public List<HolidayResponse> getHolidays(Integer year) {
         return holidayRepository.findByHolidayYear(year).stream()
                 .map(HolidayResponse::from)
                 .collect(Collectors.toList());
     }
 
-    // 일정 등록 - DEPT 타입일 때만 부서 연결, 나머지는 null
+    // 일정 등록 - DEPT 타입일 때만 부서 연결
     @Transactional
     public ScheduleResponse createSchedule(Long userId, ScheduleRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
 
-        // DEPT 타입일 때만 부서 FK 연결
         Department department = null;
         if ("DEPT".equals(request.getScheduleType()) && request.getDeptId() != null) {
             department = departmentRepository.findById(request.getDeptId())
@@ -72,7 +97,7 @@ public class ScheduleService {
         return ScheduleResponse.from(scheduleRepository.save(schedule));
     }
 
-    // 일정 수정 - 제목, 날짜, 장소, 메모만 변경 가능
+    // 일정 수정
     @Transactional
     public ScheduleResponse updateSchedule(Long scheduleId, ScheduleRequest request) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
