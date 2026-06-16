@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hr24.document.dto.DocumentRequestDto;
+import com.hr24.document.dto.DocumentResponseDto;
 import com.hr24.document.entity.Document;
 import com.hr24.document.service.DocumentService;
 import com.hr24.employee.entity.User;
@@ -104,26 +105,43 @@ public class DocumentController {
 	    return ResponseEntity.ok().build();
 	}
 	
-//	@GetMapping("/myDocs")
-//	public ResponseEntity<Page<DocumentDto>> getMyDocList(String loginId, Pageable pageable){
-//		
-//		
-//		
-//		
-//		Page<DocumentDto> result = documentService.myDocList(currentId, pageable);
-//		
-//		return ResponseEntity.ok(result);
-//	}
-//	
-//	@GetMapping("/myTmp")
-//	public ResponseEntity<Page<DocumentDto>> getMyTmpDocList(String loginId, Pageable pageable){
-//		Page<DocumentDto> result = documentService.myTmpDocList(currentId, pageable);
-//		
-//		return ResponseEntity.ok(result);
-//	}
-	
-//	@GetMapping("/{documentId}")
-//	public ResponseEntity<DocumentResponseDto> getView(@PathVariable("documentId") Long documentId){
-//		return ResponseEntity.ok().body(documentService.view(documentId));
-//	}
+	// 내 문서함
+	@GetMapping("/my")
+	public ResponseEntity<Page<DocumentResponseDto.DocumentListDto>> myDocList(
+	        @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+	        Authentication authInfo) {
+
+	    if (authInfo == null) {
+	        throw new BusinessException(ErrorCode.ACCESS_DENIED);
+	    }
+
+
+	    return ResponseEntity.ok(documentService.myDocList(authInfo.getName(), pageable));
+	}
+
+	// 임시저장함
+	@GetMapping("/tmp")
+	public ResponseEntity<Page<DocumentResponseDto.DocumentListDto>> myTmpDocList(
+	        @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+	        Authentication authInfo) {
+
+	    if (authInfo == null) {
+	        throw new BusinessException(ErrorCode.ACCESS_DENIED);
+	    }
+
+	    return ResponseEntity.ok(documentService.myTmpDocList(authInfo.getName(), pageable));
+	}
+
+	// 문서 상세
+	@GetMapping("/{documentId}")
+	public ResponseEntity<DocumentResponseDto.DocumentDto> view(
+	        @PathVariable("documentId") Long documentId,
+	        Authentication authInfo) {
+
+	    if (authInfo == null) {
+	        throw new BusinessException(ErrorCode.ACCESS_DENIED);
+	    }
+
+	    return ResponseEntity.ok(documentService.viewDocument(documentId, authInfo.getName()));
+	}
 }

@@ -30,6 +30,8 @@ import com.hr24.employee.entity.User;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.global.attachment.Attachment;
 import com.hr24.global.attachment.service.AttachmentService;
+import com.hr24.global.exception.BusinessException;
+import com.hr24.global.exception.ErrorCode;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -213,25 +215,64 @@ public class DocumentService {
 	// 업로드된 파일 종류 목록
 
 	// 내 문서함 조회(기본)
-	public Page<DocumentResponseDto> myDocList(Long currentId, Pageable pageable) {
-		return documentRepository.myDocList(currentId, pageable);
+	public Page<DocumentResponseDto.DocumentListDto> myDocList(String loginId, Pageable pageable) {
+	    
+		User user = userRepository.findByLoginId(loginId)
+	            .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
+		
+		Long currentId = user.getEmployeeId();
+		
+		return documentRepository.myDocList(currentId, pageable)
+	            .map(DocumentResponseDto.DocumentListDto::from);
 	}
 
 	// 임시 저장함 조회(기본)
-	public Page<DocumentResponseDto> myTmpDocList(Long currentId, Pageable pageable) {
-		return documentRepository.myTmpDocList(currentId, pageable);
+	public Page<DocumentResponseDto.DocumentListDto> myTmpDocList(String loginId, Pageable pageable) {
+	    
+		User user = userRepository.findByLoginId(loginId)
+	            .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
+		
+		Long currentId = user.getEmployeeId();
+		
+		return documentRepository.myTmpDocList(currentId, pageable)
+	            .map(DocumentResponseDto.DocumentListDto::from);
 	}
 
 	// 문서 상세 조회
-//	public DocumentResponseDto.DocumentDto view(Long documentId) {
-//		Document document = documentRepository.findById(documentId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문서"));
-//		
-//		List<DocumentResponseDto.DocumentFileDto> documentFileList = document.getDocumentFileList()
-//				.stream()
-//				.map(DocumentResponseDto.DocumentFileDto::from)
-//				.collect(Collectors.toList());
-//		
-//	}
+	public DocumentResponseDto.DocumentDto viewDocument(Long documentId, String loginId) {
+	    Document document = documentRepository.findById(documentId)
+	            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
+
+	    User user = userRepository.findByLoginId(loginId)
+	            .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
+
+	    Long userId = user.getEmployeeId();
+
+	    // 기안자, 처리자 체크
+	    boolean isRequester = document.getRequester().getEmployeeId().equals(userId);
+	    boolean isProcessor = document.getProcessor() != null && document.getProcessor().getEmployeeId().equals(userId);
+
+	    // 결재자 체크 (approval_history에 있는지)
+	    boolean isApprover = approvalHistoryRepository.existsByDocumentAndApprover(document, user);
+
+	    if (!isRequester && !isProcessor && !isApprover) {
+	        throw new BusinessException(ErrorCode.ACCESS_DENIED);
+	    }
+	    
+	    List<DocumentResponseDto.DocumentApprovalDto> approvalHistories = 
+	            approvalHistoryRepository.findByDocumentOrderByStepOrderAsc(document)
+	            .stream()
+	            .map(DocumentResponseDto.DocumentApprovalDto::from)
+	            .toList();
+
+	    List<DocumentResponseDto.DocumentFileResponseDto> documentFileList = 
+	            documentFileRepository.findByDocument(document)
+	            .stream()
+	            .map(DocumentResponseDto.DocumentFileResponseDto::from)
+	            .toList();
+
+	    return DocumentResponseDto.DocumentDto.of(document, approvalHistories, documentFileList);
+	}
 
 	// 문서 삭제(임시 저장 상태일때만)
 	// 추후 구현(파일이 있을 경우 파일 매핑 삭제 -> 파일 DB 데이터 삭제 -> 실제 파일 삭제 Transactional)
