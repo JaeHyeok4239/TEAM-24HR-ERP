@@ -13,4 +13,6 @@ public interface HolidayRepository extends JpaRepository<Holiday, Long> {
     List<Holiday> findByHolidayYear(Integer holidayYear);
 
     Optional<Holiday> findByHolidayDate(LocalDate holidayDate);
+
+    void deleteByHolidayYear(Integer holidayYear);
 }

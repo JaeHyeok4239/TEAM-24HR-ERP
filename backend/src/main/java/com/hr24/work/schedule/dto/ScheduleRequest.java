@@ -14,6 +14,8 @@ public class ScheduleRequest {
     private String scheduleType;
     private LocalDate startDt;
     private LocalDate endDt;
+    private String startTime;
+    private String endTime;
     private String location;
     private String memo;
 }
