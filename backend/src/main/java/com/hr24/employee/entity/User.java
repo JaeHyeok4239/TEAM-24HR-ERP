@@ -1,6 +1,10 @@
 package com.hr24.employee.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.hr24.payroll.entity.Payroll;
 
 import com.hr24.employee.enums.EmploymentType;
 import com.hr24.employee.enums.UserStatus;
