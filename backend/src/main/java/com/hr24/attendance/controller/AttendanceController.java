@@ -26,4 +26,11 @@ public class AttendanceController {
 		return ResponseEntity.ok("정상적으로 출근 처리되었습니다.");
 	}
 	
+	// 퇴근 바구니
+	@PostMapping("/check-out")
+	public ResponseEntity<String> checkOut(@RequestBody AttendanceRequest request){
+		attendanceService.checkOut(request.getEmployeeId(), request.getLatitude(), request.getLongitude());
+		return ResponseEntity.ok("정상적으로 퇴근 처리되었습니다.");
+	}
+	
 }

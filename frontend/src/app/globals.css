@@ -13,12 +13,6 @@
   --sidebar-ring: #a4e6d2;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #133C63;
-    --foreground: #ededed;
-  }
-}
 
 html {
   height: 100%;
@@ -49,8 +43,22 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+
+/* FullCalendar 날짜 색상 */
+.fc-daygrid-day-number,
+.fc-col-header-cell-cushion {
+  color: #1a1a1a !important;
+  text-decoration: none !important;
+}
+
+/* 일요일 - 빨간색 */
+.fc-day-sun .fc-daygrid-day-number,
+.fc-day-sun .fc-col-header-cell-cushion {
+  color: #e53e3e !important;
+}
+
+/* 토요일 - 파란색 */
+.fc-day-sat .fc-daygrid-day-number,
+.fc-day-sat .fc-col-header-cell-cushion {
+  color: #3182ce !important;
 }

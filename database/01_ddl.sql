@@ -598,7 +598,7 @@ COMMENT ON COLUMN holidays.is_substitute IS '0=일반, 1=대체공휴일';
 CREATE TABLE payrolls (
 	payroll_id NUMBER NOT NULL,
 	employee_id NUMBER,
-	pay_month DATE NOT NULL,
+	pay_month VARCHAR2(6) NOT NULL,
 	total_pay NUMBER NOT NULL,
     total_deduction NUMBER NOT NULL,
     net_salary NUMBER NOT NULL,
@@ -607,7 +607,8 @@ CREATE TABLE payrolls (
 	updated_at TIMESTAMP NULL,	
 	CONSTRAINT pk_payrolls PRIMARY KEY (payroll_id),
 	CONSTRAINT fk_payrolls FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE
+	REFERENCES users(employee_id) ON DELETE CASCADE,
+    CONSTRAINT chk_pay_month CHECK (LENGTH(pay_month) = 6 AND REGEXP_LIKE(pay_month, '^[0-9]+$'))
 );
 
 

@@ -647,7 +647,7 @@ VALUES (schedule_seq.NEXTVAL, 7, 3, '하반기 현장 안전교육', 'DEPT', DAT
 
 -- 1. 급여 내역 테이블 샘플 데이터 삽입
 INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
-VALUES (payrolls_seq.NEXTVAL, 1, DATE '2026-05-14', 6846000, 760295, 6085705, 'Paid', CURRENT_TIMESTAMP);
+VALUES (payrolls_seq.NEXTVAL, 1, '202605', 6846000, 760295, 6085705, 'Paid', CURRENT_TIMESTAMP);
 
 
 -- 2. 급여 상세 항목 테이블 샘플 데이터 삽입
