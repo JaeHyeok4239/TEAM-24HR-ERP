@@ -28,6 +28,7 @@ export default function ScheduleCalendar() {
   const [error, setError] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [holidays, setHolidays] = useState(new Set());
 
   // JWT 토큰에서 employeeId 직접 추출 (API 호출 불필요)
   useEffect(() => {
@@ -73,11 +74,24 @@ export default function ScheduleCalendar() {
     }
   };
 
-  // 캘린더 날짜 범위 변경 시 일정 재조회
+  // 연도별 공휴일 조회
+  const fetchHolidays = async (year) => {
+    try {
+      const res = await apiRequest(`/api/schedule/holidays?year=${year}`);
+      const data = await res.json();
+      setHolidays(new Set(data.map((h) => h.holidayDate)));
+    } catch {
+      console.error("공휴일 조회 실패");
+    }
+  };
+
+  // 캘린더 날짜 범위 변경 시 일정 재조회 + 연도 바뀌면 공휴일 재조회
   const handleDatesSet = (info) => {
     const start = info.startStr.slice(0, 10);
     const end = info.endStr.slice(0, 10);
     fetchSchedules(start, end);
+    const year = new Date(info.startStr).getFullYear();
+    fetchHolidays(year);
   };
 
   // 날짜 클릭 → 주간 뷰 전환 + 모달 날짜 세팅
@@ -220,6 +234,13 @@ export default function ScheduleCalendar() {
           allDayText="종일"
           height="100%"
           dayMaxEvents={3}
+          dayCellDidMount={(arg) => {
+            const dateStr = arg.date.toISOString().slice(0, 10);
+            if (holidays.has(dateStr)) {
+              const el = arg.el.querySelector(".fc-daygrid-day-number");
+              if (el) el.style.color = "#e53e3e";
+            }
+          }}
         />
       </div>
 
