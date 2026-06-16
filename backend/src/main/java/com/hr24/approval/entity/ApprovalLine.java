@@ -1,11 +1,8 @@
 package com.hr24.approval.entity;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.hr24.document.entity.Document;
-import com.hr24.document.entity.DocumentFile;
 import com.hr24.document.entity.DocumentType;
 import com.hr24.employee.entity.User;
 
@@ -31,35 +28,22 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name="approval_history")
-public class ApprovalHistory {
-	
+@Table(name="approval_line")
+public class ApprovalLine {
 	@Id
-	@Column(name = "history_id")
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "approval_history_seq")
-	@SequenceGenerator(name = "approval_history_seq", sequenceName = "approval_history_seq", allocationSize = 1)
-	private Long historyId;
+	@Column(name = "approval_line_id")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "approval_line_seq")
+	@SequenceGenerator(name = "approval_line_seq", sequenceName = "approval_line_seq", allocationSize = 1)
+	private Long approvalLineId;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "document_id")
-	private Document document;
+	@JoinColumn(name = "document_type")
+	private DocumentType documentType;
 	
 	@Column(name = "step_order")
 	private Integer stepOrder;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "approver_id")
+	@JoinColumn(name = "default_approver")
 	private User approver;
-	
-	@Column(name = "status")
-	private String status;
-	
-	@Column(name = "approver_comment")
-	private String approverComment;
-	
-	@Column(name = "acted_at")
-	private LocalDateTime actedAt;
-	
-	@Column(name = "created_at", insertable = false, updatable = false)
-	private LocalDateTime createAt;
 }

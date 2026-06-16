@@ -26,6 +26,7 @@ public class DocumentRequestDto {
 		private List<DocumentContentDto> documentContent;
 		@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private LocalDateTime requestAt;
+		private List<Long> deleteAttachmentIds;
 	}
 	
 }
