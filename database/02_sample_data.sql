@@ -204,25 +204,45 @@ DELETE FROM attendance_statuses;
 DELETE FROM half_day_types;
 
 -- 근무 시간 규칙
-INSERT INTO attendance_time_policies
-VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'ALL', 900, 1800, CURRENT_TIMESTAMP, NULL);
+-- 월요일(출퇴근+점심시간)
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'MON', 900, 1800, CURRENT_TIMESTAMP, NULL);
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'MON', 1200, 1300, CURRENT_TIMESTAMP, NULL);
 
-INSERT INTO attendance_time_policies
-VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'ALL', 1200, 1300, CURRENT_TIMESTAMP, NULL);
+-- 화요일(출퇴근+점심시간)
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'TUE', 900, 1800, CURRENT_TIMESTAMP, NULL);
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'TUE', 1200, 1300, CURRENT_TIMESTAMP, NULL);
+
+-- 수요일(출퇴근+점심시간)
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'WED', 900, 1800, CURRENT_TIMESTAMP, NULL);
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'WED', 1200, 1300, CURRENT_TIMESTAMP, NULL);
+
+-- 목요일(출퇴근+점심시간)
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'THU', 900, 1800, CURRENT_TIMESTAMP, NULL);
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'THU', 1200, 1300, CURRENT_TIMESTAMP, NULL);
+
+-- 금요일(출퇴근+점심시간)
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'FRI', 900, 1800, CURRENT_TIMESTAMP, NULL);
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'FRI', 1200, 1300, CURRENT_TIMESTAMP, NULL);
 
 -- 근태 판정 기준
 INSERT INTO attendance_thresholds
-VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'LATE', 10, '10분 이상 지각', CURRENT_TIMESTAMP, NULL);
+VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'LATE', 0, '출근 시간 초과 시 지각', CURRENT_TIMESTAMP, NULL);
 
 INSERT INTO attendance_thresholds
-VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'EARLY_LEAVE', 10, '10분 이상 조퇴', CURRENT_TIMESTAMP, NULL);
+VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'EARLY_LEAVE', 0, '퇴근 시간 미달 시 조퇴', CURRENT_TIMESTAMP, NULL);
 
 INSERT INTO attendance_thresholds
-VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'ABSENCE', 240, '4시간 미만 근무 시 결근', CURRENT_TIMESTAMP, NULL);
+VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'ABSENCE', 180, '출근 시간 기준 3시간 초과(오후 12시) 출근 시 결근', CURRENT_TIMESTAMP, NULL);
 
 -- 근무지
 INSERT INTO workplaces
-VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '서울 본사', 100, 37.5665, 126.9780, CURRENT_TIMESTAMP, NULL);
+VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '강남역', 100, 37.4979420, 127.0276210, CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO workplaces
+VALUES (workplaces_seq.NEXTVAL, 'WORK1', '근무지1', '여의도 더현대 서울', 100, 37.5258970, 126.9284260, CURRENT_TIMESTAMP, NULL);
+
+INSERT INTO workplaces
+VALUES (workplaces_seq.NEXTVAL, 'WORK2', '근무지2', '판교 테크노원', 100, 37.3947440, 127.1112040, CURRENT_TIMESTAMP, NULL);
 
 -- 정정 종류
 INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'IN', '출근 정정');
@@ -230,9 +250,9 @@ INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'OUT', '퇴�
 INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'STATUS', '근태 상태 정정');
 
 -- 정정 사유
-INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'INPUT_ERROR', '단순 입력 오류');
-INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'LATE_DOC', '증빙 지연 제출');
-INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'OTHER', '기타');
+INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'SIMPLE', '단순 입력 오류');
+INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'DELAY_DOCUMENT', '증빙 지연 제출');
+INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'ETC', '기타');
 
 -- 결재 상태
 INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'PENDING', '승인 대기');
@@ -244,12 +264,12 @@ INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'WORK',
 INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LATE', '지각', 2);
 INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'EARLY_LEAVE', '조퇴', 3);
 INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'ABSENT', '결근', 4);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'VACATION', '휴가', 5);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'NO_CHECKOUT', '미퇴근', 6);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LEAVE', '휴가', 5);
+INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'MISSING_CHECKOUT', '미퇴근', 6);
 
 -- 반차 종류
-INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'ANNUAL', '연차');
-INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'HALF', '반차');
+INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'AM', '오전 반차');
+INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'PM', '오후 반차');
 
 
 
@@ -448,20 +468,23 @@ VALUES (holidays_seq.NEXTVAL, 2025, DATE '2025-12-25', '크리스마스', 0);
 
 -- 2. 회의실
 
-INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
-VALUES (meeting_room_seq.NEXTVAL, '대회의실', 20, '본사 3층', 'ACTIVE');
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실1', '본사 3층', 'ACTIVE');
 
-INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
-VALUES (meeting_room_seq.NEXTVAL, '소회의실A', 6, '본사 2층', 'ACTIVE');
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실2', '본사 2층', 'ACTIVE');
 
-INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
-VALUES (meeting_room_seq.NEXTVAL, '소회의실B', 6, '본사 2층', 'ACTIVE');
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실3', '본사 2층', 'ACTIVE');
 
-INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
-VALUES (meeting_room_seq.NEXTVAL, '임원회의실', 10, '본사 5층', 'ACTIVE');
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실4', '본사 5층', 'ACTIVE');
 
-INSERT INTO meeting_room (room_id, room_name, capacity, location, status)
-VALUES (meeting_room_seq.NEXTVAL, '교육실', 30, '본사 4층', 'INACTIVE');
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실5', '본사 4층', 'ACTIVE');
+
+INSERT INTO meeting_room (room_id, room_name, location, status)
+VALUES (meeting_room_seq.NEXTVAL, '회의실6', '본사 1층', 'ACTIVE');
 
 
 

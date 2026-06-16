@@ -123,7 +123,8 @@ CREATE TABLE
         CONSTRAINT chk_att_time_end_range CHECK (end_time BETWEEN 0 AND 2359),
         CONSTRAINT chk_att_time_start_minute CHECK (MOD(start_time, 100) < 60),
         CONSTRAINT chk_att_time_end_minute CHECK (MOD(end_time, 100) < 60),
-        CONSTRAINT chk_att_time_emp_type CHECK (employment_type IN ('REGULAR', 'DAILY'))
+        CONSTRAINT chk_att_time_emp_type CHECK (employment_type IN ('REGULAR', 'DAILY')),
+        CONSTRAINT chk_att_time_day_week CHECK (day_of_week IN ('MON','TUE','WED','THU','FRI','SAT','SUN'))
     );
 
 -- 근태관리: 근태 판정 기준
@@ -143,7 +144,7 @@ CREATE TABLE
 -- 근태관리: 근무지
 CREATE TABLE
     workplaces (
-        workplace_id NUMBER NOT NULL,
+        workplace_id NUMBER NOT NULL, -- 1 본사(정규직) 2 근무지1(일용직) 3 근무지2(일용직)
         workplace_code VARCHAR2 (30) NOT NULL,
         workplace_name VARCHAR2 (100) NOT NULL,
         workplace_address VARCHAR2 (255) NULL,
@@ -167,12 +168,11 @@ CREATE TABLE
         is_location_valid CHAR(1) DEFAULT 'N' NOT NULL, -- 위치 인증 여부(Y/N)
         workplace_id NUMBER NULL, -- 근무지
         work_date DATE NOT NULL, -- 근무 날짜
-        memo VARCHAR2 (255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
         CONSTRAINT pk_attendance_logs PRIMARY KEY (attendance_log_id),
         CONSTRAINT fk_att_logs_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
-        CONSTRAINT fk_att_logs_workplace FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id)
+        CONSTRAINT fk_att_logs_workplace FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
         CONSTRAINT uk_att_logs UNIQUE (employee_id, work_date, log_type)
     );
 
@@ -185,19 +185,20 @@ CREATE TABLE
         approval_status_id NUMBER NOT NULL,
         half_day_type_id NUMBER NULL,
         holiday_id NUMBER NULL,
-        correction_type_id NUMBER NOT NULL,
-        correction_reason_type_id NUMBER NOT NULL, 
+        correction_type_id NUMBER NULL,
+        correction_reason_type_id NUMBER NULL, 
         employee_id NUMBER NOT NULL, 
         work_date DATE NOT NULL, -- 근무 기준 날짜
+        workplace_id NUMBER NULL, -- 근무지
         check_in_time TIMESTAMP NULL, -- 출근 시간
         check_out_time TIMESTAMP NULL, -- 퇴근 시간
-        total_work_minutes NUMBER NULL, -- 총 근무 시간(분)
-        actual_work_minutes NUMBER NULL, -- 휴게 제외 실 근무 시간(분)
+        total_work_minutes NUMBER NULL, -- 총 출근 시간(휴게 포함)
+        actual_work_minutes NUMBER NULL, -- 기본 근무 시간(휴게, 초과 근무 제외)
         overtime_minutes NUMBER NULL, -- 초과 근무 시간(분)
         is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
         is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
         is_correction_required CHAR(1) DEFAULT 'N' NOT NULL, -- 정정 필요 여부(Y/N)
-        processing_status VARCHAR2 (30) DEFAULT 'NORMAL' NOT NULL, -- 처리 상태(NORMAL/CORRECTION_REQUIRED/CORRECTED)
+        processing_status VARCHAR2 (30) DEFAULT 'NORMAL' NOT NULL, -- 처리 상태(NORMAL/CORRECTION_REQUIRED/CORRECTED) (미퇴근) 정상/정정 필요/정정 완료
         correction_reason VARCHAR2 (255) NULL, -- 근태 정정 사유
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
@@ -247,7 +248,7 @@ CREATE TABLE
         status_code VARCHAR2 (30) NOT NULL, -- 상태 코드(WORK/LATE/EARLY_LEAVE/ABSENT/LEAVE/MISSING_CHECKOUT)
         status_name VARCHAR2 (50) NOT NULL, -- 상태 이름(근무/지각/조퇴/결근/휴가/미퇴근)
         status_priority NUMBER NOT NULL, -- 상태 판정 우선순위(휴가(연차>반차)>결근>반차>조퇴>지각>근무)
-        CONSTRAINT pk_attendance_statues PRIMARY KEY (attendance_status_id)
+        CONSTRAINT pk_attendance_statuses PRIMARY KEY (attendance_status_id)
     );
 
 -- 근태관리: 반차 종류(연차/반차)
@@ -320,6 +321,7 @@ CREATE TABLE document (
     requested_at   TIMESTAMP,                   -- 결재 요청일시
     processed_at   TIMESTAMP,                   -- 처리일시
     reject_reason  VARCHAR2(500 CHAR),          -- 반려 사유 (최종 반려 단계 기준)
+    document_content JSON DEFAULT '{}' NOT NULL, -- 문서 본문 (JSON 형태로 다양한 필드 저장)
     CONSTRAINT document_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT document_fk_requester FOREIGN KEY (requester_id) REFERENCES users(employee_id),
     CONSTRAINT document_fk_processor FOREIGN KEY (processor_id) REFERENCES users(employee_id),
@@ -405,7 +407,6 @@ CREATE TABLE
 CREATE TABLE meeting_room (
     room_id     NUMBER          NOT NULL,
     room_name   VARCHAR2(100)   NOT NULL,
-    capacity    NUMBER          NOT NULL,
     location    VARCHAR2(200)   NULL,
     status      VARCHAR2(20)    DEFAULT 'ACTIVE' NOT NULL,
     CONSTRAINT pk_meeting_room PRIMARY KEY (room_id),
@@ -415,7 +416,6 @@ CREATE TABLE meeting_room (
 COMMENT ON TABLE  meeting_room          IS '회의실';
 COMMENT ON COLUMN meeting_room.room_id  IS '회의실 PK';
 COMMENT ON COLUMN meeting_room.room_name IS '회의실명';
-COMMENT ON COLUMN meeting_room.capacity IS '수용 인원';
 COMMENT ON COLUMN meeting_room.location IS '위치';
 COMMENT ON COLUMN meeting_room.status   IS 'ACTIVE/INACTIVE';
 
