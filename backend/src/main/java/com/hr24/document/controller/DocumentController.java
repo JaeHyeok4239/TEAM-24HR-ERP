@@ -38,7 +38,7 @@ public class DocumentController {
 
 	private final DocumentService documentService;
 	
-	//임시 저장
+	//임시 저장 + 결재 요청
 	@PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<Long> write(
 			@io.swagger.v3.oas.annotations.parameters.RequestBody(
