@@ -39,10 +39,11 @@ public class DocumentResponseDto {
 					.documentId(document.getDocumentId())
 					.documentType(document.getDocumentType().getTypeId())
 					.requesterId(document.getRequester().getEmployeeId())
-					.processorId(document.getProcessor().getEmployeeId())
+					.processorId(document.getProcessor() != null ? document.getProcessor().getEmployeeId() : null)
 					.requester(document.getRequester().getName())
-					.processor(document.getProcessor().getName())
+					.processor(document.getProcessor() != null ? document.getProcessor().getName() : null)
 					.documentTitle(document.getDocumentTitle())
+					.status(document.getStatus())
 					.currentStep(document.getCurrentStep())
 					.createdAt(document.getCreatedAt())
 					.build();
@@ -147,4 +148,5 @@ public class DocumentResponseDto {
 					.build();
 		}
 	}
+	
 }
