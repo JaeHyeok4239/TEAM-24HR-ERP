@@ -1,6 +1,7 @@
 package com.hr24.document.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,11 +44,14 @@ public class Leave {
     private LeaveType leaveType;
 
     @Column(name = "start_date")
-    private LocalDate startDate;
+    private LocalDateTime startDate;
 
     @Column(name = "end_date")
-    private LocalDate endDate;
+    private LocalDateTime endDate;
 
     @Column(name = "leave_cnt")
     private Double leaveCnt;
+    
+    @Column(name = "is_processed")
+    private String isProcessed;
 }
