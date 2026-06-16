@@ -297,10 +297,5 @@ public class DocumentService {
 		return DocumentResponseDto.DocumentDto.of(document, approvalHistories, documentFileList);
 	}
 
-	// 문서 삭제(임시 저장 상태일때만)
-	// 추후 구현(파일이 있을 경우 파일 매핑 삭제 -> 파일 DB 데이터 삭제 -> 실제 파일 삭제 Transactional)
-
-	// 업로드된 파일 종류 목록
-//	public List<AttachmentDto> fileListView(Long documentId) {
-//	}
+	
 }

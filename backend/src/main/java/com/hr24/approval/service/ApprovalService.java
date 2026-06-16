@@ -24,4 +24,8 @@ public class ApprovalService {
 	            .map(ApprovalResponseDto.ApprovalLineDto::from)
 	            .toList();
 	}
+	
+	//결재함(내가 결재해야하는 문서 목록)
+	
+	//결재 처리(최종 승인자라면 문서 상태 PRC로 변경 가능)
 }

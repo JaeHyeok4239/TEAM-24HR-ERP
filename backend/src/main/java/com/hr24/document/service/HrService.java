@@ -25,7 +25,7 @@ public class HrService {
 	private final LeaveRepository leaveRepository;
     private final LeaveTypeRepository leaveTypeRepository;
     
-    //휴가 신청 처리
+    //휴가 신청 데이터 생성
     @Transactional
     public void createLeaveFromContent(Document document, Map<String, Object> content) {
         HrRequestDto.LeaveDto dto;
