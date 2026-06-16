@@ -1,6 +1,5 @@
 package com.hr24.employee.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -23,11 +22,10 @@ public class DepartmentService {
 	public Department createTestDepartment() {
 		Department department = new Department();
 
-		department.setDepartmentCode("TEST");
-		department.setDepartmentName("테스트부서");
-		department.setDescription("JPA save 테스트용 부서");
+		department.setDepartmentCode("TEST1");
+		department.setDepartmentName("테스트부서2");
+		department.setDescription("JPA save 테스트용 부서2");
 		department.setIsActive("Y");
-		department.setCreatedAt(LocalDateTime.now());
 
 		return departmentRepository.save(department);
 	}

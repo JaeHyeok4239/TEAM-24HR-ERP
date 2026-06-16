@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.hr24.employee.entity.User;
 
@@ -11,9 +13,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	
 	Optional<User> findByLoginId(String loginId);
 	
-	Optional<User> findByEmployeeNo(String employeeNo);
-
-    List<User> findByNameContaining(String keyword);
+	@Query("""
+	    select u
+	    from User u
+	    left join fetch u.department
+	    left join fetch u.position
+	    where u.loginId = :loginId
+	""")
+		Optional<User> findByLoginIdWithDepartmentAndPosition(
+	            @Param("loginId") String loginId
+	    );
 
     List<User> findByDepartment_DepartmentId(Long departmentId);
 }
