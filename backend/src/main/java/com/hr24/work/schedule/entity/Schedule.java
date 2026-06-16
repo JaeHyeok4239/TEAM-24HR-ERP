@@ -44,6 +44,12 @@ public class Schedule {
     @Column(name = "end_dt")
     private LocalDate endDt;
 
+    @Column(name = "start_time")
+    private String startTime;
+
+    @Column(name = "end_time")
+    private String endTime;
+
     @Column(name = "location")
     private String location;
 

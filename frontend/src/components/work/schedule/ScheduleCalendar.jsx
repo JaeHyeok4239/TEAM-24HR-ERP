@@ -53,12 +53,19 @@ export default function ScheduleCalendar() {
         data.map((s) => ({
           id: String(s.scheduleId),
           title: s.title,
-          start: s.startDt,
-          end: s.endDt,
+          start: s.startTime ? `${s.startDt}T${s.startTime}` : s.startDt,
+          end:   s.endTime   ? `${s.endDt}T${s.endTime}`     : s.endDt,
+          allDay: !s.startTime,
           color: s.scheduleType === "COMPANY" ? "#ef4444"
                : s.scheduleType === "DEPT"    ? "#8b5cf6"
                : s.scheduleType === "PROJECT" ? "#f59e0b"
                : "#3b82f6",
+          extendedProps: {
+            startTime: s.startTime,
+            endTime: s.endTime,
+            location: s.location,
+            memo: s.memo,
+          },
         }))
       );
     } catch {
@@ -95,6 +102,10 @@ export default function ScheduleCalendar() {
       start: info.event.startStr?.slice(0, 10),
       end: info.event.endStr?.slice(0, 10),
       color: info.event.backgroundColor,
+      startTime: info.event.extendedProps.startTime,
+      endTime: info.event.extendedProps.endTime,
+      location: info.event.extendedProps.location,
+      memo: info.event.extendedProps.memo,
     });
   };
 
@@ -142,6 +153,8 @@ export default function ScheduleCalendar() {
           scheduleType: form.scheduleType,
           startDt:      form.date,
           endDt:        form.date,
+          startTime:    form.startTime || null,
+          endTime:      form.endTime   || null,
           location:     form.location,
           memo:         form.memo,
           deptId:       form.scheduleType === "DEPT" ? form.deptId : null,
@@ -203,7 +216,8 @@ export default function ScheduleCalendar() {
           eventClick={handleEventClick}
           slotMinTime="07:00:00"
           slotMaxTime="20:00:00"
-          allDaySlot={false}
+          allDaySlot={true}
+          allDayText="종일"
           height="100%"
           dayMaxEvents={3}
         />
@@ -222,7 +236,27 @@ export default function ScheduleCalendar() {
                 />
                 <span className="font-medium text-base">{selectedEvent.title}</span>
               </div>
-              <p className="text-gray-500 ml-5">{selectedEvent.start}</p>
+              <p className="text-gray-500 ml-5">
+                {selectedEvent.start}
+                {selectedEvent.startTime && (
+                  <span className="ml-2">
+                    {selectedEvent.startTime}
+                    {selectedEvent.endTime && ` ~ ${selectedEvent.endTime}`}
+                  </span>
+                )}
+              </p>
+              {selectedEvent.location && (
+                <div className="ml-5 flex gap-1">
+                  <span className="text-gray-400">장소</span>
+                  <span>{selectedEvent.location}</span>
+                </div>
+              )}
+              {selectedEvent.memo && (
+                <div className="ml-5 flex gap-1">
+                  <span className="text-gray-400">내용</span>
+                  <span className="whitespace-pre-wrap">{selectedEvent.memo}</span>
+                </div>
+              )}
             </div>
             <div className="flex justify-between mt-6">
               <button
@@ -315,6 +349,17 @@ export default function ScheduleCalendar() {
                   type="text"
                   className="w-full border rounded px-3 py-2 mt-1 text-sm"
                   placeholder="장소 입력"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600">내용</label>
+                <textarea
+                  name="memo"
+                  value={form.memo}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full border rounded px-3 py-2 mt-1 text-sm resize-none"
+                  placeholder="내용 입력"
                 />
               </div>
 
