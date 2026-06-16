@@ -10,9 +10,11 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -60,6 +62,46 @@ public class DocumentController {
 		Long documentId = documentService.createDocument(documentDto, files, authInfo.getName());
 		
 		return ResponseEntity.ok(documentId);
+	}
+	
+	// 문서 수정 (임시저장 수정 or 기안)
+	@PutMapping(value = "/{documentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<Void> update(
+	        @PathVariable("documentId") Long documentId,
+	        @io.swagger.v3.oas.annotations.parameters.RequestBody(
+	                content = @io.swagger.v3.oas.annotations.media.Content(
+	                    encoding = @io.swagger.v3.oas.annotations.media.Encoding(
+	                        name = "document",
+	                        contentType = MediaType.APPLICATION_JSON_VALUE
+	                    )
+	                )
+	            )
+	        @RequestPart("document") DocumentRequestDto.DocumentDto documentDto,
+	        @RequestPart(value = "files", required = false) List<MultipartFile> files,
+	        Authentication authInfo) {
+
+	    if (authInfo == null) {
+	        throw new BusinessException(ErrorCode.ACCESS_DENIED);
+	    }
+
+	    documentService.updateDocument(documentId, documentDto, files, authInfo.getName());
+
+	    return ResponseEntity.ok().build();
+	}
+
+	// 문서 삭제 (임시저장만)
+	@DeleteMapping("/{documentId}")
+	public ResponseEntity<Void> delete(
+	        @PathVariable("documentId") Long documentId,
+	        Authentication authInfo) {
+
+	    if (authInfo == null) {
+	        throw new BusinessException(ErrorCode.ACCESS_DENIED);
+	    }
+
+	    documentService.deleteDocument(documentId, authInfo.getName());
+
+	    return ResponseEntity.ok().build();
 	}
 	
 //	@GetMapping("/myDocs")

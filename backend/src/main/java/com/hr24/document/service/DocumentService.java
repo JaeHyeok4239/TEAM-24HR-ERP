@@ -70,6 +70,27 @@ public class DocumentService {
 				DocumentRequestDto.DocumentContentDto::getData));
 	}
 
+	//결재 연동
+	private void createApprovalHistory(Document document) {
+	    List<ApprovalLine> lines = approvalLineRepository
+	            .findByDocumentTypeOrderByStepOrderAsc(document.getDocumentType());
+
+	    if (lines.isEmpty()) {
+	        throw new IllegalStateException("해당 문서 종류의 결재선이 없습니다.");
+	    }
+
+	    List<ApprovalHistory> histories = lines.stream()
+	            .map(line -> ApprovalHistory.builder()
+	                    .document(document)
+	                    .stepOrder(line.getStepOrder())
+	                    .approver(line.getApprover())
+	                    .status("PND")
+	                    .build())
+	            .toList();
+
+	    approvalHistoryRepository.saveAll(histories);
+	}
+	
 	// 문서 작성
 	@Transactional
 	public Long createDocument(DocumentRequestDto.DocumentDto documentDto, List<MultipartFile> files, String loginId) {
@@ -110,32 +131,84 @@ public class DocumentService {
 
 		if ("REQ".equals(saved.getStatus())) {
 			// 결재 로직 추가
-			List<ApprovalLine> lines = approvalLineRepository.findByDocumentTypeOrderByStepOrderAsc(documentType);
-
-			if (lines.isEmpty()) {
-				throw new IllegalStateException("해당 문서 종류의 결재선이 없습니다.");
-			}
-
-			List<ApprovalHistory> histories = lines.stream().map(line -> ApprovalHistory.builder().document(saved)
-					.stepOrder(line.getStepOrder()).approver(line.getApprover()).status("PND").build()).toList();
-
-			approvalHistoryRepository.saveAll(histories);
+			createApprovalHistory(document);
 		}
 
 		return saved.getDocumentId();
 
 	}
+	
+	//수정
+	@Transactional
+	public void updateDocument(Long documentId, DocumentRequestDto.DocumentDto documentDto, List<MultipartFile> files, String loginId) {
 
-	// 문서 수정(임시 저장 상태일 때만 가능)
-	// void modify(DocumentDto documentDto);
+	    Document document = documentRepository.findById(documentId)
+	            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
 
+	    if (!"TMP".equals(document.getStatus())) {
+	        throw new IllegalStateException("임시저장 상태의 문서만 수정할 수 있습니다");
+	    }
+
+	    String newStatus = documentDto.getStatus();
+	    if (newStatus == null || newStatus.isBlank()) {
+	        newStatus = "TMP";
+	    }
+
+	    document.setDocumentTitle(documentDto.getDocumentTitle());
+	    document.setDocumentContent(toDocumentContentMap(documentDto.getDocumentContent()));
+	    document.setStatus(newStatus);
+
+	    // 파일 삭제
+	    if (documentDto.getDeleteAttachmentIds() != null && !documentDto.getDeleteAttachmentIds().isEmpty()) {
+	        for (Long attachmentId : documentDto.getDeleteAttachmentIds()) {
+	            documentFileRepository.deleteByAttachment_AttachmentId(attachmentId);
+	            attachmentService.delete(attachmentId);
+	        }
+	    }
+
+	    // 파일 추가
+	    if (files != null && !files.isEmpty()) {
+	        List<MultipartFile> uploadFiles = files.stream()
+	                .filter(file -> !file.isEmpty())
+	                .toList();
+	        if (!uploadFiles.isEmpty()) {
+	            List<Attachment> attachments = attachmentService.upload(uploadFiles, document.getRequester().getEmployeeId());
+	            createDocumentFiles(document, attachments);
+	        }
+	    }
+
+	    if ("REQ".equals(newStatus)) {
+	        createApprovalHistory(document);
+	        document.setRequestedAt(LocalDateTime.now());
+	    }
+	}
+	
 	// 반려 문서 재기안(반려 상태일 때, 원본 반려 문서 조회 -> 내용 복사 후 임시저장 상태로 저장(기존 매핑되었던 첨부파일 불러온 뒤 최종
 	// 확정된 파일들만 재매핑)
 	// Long createReDraft(Long rejectedDocumentId)
 
 	// 문서 삭제(임시 저장 상태일 때만 가능 / 문서 삭제 시 매핑 데이터 삭제 -> 파일 데이터 삭제 -> 실제 파일 삭제
 	// Transactional 처리)
-	// void delete(Long documentId);
+	@Transactional
+	public void deleteDocument(Long documentId, String loginId) {
+
+	    Document document = documentRepository.findById(documentId)
+	            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
+
+	    if (!"TMP".equals(document.getStatus())) {
+	        throw new IllegalStateException("임시저장 상태의 문서만 삭제할 수 있습니다");
+	    }
+
+	    // 매핑된 파일 조회 후 삭제
+	    List<DocumentFile> documentFiles = documentFileRepository.findByDocument(document);
+	    for (DocumentFile documentFile : documentFiles) {
+	        Long attachmentId = documentFile.getAttachment().getAttachmentId();
+	        documentFileRepository.delete(documentFile);
+	        attachmentService.delete(attachmentId);
+	    }
+
+	    documentRepository.delete(document);
+	}
 
 	// 업로드된 파일 종류 목록
 
