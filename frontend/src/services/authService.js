@@ -2,6 +2,7 @@ import { apiRequest } from "@/lib/api";
 
 const BASE_URL = "http://localhost:8080";
 
+// 로그인 요청
 export const loginRequest = async (loginId, password) => {
   const response = await fetch(`${BASE_URL}/api/auth/login`, {
     method: "POST",
@@ -21,6 +22,14 @@ export const loginRequest = async (loginId, password) => {
   return response.json();
 };
 
+// 현재 로그인 사용자 정보 조회
+export const getMyInfoRequest = async () => {
+  const response = await apiRequest("/api/users/me");
+
+  return response.json();
+};
+
+// 로그아웃 요청
 export const logoutRequest = async () => {
   return apiRequest("/api/auth/logout", {
     method: "POST",
