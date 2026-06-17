@@ -19,5 +19,5 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 	
     @Query("select d from Document d where d.requester.employeeId = :currentId and d.status = 'TMP' order by d.createdAt desc")
     Page<Document> myTmpDocList(@Param("currentId") Long currentId, Pageable pageable);
-
+    
 }

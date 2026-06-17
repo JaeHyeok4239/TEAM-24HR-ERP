@@ -150,14 +150,15 @@ public class DocumentService {
 			// 결재 로직 추가
 			createApprovalHistory(document);
 		}
-		
-		if ("REQ".equals(document.getStatus()) && (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
-		    throw new IllegalArgumentException("문서 내용을 입력해주세요.");
+
+		if ("REQ".equals(document.getStatus())
+				&& (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
+			throw new IllegalArgumentException("문서 내용을 입력해주세요.");
 		}
-		
+
 		// detailTable에 따른 분기별 처리
 		processDetailTable(document, documentDto, "REQ".equals(saved.getStatus()));
-		
+
 		return saved.getDocumentId();
 
 	}
@@ -205,14 +206,15 @@ public class DocumentService {
 			createApprovalHistory(document);
 			document.setRequestedAt(LocalDateTime.now());
 		}
-		
-		if ("REQ".equals(document.getStatus()) && (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
-		    throw new IllegalArgumentException("문서 내용을 입력해주세요.");
+
+		if ("REQ".equals(document.getStatus())
+				&& (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
+			throw new IllegalArgumentException("문서 내용을 입력해주세요.");
 		}
-		
+
 		// detailTable에 따른 분기별 처리
 		processDetailTable(document, documentDto, "REQ".equals(document.getStatus()));
-		
+
 	}
 
 	// 문서 삭제(임시 저장 상태일 때만 가능 / 문서 삭제 시 매핑 데이터 삭제 -> 파일 데이터 삭제 -> 실제 파일 삭제
@@ -297,5 +299,4 @@ public class DocumentService {
 		return DocumentResponseDto.DocumentDto.of(document, approvalHistories, documentFileList);
 	}
 
-	
 }

@@ -61,5 +61,5 @@ public class ApprovalHistory {
 	private LocalDateTime actedAt;
 	
 	@Column(name = "created_at", insertable = false, updatable = false)
-	private LocalDateTime createAt;
+	private LocalDateTime createdAt;
 }

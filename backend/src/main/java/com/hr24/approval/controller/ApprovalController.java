@@ -2,6 +2,10 @@ package com.hr24.approval.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hr24.approval.dto.ApprovalResponseDto;
 import com.hr24.approval.service.ApprovalService;
+import com.hr24.document.dto.DocumentResponseDto;
+import com.hr24.global.exception.BusinessException;
+import com.hr24.global.exception.ErrorCode;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +31,48 @@ public class ApprovalController {
 
 	private final ApprovalService approvalService;
 
-	// 결재선 조회
+	// 결재선 조회(추후 페이지 적용)
 	@GetMapping("/line")
 	public ResponseEntity<List<ApprovalResponseDto.ApprovalLineDto>> lineList(
-			@RequestParam(required = false, value = "document_type") Long documentType, @RequestParam(required = false, value = "keyword") String keyword) {
+			@RequestParam(required = false, value = "department_id") Long departmentId,
+			@RequestParam(required = false, value = "document_type") Long documentType,
+			@RequestParam(required = false, value = "keyword") String keyword) {
 
-		return ResponseEntity.ok(approvalService.searchApprovalLines(documentType, keyword));
+		return ResponseEntity.ok(approvalService.listOrSearchApprovalLines(departmentId, documentType, keyword));
+	}
+
+	// 전체 결재함
+	@GetMapping("/history")
+	public ResponseEntity<Page<ApprovalResponseDto.ApprovalHistoryDto>> approvalList(
+			@RequestParam(required = false, value = "document_type") Long documentType,
+			@RequestParam(required = false, value = "status") String status, 
+			@RequestParam(required = false, value = "keyword") String keyword,
+			@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+	        Authentication authInfo) {
+		
+		if(authInfo == null) {
+			throw new BusinessException(ErrorCode.ACCESS_DENIED);
+		}
+		
+		String loginId = authInfo.getName();
+		
+		return ResponseEntity.ok(approvalService.listOrSearchApprovalList(loginId, documentType, status, keyword, pageable));
+				
+	}
+
+	// 새 요청 조회
+	@GetMapping("/")
+	public ResponseEntity<Page<ApprovalResponseDto.ApprovalHistoryDto>> pendingList(
+			@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+			Authentication authInfo) {
+
+		if (authInfo == null) {
+			throw new BusinessException(ErrorCode.ACCESS_DENIED);
+		}
+
+		String loginId = authInfo.getName();
+
+		return ResponseEntity.ok(approvalService.PendingApprovalList(loginId, pageable));
 	}
 
 }
