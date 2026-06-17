@@ -13,6 +13,7 @@ import com.hr24.attendance.entity.AttendanceResult;
 import com.hr24.attendance.repository.AttendanceLogRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
 import com.hr24.attendance.repository.WorkplaceRepository;
+import com.hr24.attendance.entity.Workplace;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class AttendanceService{
 	private final AttendanceResultRepository attendanceResultRepository;
 	private final WorkplaceRepository workplaceRepository;
 	
+	// 호버사인 계산식
 	public static Double LocationUtils(Double user_latitude, Double user_longitude, Double HR_latitude, Double HR_longitude) {
 		final int R = 6371; // Radius of the earth in km
 
@@ -39,19 +41,35 @@ public class AttendanceService{
         return distance*1000;
 	}
 	
-	// 출근 버튼(직원ID, 위도, 경도)
+	// 위치 검증
+	public Long validateAndGetWorkplace(Double latitude, Double longitude) {
+		// 근무지 전체 조회
+		var workplaces = workplaceRepository.findAll();
+
+		// 가까운 곳 찾기
+		for (Workplace wp : workplaces) {
+			double distance = LocationUtils(latitude, longitude, wp.getLatitude(), wp.getLongitude());
+		    // 계산된 거리가 허용 반경(radius_meter) 이내인지 확인
+		    if (distance <= wp.getRadiusMeter()) {
+		        return wp.getWorkplaceId();
+		    }
+		}
+		
+		// 못 찾았을 경우
+		throw new RuntimeException("근무지 근처가 아닙니다.");
+	}
+	
+	// [1] 출근 버튼(직원ID, 위도, 경도)
 	public void checkIn(Long employeeId, Double latitude, Double longitude) {
+		// 1. 중복 체크
 		// 오늘 날짜 구하기
 		LocalDate today = LocalDate.now();
-		
-//		작성 중이던 것...
-//		workplaceRepository workplacerepository = new workpla
-//		double distance = LocationUtils.calculateDistance(userLat, userLon, hrLat, hrLon);
-		
-		// 중복 체크
 		if(attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeId, today).isPresent()) {
 			throw new RuntimeException("오늘 자 출근 기록이 존재합니다.");
 		}
+		// 위의 위치검증 메서드 호출
+		Long matchedWorkplaceId = validateAndGetWorkplace(latitude, longitude);
+		
 		AttendanceLog log = AttendanceLog.builder()
 				.employeeId(employeeId)
 				.logType("IN")
@@ -59,36 +77,40 @@ public class AttendanceService{
 				.latitude(latitude)
 				.longitude(longitude)
 				.isLocationValid("Y")
+				.workplaceId(matchedWorkplaceId)
 				.workDate(LocalDate.now())
 				.createdAt(LocalDateTime.now())
 				.build();
 		attendanceLogRepository.save(log);
 	}
 	
-	// 퇴근 버튼(직원ID, 위도, 경도)
+	// [2] 퇴근 버튼(직원ID, 위도, 경도)
 	public void checkOut(Long employeeId, Double latitude, Double longitude) {
+		// 1. 중복 체크
 		// 오늘 날짜 구하기
 		LocalDate today = LocalDate.now();
-		
-		// 중복 체크
 		if (attendanceLogRepository.findByEmployeeIdAndWorkDateAndLogType(employeeId, today, "OUT").isPresent()) {
 		    throw new RuntimeException("이미 오늘 자 퇴근 기록이 존재합니다.");
 		}
+		// 위의 위치검증 메서드 호출
+		Long matchedWorkplaceId = validateAndGetWorkplace(latitude, longitude);
+		
 		AttendanceLog log = AttendanceLog.builder()
 				.employeeId(employeeId)
 				.logType("OUT")
 				.logTime(LocalDateTime.now())
 				.latitude(latitude)
 				.longitude(longitude)
-				.isLocationValid("Y")
+				.isLocationValid("N")
+				.workplaceId(matchedWorkplaceId)
 				.workDate(LocalDate.now())
 				.createdAt(LocalDateTime.now())
 				.build();
 		attendanceLogRepository.save(log);
 	}
 	
-	// 내 근태 현황 월별 달력 조회
-	public void yearMonth(Long employeeId, YearMonth yearMonth) {
+	// [3] 내 근태 현황 월별 달력 조회
+	public AttendanceResponse yearMonth(Long employeeId, YearMonth yearMonth) {
 		// 오늘 날짜 구하기
 		LocalDate today = LocalDate.now();
 		//YearMonth로 시작일 종료일 구하기
@@ -97,21 +119,24 @@ public class AttendanceService{
 		// 한 달 근태 기록 목록
 		List<AttendanceResult> monthList = attendanceResultRepository.findByEmployeeIdAndWorkDateBetween(employeeId, monthStart, monthEnd);
 		
-		// (출근/지각/결근) 선언 및 초기화
+		// (출근/지각/결근/휴가) 선언 및 초기화
 		int workCount = 0;
 		int lateCount = 0;
 		int absentCount = 0;
+		int leavecount = 0;
 		
 		// 출근/지각/결근 몇 번 했는지 검사하는 코드
 		for(int i=0; i < monthList.size(); i++){
 			AttendanceResult attendance = monthList.get(i);
-			// 상태 번호 확인(출근/지각/확인 중 무엇인지)
+			// 상태 번호 확인(출근/지각/확인/휴가 중 무엇인지)
 			if(attendance.getAttendanceStatusId() == 1) {
 				workCount++;
 			}else if(attendance.getAttendanceStatusId() == 2) {
 				lateCount++;
 			}else if(attendance.getAttendanceStatusId() == 3) {
 				absentCount++;
+			}else if(attendance.getAttendanceStatusId() == 4) {
+				leavecount++;
 			}else {
 				// 1, 2, 3이 아닌 다른 값이 들어왔을 때 예외 던지기
 				throw new IllegalArgumentException("잘못된 근태 상태 ID입니다: " + attendance.getAttendanceStatusId());
@@ -123,11 +148,9 @@ public class AttendanceService{
 		response.setAbsentCount(absentCount);
 		response.setLateCount(lateCount);
 		response.setWorkCount(workCount);
+		response.setLeaveCount(leavecount);
 		response.setAttendance(monthList);
+		return response;
 	}
-	
-	
-	
-	
 	
 }

@@ -12,6 +12,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Builder                 
@@ -19,6 +20,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 
 @Entity
+@Getter
 @Table(name = "workplaces")
 @SequenceGenerator(
 		name="workplaces_seq",
@@ -36,22 +38,22 @@ public class Workplace{
 	private Long workplaceId;
 	
 	@Column(name="workplace_code")
-	private Long workplaceCode;
+	private String workplaceCode;
 	
 	@Column(name="workplace_name")
-	private Long workplaceName;
+	private String workplaceName;
 	
 	@Column(name="workplace_address")
-	private Long workplaceAddress;
+	private String workplaceAddress;
 	
 	@Column(name="radius_meter")
-	private Long radiusMeter;
+	private Double radiusMeter;
 	
 	@Column(name="latitude")
-	private Long latitude;
+	private Double latitude;
 	
 	@Column(name="longitude")
-	private Long longitude;
+	private Double longitude;
 	
 	@Column(name="created_at")
 	private LocalDateTime createdAt;

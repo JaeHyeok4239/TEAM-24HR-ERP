@@ -58,7 +58,7 @@ public class AttendanceResult{
 	private LocalDate workDate;
 	
 	@Column(name="workplace_id")
-	private String workplaceId;
+	private Long workplaceId;
 	
 	@Column(name="check_in_time")
 	private LocalDateTime checkInTime;
