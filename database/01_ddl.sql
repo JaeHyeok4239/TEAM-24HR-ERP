@@ -197,7 +197,7 @@ CREATE TABLE
         overtime_minutes NUMBER NULL, -- 초과 근무 시간(분)
         is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
         is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
-        is_fixed CHAR(1) DEFAULT 'N' NOT NULL --(Y/N) 정정 여부
+        is_fixed CHAR(1) DEFAULT 'N' NOT NULL, --(Y/N) 정정 여부
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
 
