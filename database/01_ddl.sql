@@ -264,9 +264,11 @@ CREATE TABLE approval_line (
     document_type    NUMBER NOT NULL,       -- 문서유형 ID (FK → document_type)
     step_order       NUMBER NOT NULL,       -- 결재 단계
     default_approver NUMBER NOT NULL,       -- 기본 결재자 (FK → users)
+    department_id    NUMBER, -- 결재 부서 (FK → departments, 결재자가 부서에 속해있지 않으면 NULL)
+    CONSTRAINT line_fk_department FOREIGN KEY (department_id) REFERENCES departments(department_id),
     CONSTRAINT line_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT line_fk_approver FOREIGN KEY (default_approver) REFERENCES users(employee_id),
-    CONSTRAINT line_uq_step UNIQUE (document_type, step_order) -- 유형별 단계 중복 방지
+    CONSTRAINT line_uq_dept_doc_step UNIQUE (document_type, step_order, department_id) -- 유형별 단계 중복 방지
 );
 
 -- 문서 처리 부서 (문서유형별 처리 가능 부서 및 권한 설정)

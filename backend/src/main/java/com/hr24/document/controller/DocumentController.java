@@ -42,7 +42,7 @@ public class DocumentController {
 	private final DocumentService documentService;
 	
 	//임시 저장 + 결재 요청
-	@PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<Long> write(
 			@io.swagger.v3.oas.annotations.parameters.RequestBody(
 			        content = @io.swagger.v3.oas.annotations.media.Content(
@@ -106,7 +106,7 @@ public class DocumentController {
 	}
 	
 	// 내 문서함
-	@GetMapping("/my")
+	@GetMapping("/")
 	public ResponseEntity<Page<DocumentResponseDto.DocumentListDto>> myDocList(
 	        @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
 	        Authentication authInfo) {

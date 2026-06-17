@@ -312,13 +312,13 @@ INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXT
 -- 연차/반차/조퇴: 1단계 인사팀장(2)
 -- 지출결의서:    1단계 인사팀장(2) → 2단계 대표이사(1)
 -- 구매요청서:    1단계 구매팀장(6) → 2단계 대표이사(1)
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 1, 1, 2);
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 2, 1, 2);
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 3, 1, 2);
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 4, 1, 2); -- 지출결의 1차: 인사팀장
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 4, 2, 1); -- 지출결의 2차: 대표이사
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 5, 1, 6); -- 구매요청 1차: 구매팀장
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver) VALUES (approval_line_seq.NEXTVAL, 5, 2, 1); -- 구매요청 2차: 대표이사
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 1, 1, 2, 2); 
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 2, 1, 2, 2);
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 3, 1, 2, 2);
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 4, 1, 2, 2); -- 지출결의 1차: 인사팀장
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 4, 2, 1, NULL); -- 지출결의 2차: 대표이사
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 5, 1, 6, NULL); -- 구매요청 1차: 구매팀장
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 5, 2, 1, NULL); -- 구매요청 2차: 대표이사
 
 
 -- 4. 문서 처리 부서
