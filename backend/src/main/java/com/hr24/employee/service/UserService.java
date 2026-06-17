@@ -4,11 +4,13 @@ import java.util.List;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hr24.employee.dto.MyInfoResponseDto;
 import com.hr24.employee.dto.MyInfoUpdateRequestDto;
+import com.hr24.employee.dto.PasswordChangeRequestDto;
 import com.hr24.employee.entity.Department;
 import com.hr24.employee.entity.Position;
 import com.hr24.employee.entity.User;
@@ -17,6 +19,7 @@ import com.hr24.employee.repository.UserRepository;
 import com.hr24.employee.repository.UserRoleRepository;
 import com.hr24.global.exception.BusinessException;
 import com.hr24.global.exception.ErrorCode;
+import com.hr24.global.redis.RedisService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +29,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final RedisService redisService;
 
     @Transactional(readOnly = true)
     public MyInfoResponseDto getMyInfo() {
@@ -69,6 +74,44 @@ public class UserService {
     	
     	return createMyInfoResponse(user);
     }
+    
+    @Transactional
+    public void changePassword(
+    		PasswordChangeRequestDto requestDto
+    ) {
+    	Authentication authentication =
+    			SecurityContextHolder.getContext().getAuthentication();
+    	
+    	String loginId = authentication.getName();
+    	
+    	User user = userRepository.findByLoginId(loginId)
+    			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+    			);
+    	
+    	boolean currentPasswordMatched = passwordEncoder.matches(
+    			requestDto.getCurrentPassword(),
+    			user.getPassword()
+    	);
+    	
+    	if (!currentPasswordMatched) {
+    		throw new BusinessException(ErrorCode.CURRENT_PASSWORD_MISMATCH);
+    	}
+    	
+    	boolean sameAsCurrentPassword = passwordEncoder.matches(
+    			requestDto.getNewPassword(),
+    			user.getPassword()
+    	);
+    	
+    	if (sameAsCurrentPassword) {
+    		throw new BusinessException(ErrorCode.SAME_AS_CURRENT_PASSWORD);
+    	}
+    	
+    	String encodedPasswod = passwordEncoder.encode(requestDto.getNewPassword());
+    	
+    	user.changePassword(encodedPasswod);
+    	
+    	redisService.delete("RT:" + user.getEmployeeId());
+    }
 
     private MyInfoResponseDto createMyInfoResponse(User user) {
 
@@ -111,5 +154,5 @@ public class UserService {
 
                 roles
         );
-    }
+    } 
 }
