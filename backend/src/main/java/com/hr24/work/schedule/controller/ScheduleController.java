@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hr24.work.schedule.dto.HolidayResponse;
 import com.hr24.work.schedule.dto.ScheduleRequest;
 import com.hr24.work.schedule.dto.ScheduleResponse;
+import com.hr24.work.schedule.service.HolidayFetchService;
 import com.hr24.work.schedule.service.ScheduleService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
+    private final HolidayFetchService holidayFetchService;
 
     // 기간 내 일정 목록 조회 - 달력 화면에서 startDt~endDt 범위로 호출
     @Operation(summary = "기간별 일정 조회", description = "시작일~종료일 범위에 걸치는 일정 목록을 반환합니다.")
@@ -46,6 +48,14 @@ public class ScheduleController {
     @GetMapping("/holidays")
     public ResponseEntity<List<HolidayResponse>> getHolidays(@RequestParam Integer year) {
         return ResponseEntity.ok(scheduleService.getHolidays(year));
+    }
+
+    // 공공 API에서 공휴일 데이터 가져와 DB 저장 (관리자용)
+    @Operation(summary = "공휴일 갱신", description = "공공데이터 API에서 해당 연도의 공휴일을 가져와 DB에 저장합니다.")
+    @PostMapping("/holidays/fetch")
+    public ResponseEntity<String> fetchHolidays(@RequestParam Integer year) {
+        int count = holidayFetchService.fetchAndSave(year);
+        return ResponseEntity.ok(year + "년 공휴일 " + count + "건 저장 완료");
     }
 
     // 일정 등록 - scheduleType(PERSONAL/DEPT/COMPANY)에 따라 부서 연결 여부 결정

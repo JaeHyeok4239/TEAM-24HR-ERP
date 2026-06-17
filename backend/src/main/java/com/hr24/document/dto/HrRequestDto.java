@@ -1,6 +1,6 @@
 package com.hr24.document.dto;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -14,10 +14,10 @@ public class HrRequestDto {
 		@Setter
 		public static class LeaveDto {
 		    private Long leaveType;
-		    @JsonFormat(pattern = "yyyy-MM-dd")
-		    private LocalDate startDate;
-		    @JsonFormat(pattern = "yyyy-MM-dd")
-		    private LocalDate endDate;
+		    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+		    private LocalDateTime startDate;
+		    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+		    private LocalDateTime endDate;
 		    private Double leaveCnt;
 		}
 		

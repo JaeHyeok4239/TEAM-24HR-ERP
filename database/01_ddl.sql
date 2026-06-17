@@ -368,6 +368,8 @@ CREATE TABLE
         start_date DATE NOT NULL, -- 휴가 시작일
         end_date DATE NOT NULL, -- 휴가 종료일
         leave_cnt NUMBER (3, 2) NOT NULL, -- 사용 일수
+        is_processed CHAR(1) DEFAULT 'N' NOT NULL, -- 처리 여부 (Y/N)
+        CONSTRAINT leave_ck_is_processed CHECK (is_processed IN ('Y', 'N')),
         CONSTRAINT leave_fk_document FOREIGN KEY (document_id) REFERENCES document (document_id),
         CONSTRAINT leave_fk_type FOREIGN KEY (leave_type) REFERENCES leave_type (type_id),
         CONSTRAINT leave_uq_document UNIQUE (document_id)
@@ -523,6 +525,8 @@ CREATE TABLE schedule (
     schedule_type   VARCHAR2(20)    NOT NULL,
     start_dt        DATE            NOT NULL,
     end_dt          DATE            NOT NULL,
+    start_time      VARCHAR2(5)     NULL,
+    end_time        VARCHAR2(5)     NULL,
     location        VARCHAR2(200)   NULL,
     memo            CLOB            NULL,
     created_at      TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
@@ -540,6 +544,8 @@ COMMENT ON COLUMN schedule.title        IS '일정 제목';
 COMMENT ON COLUMN schedule.schedule_type IS 'PERSONAL/DEPT/COMPANY/PROJECT';
 COMMENT ON COLUMN schedule.start_dt     IS '시작일';
 COMMENT ON COLUMN schedule.end_dt       IS '종료일';
+COMMENT ON COLUMN schedule.start_time   IS '시작 시간 (HH:MM)';
+COMMENT ON COLUMN schedule.end_time     IS '종료 시간 (HH:MM)';
 COMMENT ON COLUMN schedule.location     IS '장소';
 COMMENT ON COLUMN schedule.memo         IS '메모';
 COMMENT ON COLUMN schedule.created_at   IS '등록일시';

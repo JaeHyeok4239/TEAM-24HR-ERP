@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -28,7 +29,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { useState } from 'react';
 
 // 메뉴 props 영역(링크, 아이콘, 라벨, 하위메뉴)
 const NAV_ITEMS = [
@@ -72,15 +72,14 @@ const NAV_ITEMS = [
 export default function Menu() {
   const pathname = usePathname();
 
-  const accessToken = useAuthStore((state) => state.accessToken);
   const authLogout = useAuthStore((state) => state.logout);
-
   const userInfo = useAuthStore((state) => state.userInfo);
+  
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await logoutRequest(accessToken);
+      await logoutRequest();
     } catch (error) {
       console.error('로그아웃 API 호출 실패', error);
     } finally {
@@ -188,7 +187,7 @@ export default function Menu() {
           {isProfileMenuOpen && (
             <div className="absolute bottom-full left-2 right-2 mb-2 bg-white border">
               <Link
-                href="/my-info"
+                href="/user/my-info"
                 onClick={() => setIsProfileMenuOpen(false)}
                 className="block px-3 py-2 text-sm text-black"
               >
@@ -196,7 +195,7 @@ export default function Menu() {
               </Link>
 
               <Link
-                href="/change-password"
+                href="/user/password-change"
                 onClick={() => setIsProfileMenuOpen(false)}
                 className="block px-3 py-2 text-sm text-black"
               >
