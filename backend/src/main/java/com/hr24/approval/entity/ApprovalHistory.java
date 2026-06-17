@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import com.hr24.document.entity.Document;
 import com.hr24.document.entity.DocumentFile;
 import com.hr24.document.entity.DocumentType;
@@ -19,6 +20,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -62,4 +64,8 @@ public class ApprovalHistory {
 	
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private LocalDateTime createdAt;
+	
+	@Version
+	private Long version;
+	
 }

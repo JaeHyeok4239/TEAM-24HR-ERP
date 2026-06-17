@@ -16,6 +16,12 @@ public enum ErrorCode {
 			HttpStatus.BAD_REQUEST,
 			"잘못된 요청입니다."),
 	
+	DATA_NOT_FOUND(
+			HttpStatus.NOT_FOUND,
+			"데이터가 존재하지 않습니다."
+			),
+	
+	
 	// 인증
 	AUTHENTICATION_REQUIRED(
 	        HttpStatus.UNAUTHORIZED,
@@ -35,9 +41,17 @@ public enum ErrorCode {
 	
 	INVALID_TOKEN(
 			HttpStatus.UNAUTHORIZED,
-			"유효하지 않은 토큰입니다.");
-			
+			"유효하지 않은 토큰입니다."),
 	
+	//결재 관련
+	ALREADY_PROCESSED(
+			HttpStatus.CONFLICT,
+			"이미 처리 중이거나 완료된 요청입니다."),
+	
+	NOT_YOUR_TURN(
+			HttpStatus.BAD_REQUEST,
+			"해당 단계의 결재자만 요청이 가능합니다.");
+
 	
 	
 	private final HttpStatus status;
