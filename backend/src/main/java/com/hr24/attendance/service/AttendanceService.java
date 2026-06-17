@@ -13,6 +13,7 @@ import com.hr24.attendance.entity.AttendanceResult;
 import com.hr24.attendance.repository.AttendanceLogRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
 import com.hr24.attendance.repository.WorkplaceRepository;
+import com.hr24.attendance.entity.Workplace;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,55 +40,98 @@ public class AttendanceService{
         return distance*1000;
 	}
 	
-	// 출근 버튼(직원ID, 위도, 경도)
+	// [1] 출근 버튼(직원ID, 위도, 경도)
 	public void checkIn(Long employeeId, Double latitude, Double longitude) {
+		// 1. 중복 체크
 		// 오늘 날짜 구하기
 		LocalDate today = LocalDate.now();
-		
-//		작성 중이던 것...
-//		workplaceRepository workplacerepository = new workpla
-//		double distance = LocationUtils.calculateDistance(userLat, userLon, hrLat, hrLon);
-		
-		// 중복 체크
 		if(attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeId, today).isPresent()) {
 			throw new RuntimeException("오늘 자 출근 기록이 존재합니다.");
 		}
+		
+		// 2. 위치 검증
+		var workplaces = workplaceRepository.findAll();
+
+		Long matchedWorkplaceId = null;
+		boolean isLocationValid = false;
+		
+		for (Workplace wp : workplaces) {
+			double distance = LocationUtils(latitude, longitude, wp.getLatitude(), wp.getLongitude());
+		    // 계산된 거리가 허용 반경(radius_meter) 이내인지 확인
+		    if (distance <= wp.getRadiusMeter()) {
+		        // 이 근무지 ID를 저장
+		        matchedWorkplaceId = wp.getWorkplaceId(); 
+		        isLocationValid = true;
+		        break;
+		    }
+		}
+		
+		// 근무지 근처(100미터 이내)가 아닐 경우
+		if (!isLocationValid) {
+			throw new RuntimeException("근무지 근처가 아닙니다.");
+		}
+		
+
 		AttendanceLog log = AttendanceLog.builder()
 				.employeeId(employeeId)
 				.logType("IN")
 				.logTime(LocalDateTime.now())
 				.latitude(latitude)
 				.longitude(longitude)
-				.isLocationValid("Y")
+				.isLocationValid(isLocationValid ? "Y":"N")
+				.workplaceId(matchedWorkplaceId)
 				.workDate(LocalDate.now())
 				.createdAt(LocalDateTime.now())
 				.build();
 		attendanceLogRepository.save(log);
 	}
 	
-	// 퇴근 버튼(직원ID, 위도, 경도)
+	// [2] 퇴근 버튼(직원ID, 위도, 경도)
 	public void checkOut(Long employeeId, Double latitude, Double longitude) {
+		// 1. 중복 체크
 		// 오늘 날짜 구하기
 		LocalDate today = LocalDate.now();
-		
-		// 중복 체크
 		if (attendanceLogRepository.findByEmployeeIdAndWorkDateAndLogType(employeeId, today, "OUT").isPresent()) {
 		    throw new RuntimeException("이미 오늘 자 퇴근 기록이 존재합니다.");
 		}
+		
+		// 2. 위치 검증
+		var workplaces = workplaceRepository.findAll();
+
+		Long matchedWorkplaceId = null;
+		boolean isLocationValid = false;
+		
+		for (Workplace wp : workplaces) {
+			double distance = LocationUtils(latitude, longitude, wp.getLatitude(), wp.getLongitude());
+		    // 계산된 거리가 허용 반경(radius_meter) 이내인지 확인
+		    if (distance <= wp.getRadiusMeter()) {
+		        // 이 근무지 ID를 저장
+		        matchedWorkplaceId = wp.getWorkplaceId(); 
+		        isLocationValid = true;
+		        break;
+		    }
+		}
+		
+		// 근무지 근처(100미터 이내)가 아닐 경우
+		if (!isLocationValid) {
+			throw new RuntimeException("근무지 근처가 아닙니다.");
+		}
+		
 		AttendanceLog log = AttendanceLog.builder()
 				.employeeId(employeeId)
 				.logType("OUT")
 				.logTime(LocalDateTime.now())
 				.latitude(latitude)
 				.longitude(longitude)
-				.isLocationValid("Y")
+				.isLocationValid(isLocationValid ? "Y":"N")
+				.workplaceId(matchedWorkplaceId)
 				.workDate(LocalDate.now())
 				.createdAt(LocalDateTime.now())
 				.build();
 		attendanceLogRepository.save(log);
 	}
 	
-	// 내 근태 현황 월별 달력 조회
+	// [3] 내 근태 현황 월별 달력 조회
 	public void yearMonth(Long employeeId, YearMonth yearMonth) {
 		// 오늘 날짜 구하기
 		LocalDate today = LocalDate.now();
@@ -97,7 +141,7 @@ public class AttendanceService{
 		// 한 달 근태 기록 목록
 		List<AttendanceResult> monthList = attendanceResultRepository.findByEmployeeIdAndWorkDateBetween(employeeId, monthStart, monthEnd);
 		
-		// (출근/지각/결근) 선언 및 초기화
+		// (출근/지각/결근/휴가) 선언 및 초기화 *휴가추가해야함
 		int workCount = 0;
 		int lateCount = 0;
 		int absentCount = 0;
