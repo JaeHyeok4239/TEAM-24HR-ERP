@@ -21,6 +21,8 @@ public class ScheduleResponse {
     private String scheduleType;
     private LocalDate startDt;
     private LocalDate endDt;
+    private String startTime;
+    private String endTime;
     private String location;
     private String memo;
     private LocalDateTime createdAt;
@@ -36,6 +38,8 @@ public class ScheduleResponse {
                 .scheduleType(schedule.getScheduleType())
                 .startDt(schedule.getStartDt())
                 .endDt(schedule.getEndDt())
+                .startTime(schedule.getStartTime())
+                .endTime(schedule.getEndTime())
                 .location(schedule.getLocation())
                 .memo(schedule.getMemo())
                 .createdAt(schedule.getCreatedAt())

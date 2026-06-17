@@ -89,6 +89,8 @@ public class ScheduleService {
                 .scheduleType(request.getScheduleType())
                 .startDt(request.getStartDt())
                 .endDt(request.getEndDt())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
                 .location(request.getLocation())
                 .memo(request.getMemo())
                 .createdAt(LocalDateTime.now())

@@ -10,8 +10,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
 @Entity
+@Getter
 @SequenceGenerator(
 		name="attendance_results_seq",
 		sequenceName="attendance_results_seq",

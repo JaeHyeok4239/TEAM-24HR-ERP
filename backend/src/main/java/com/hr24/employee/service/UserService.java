@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hr24.employee.dto.MyInfoResponseDto;
+import com.hr24.employee.dto.MyInfoUpdateRequestDto;
 import com.hr24.employee.entity.Department;
 import com.hr24.employee.entity.Position;
 import com.hr24.employee.entity.User;
@@ -17,63 +18,98 @@ import com.hr24.employee.repository.UserRoleRepository;
 import com.hr24.global.exception.BusinessException;
 import com.hr24.global.exception.ErrorCode;
 
-
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
-	private final UserRepository userRepository;
-	private final UserRoleRepository userRoleRepository;
+    private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
 
-	@Transactional(readOnly = true)
-	public MyInfoResponseDto getMyInfo() {
-		
-		Authentication authentication =
-				SecurityContextHolder.getContext().getAuthentication();
-		
-		String loginId = authentication.getName();
-		
-		User user = userRepository.findByLoginIdWithDepartmentAndPosition(loginId)
-				.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-		
-		Department department = user.getDepartment();
-		Position position = user.getPosition();
-		   
-		List<UserRole> userRoles =
-				userRoleRepository.findAllWithRoleByEmployeeId(user.getEmployeeId());
-		
-		List<String> roles = userRoles.stream()
-		        .map(userRole ->
-		                userRole.getRole().getRoleCode()
-		        )
-		        .toList();
+    @Transactional(readOnly = true)
+    public MyInfoResponseDto getMyInfo() {
 
-		return new MyInfoResponseDto(
-		        user.getEmployeeNo(),
-		        user.getLoginId(),
-		        user.getName(),
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
 
-		        department != null
-		                ? department.getDepartmentName()
-		                : null,
+        String loginId = authentication.getName();
 
-		        position != null
-		                ? position.getPositionName()
-		                : null,
+        User user = userRepository
+                .findByLoginIdWithDepartmentAndPosition(loginId)
+                .orElseThrow(() ->
+                        new BusinessException(ErrorCode.USER_NOT_FOUND)
+                );
 
-		        user.getHireDate() != null
-		                ? user.getHireDate().toLocalDate()
-		                : null,
+        return createMyInfoResponse(user);
+    }
+    
+    @Transactional
+    public MyInfoResponseDto updateMyInfo(
+    		MyInfoUpdateRequestDto requestDto
+    ) {
+    	Authentication authentication =
+    			SecurityContextHolder.getContext().getAuthentication();
+    	
+    	String loginId = authentication.getName();
+    	
+    	User user = userRepository
+    			.findByLoginIdWithDepartmentAndPosition(loginId)
+    			.orElseThrow(() ->
+    					new BusinessException(ErrorCode.USER_NOT_FOUND)
+    			);
+    	
+    	user.updateMyInfo(
+    			requestDto.getEmail(),
+    			requestDto.getPhone(),
+    			requestDto.getZipcode(),
+    			requestDto.getAddress(),
+    			requestDto.getAddressDetail()
+    	);
+    	
+    	return createMyInfoResponse(user);
+    }
 
-		        user.getEmail(),
-		        user.getPhone(),
-		        user.getZipcode(),
-		        user.getAddress(),
-		        user.getAddressDetail(),
+    private MyInfoResponseDto createMyInfoResponse(User user) {
 
-		        roles
-		);
-	}
+        Department department = user.getDepartment();
+        Position position = user.getPosition();
+
+        List<UserRole> userRoles =
+                userRoleRepository.findAllWithRoleByEmployeeId(
+                        user.getEmployeeId()
+                );
+
+        List<String> roles = userRoles.stream()
+                .map(userRole ->
+                        userRole.getRole().getRoleCode()
+                )
+                .toList();
+
+        return new MyInfoResponseDto(
+                user.getEmployeeNo(),
+                user.getLoginId(),
+                user.getName(),
+
+                department != null
+                        ? department.getDepartmentName()
+                        : null,
+
+                position != null
+                        ? position.getPositionName()
+                        : null,
+
+                user.getHireDate() != null
+                        ? user.getHireDate().toLocalDate()
+                        : null,
+
+                user.getEmail(),
+                user.getPhone(),
+                user.getZipcode(),
+                user.getAddress(),
+                user.getAddressDetail(),
+
+                roles
+        );
+    }
 }
