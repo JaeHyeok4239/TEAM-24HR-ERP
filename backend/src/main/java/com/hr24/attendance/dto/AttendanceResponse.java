@@ -16,5 +16,6 @@ public class AttendanceResponse {
 	private int workCount = 0;
 	private int lateCount = 0;
 	private int absentCount = 0;
+	private int leaveCount = 0;
 	private List<AttendanceResult> attendance;
 }
