@@ -57,7 +57,7 @@ public class ApprovalService {
 	
 	//결재 처리(최종 승인자라면 문서 상태 PRC로 변경 가능)
 	
-	// 결재함 조회
+	// 결재 대기함
 	public Page<ApprovalResponseDto.ApprovalHistoryDto> PendingApprovalList(String loginId, Pageable pageable){
 		User user = userRepository.findByLoginId(loginId)
 				.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
@@ -67,7 +67,7 @@ public class ApprovalService {
 		return approvalHistoryRepository.findPendingApprovals(userId, pageable).map(ApprovalResponseDto.ApprovalHistoryDto::from);
 	}
 	
-	//결재함 조회(검색 + 필터)
+	//결재 이력 보관함(PND는 제외)
 	public Page<ApprovalResponseDto.ApprovalHistoryDto> listOrSearchApprovalList(String loginId, Long documentType, String status, String keyword, Pageable pageable){
 		User user = userRepository.findByLoginId(loginId)
 				.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));

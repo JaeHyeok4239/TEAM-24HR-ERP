@@ -36,6 +36,7 @@ public interface ApprovalHistoryRepository extends JpaRepository<ApprovalHistory
 		    FROM ApprovalHistory ah
 		    JOIN ah.document d
 		    WHERE ah.approver.employeeId = :currentId
+			  AND ah.status <> 'PND'
 		      AND (:status IS NULL OR ah.status = :status)
 		      AND (:documentType IS NULL OR d.documentType.typeId = :documentType)
 		      AND (:keyword IS NULL 
