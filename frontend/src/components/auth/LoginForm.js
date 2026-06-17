@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { getMyInfoRequest, loginRequest } from "@/services/authService";
+import { loginRequest } from "@/services/authService";
+import { getMyInfoRequest } from "@/services/userService";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginForm() {

@@ -2,12 +2,16 @@ package com.hr24.employee.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hr24.employee.dto.MyInfoResponseDto;
+import com.hr24.employee.dto.MyInfoUpdateRequestDto;
 import com.hr24.employee.service.UserService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -20,6 +24,13 @@ public class UserController {
 	@GetMapping("/me")
 	public MyInfoResponseDto getMyInfo() {
 		return userService.getMyInfo();
+	}
+	
+	@PatchMapping("/me")
+	public MyInfoResponseDto updateMyInfo(
+			@Valid @RequestBody MyInfoUpdateRequestDto requestDto
+	) {
+		return userService.updateMyInfo(requestDto);
 	}
 	
 	@PreAuthorize("hasAnyRole('ADMIN','HR_MANAGER')")
