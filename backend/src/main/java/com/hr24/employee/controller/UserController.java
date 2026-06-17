@@ -1,5 +1,6 @@
 package com.hr24.employee.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hr24.employee.dto.MyInfoResponseDto;
 import com.hr24.employee.dto.MyInfoUpdateRequestDto;
+import com.hr24.employee.dto.PasswordChangeRequestDto;
 import com.hr24.employee.service.UserService;
 
 import jakarta.validation.Valid;
@@ -31,6 +33,15 @@ public class UserController {
 			@Valid @RequestBody MyInfoUpdateRequestDto requestDto
 	) {
 		return userService.updateMyInfo(requestDto);
+	}
+	
+	@PatchMapping("/me/password")
+	public ResponseEntity<Void> changePassword(
+			@Valid @RequestBody PasswordChangeRequestDto requestDto
+	) {
+		userService.changePassword(requestDto);
+		
+		return ResponseEntity.noContent().build();
 	}
 	
 	@PreAuthorize("hasAnyRole('ADMIN','HR_MANAGER')")
