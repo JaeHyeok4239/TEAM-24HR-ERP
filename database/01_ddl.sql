@@ -103,9 +103,25 @@ CREATE TABLE
         CONSTRAINT uk_user_roles_user_role UNIQUE (employee_id, role_id)
     );
 
+    -- 직원별 연차 잔액
+CREATE TABLE annual_leave_balances (
+    annual_leave_balance_id NUMBER NOT NULL,
+    employee_id NUMBER NOT NULL,
+    leave_year NUMBER(4) NOT NULL,
+    total_days NUMBER(5, 2) DEFAULT 0 NOT NULL,
+    remaining_days NUMBER(5, 2) DEFAULT 0 NOT NULL,
+    granted_at TIMESTAMP NULL,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NULL,
 
-
-
+    CONSTRAINT pk_annual_leave_balances PRIMARY KEY (annual_leave_balance_id),
+    CONSTRAINT fk_annual_leave_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
+    CONSTRAINT uk_annual_leave_employee_year UNIQUE (employee_id, leave_year),
+    CONSTRAINT chk_annual_leave_total_days CHECK (total_days >= 0),
+    CONSTRAINT chk_annual_leave_remaining_days CHECK (remaining_days >= 0),
+    CONSTRAINT chk_annual_leave_remaining_total CHECK (remaining_days <= total_days)
+);
 
 -- 근태관리: 근무 시간 규칙
 CREATE TABLE
