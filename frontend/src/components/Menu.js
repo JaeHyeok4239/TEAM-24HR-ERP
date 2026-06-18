@@ -60,6 +60,7 @@ const NAV_ITEMS = [
     label: '업무 관리',
     children: [
       { href: '/work/schedule', label: '일정 관리' },
+      { href: '/work/meeting', label: '회의실 예약' },
     ],
   },
 
