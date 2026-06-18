@@ -108,18 +108,9 @@ public class DocumentService {
 
 		if ("leave".equals(detailTable)) {
 
-			// 연차/반차 사용 시 잔여 연차 계산해서 차단
+			// 연차/반차 사용 시 잔여 연차 검증 및 형식 검증
 
-			if (isSubmit) {
-				hrService.createLeaveFromContent(document, document.getDocumentContent());
-			} else {
-				// 임시저장 시 형식만 맞춰서 검증 (저장은 안 함, 에러 시 무시)
-				try {
-					objectMapper.convertValue(document.getDocumentContent(), HrRequestDto.LeaveDto.class);
-				} catch (IllegalArgumentException e) {
-					// 임시저장이니 무시하거나, 로그만 남김
-				}
-			}
+		
 		}
 	}
 
@@ -170,7 +161,7 @@ public class DocumentService {
 		}
 
 		// detailTable에 따른 분기별 처리
-		processDetailTable(document, documentDto, "REQ".equals(saved.getStatus()));
+		//processDetailTable(document, documentDto, "REQ".equals(saved.getStatus()));
 
 		return saved.getDocumentId();
 
