@@ -113,7 +113,6 @@ CREATE TABLE
         attendance_time_policy_id NUMBER NOT NULL,
         employment_type VARCHAR2 (20) NOT NULL, -- 직원 구분(REGULAR/DAILY)
         policy_type VARCHAR2 (20) NOT NULL, -- 규칙 타입(WORK/BREAK)
-        day_of_week VARCHAR2 (10) NOT NULL, -- 요일 코드(MON~SUN)
         start_time NUMBER (4) NOT NULL, -- 규칙 시작 시간(HHMM)
         end_time NUMBER (4) NOT NULL, -- 규칙 종료 시간(HHMM) ex. 오전 9시는 0900
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -124,8 +123,7 @@ CREATE TABLE
         CONSTRAINT chk_att_time_start_minute CHECK (MOD(start_time, 100) < 60),
         CONSTRAINT chk_att_time_end_minute CHECK (MOD(end_time, 100) < 60),
         CONSTRAINT chk_att_policy_type CHECK (policy_type IN ('WORK', 'BREAK')),
-        CONSTRAINT chk_att_time_emp_type CHECK (employment_type IN ('REGULAR', 'DAILY')),
-        CONSTRAINT chk_att_time_day_week CHECK (day_of_week IN ('MON','TUE','WED','THU','FRI','SAT','SUN'))
+        CONSTRAINT chk_att_time_emp_type CHECK (employment_type IN ('REGULAR', 'DAILY'))
     );
 
 -- 근태관리: 근태 판정 기준
