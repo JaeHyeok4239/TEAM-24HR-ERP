@@ -647,7 +647,65 @@ VALUES (schedule_seq.NEXTVAL, 7, 3, '하반기 현장 안전교육', 'DEPT', DAT
 
 -- 1. 급여 내역 테이블 샘플 데이터 삽입
 INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
-VALUES (payrolls_seq.NEXTVAL, 1, '202605', 6846000, 760295, 6085705, 'Paid', CURRENT_TIMESTAMP);
+VALUES (payrolls_seq.NEXTVAL, 1, '2026-05', 8038000, 849039, 7188961, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 2, '2026-05', 5266000, 605134, 4660866, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 3, '2026-05', 6846000, 760295, 6085705, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 4, '2026-05', 7028000, 773845, 6254155, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 5, '2026-05', 6254155, 561893, 4342107, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 6, '2026-05', 4698000, 537286, 4160714, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 7, '2026-05', 4332000, 493567, 3838433, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 8, '2026-05', 5190000, 596056, 4593944, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 9, '2026-05', 5249000, 603103, 4645897, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 10, '2026-05', 4541000, 518532, 4022468, 'Paid', CURRENT_TIMESTAMP);
+
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 1, '2026-06', 8038000, 849039, 7188961, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 2, '2026-06', 5266000, 605134, 4660866, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 3, '2026-06', 6846000, 760295, 6085705, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 4, '2026-06', 7028000, 773845, 6254155, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 5, '2026-06', 4904000, 561893, 4342107, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 6, '2026-06', 4759000, 544573, 4214427, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 7, '2026-06', 4332000, 493567, 3838433, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 8, '2026-06', 5062000, 580766, 4481234, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 9, '2026-06', 5223000, 599997, 4623003, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 10, '2026-06', 4439000, 506349, 3932651, 'Paid', CURRENT_TIMESTAMP);
 
 
 -- 2. 급여 상세 항목 테이블 샘플 데이터 삽입
