@@ -16,6 +16,34 @@ public enum ErrorCode {
 			HttpStatus.BAD_REQUEST,
 			"잘못된 요청입니다."),
 	
+	//부서(조회 및 수정)
+	DEPARTMENT_NOT_FOUND(
+			HttpStatus.NOT_FOUND,
+			"부서를 찾을 수 없습니다." ),
+	
+	DUPLICATE_DEPARTMENT_CODE(
+			HttpStatus.CONFLICT,
+			"이미 사용 중인 부서 코드입니다." ),
+	
+	DUPLICATE_DEPARTMENT_NAME(
+			HttpStatus.CONFLICT,
+			"이미 사용 중인 부서명입니다." ),
+	
+	INVALID_PARENT_DEPARTMENT(
+			HttpStatus.BAD_REQUEST, 
+		"올바르지 않은 상위 부서입니다." ), 
+
+	INACTIVE_PARENT_DEPARTMENT(
+			HttpStatus.BAD_REQUEST,
+			"미사용 부서는 상위 부서로 지정할 수 없습니다." ),
+	
+	DEPARTMENT_HAS_ASSIGNED_EMPLOYEES(
+			HttpStatus.CONFLICT, 
+		"해당 부서에 소속된 직원이 있어 미사용 처리할 수 없습니다."), 
+
+	DEPARTMENT_HAS_ACTIVE_CHILDREN(
+			HttpStatus.CONFLICT,
+			"사용 중인 하위 부서가 있어 미사용 처리할 수 없습니다." ),
 	DATA_NOT_FOUND(
 			HttpStatus.NOT_FOUND,
 			"데이터가 존재하지 않습니다."

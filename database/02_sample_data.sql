@@ -185,9 +185,37 @@ VALUES ( user_role_seq.NEXTVAL, 9, 2 ); -- 일반직원1 USER
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
 VALUES ( user_role_seq.NEXTVAL, 10, 2 ); -- 일반직원2 USER
 
+-- 직원별 연차 잔액 샘플 데이터
+-- 정규직 employee_id 1~10만 등록
+INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
+VALUES ( annual_leave_balance_seq.NEXTVAL, 1, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
 
+INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
+VALUES ( annual_leave_balance_seq.NEXTVAL, 2, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
 
+INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
+VALUES ( annual_leave_balance_seq.NEXTVAL, 3, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
 
+INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
+VALUES ( annual_leave_balance_seq.NEXTVAL, 4, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
+
+INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
+VALUES ( annual_leave_balance_seq.NEXTVAL, 5, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
+
+INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
+VALUES ( annual_leave_balance_seq.NEXTVAL, 6, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
+
+INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
+VALUES ( annual_leave_balance_seq.NEXTVAL, 7, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
+
+INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
+VALUES ( annual_leave_balance_seq.NEXTVAL, 8, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
+
+INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
+VALUES ( annual_leave_balance_seq.NEXTVAL, 9, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
+
+INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
+VALUES ( annual_leave_balance_seq.NEXTVAL, 10, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
 
 -- 테이블 삭제
 DELETE FROM attendance_logs;

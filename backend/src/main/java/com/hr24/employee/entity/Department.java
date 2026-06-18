@@ -51,5 +51,33 @@ public class Department extends BaseTimeEntity {
 
 	@Column(name = "is_active", nullable = false, length = 1)
 	private String isActive = "Y";
+	
+	public static Department create(
+	        String departmentCode,
+	        String departmentName,
+	        Department parentDepartment,
+	        Boolean active
+	) {
+	    Department department = new Department();
+
+	    department.departmentCode = departmentCode;
+	    department.departmentName = departmentName;
+	    department.parentDepartment = parentDepartment;
+	    department.isActive =
+	            Boolean.TRUE.equals(active) ? "Y" : "N";
+
+	    return department;
+	}
+
+	public void update(
+	        String departmentName,
+	        Department parentDepartment,
+	        Boolean active
+	) {
+	    this.departmentName = departmentName;
+	    this.parentDepartment = parentDepartment;
+	    this.isActive =
+	            Boolean.TRUE.equals(active) ? "Y" : "N";
+	}
 
 }
