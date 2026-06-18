@@ -231,12 +231,6 @@ INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'EARLY_
 INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'ABSENT', '결근', 4);
 INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LEAVE', '휴가', 5);
 
--- 반차 종류
-INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'AM', '오전 반차');
-INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'PM', '오후 반차');
-
-
-
 
 
 -- 전자결재 샘플 데이터
