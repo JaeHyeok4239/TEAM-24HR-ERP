@@ -65,9 +65,9 @@ public class MeetingService {
         MeetingRoom room = meetingRoomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회의실입니다."));
 
-        // 같은 날짜, 같은 회의실의 기존 예약과 시간이 겹치는지 확인
+        // 비관적 락으로 조회 - 트랜잭션 종료 전까지 동일 회의실/날짜 접근 차단
         boolean isOverlap = reservationRepository
-                .findConfirmedByRoomAndDate(room, request.getRsvDate())
+                .findConfirmedByRoomAndDateWithLock(room, request.getRsvDate())
                 .stream()
                 .anyMatch(r ->
                         request.getStartTime().compareTo(r.getEndTime()) < 0 &&

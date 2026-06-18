@@ -25,7 +25,7 @@ const refreshAccessToken = async () => {
   });
 
   if (!response.ok) {
-    throw new Error("Access Token 재발급에 실패했습니다.")
+    throw new Error("Access Token 재발급에 실패했습니다.");
   }
 
   const data = await response.json();
@@ -41,13 +41,12 @@ const refreshAccessToken = async () => {
     accessToken: newAccessToken,
   });
 
-  return newAccessToken
-}
+  return newAccessToken;
+};
 
 export const apiRequest = async (url, options = {}) => {
   const accessToken =
-    useAuthStore.getState().accessToken
-    || localStorage.getItem("accessToken");
+    useAuthStore.getState().accessToken || localStorage.getItem("accessToken");
 
   const request = (token) => {
     return fetch(`${BASE_URL}${url}`, {
@@ -77,7 +76,22 @@ export const apiRequest = async (url, options = {}) => {
   }
 
   if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`);
+    let errorData = null;
+
+    try {
+      errorData = await response.json();
+    } catch {
+      // JSON 형식의 오류 응답이 아니면 기본 메시지를 사용한다.
+    }
+
+    const error = new Error(
+      errorData?.message || `요청 처리에 실패했습니다. (${response.status})`,
+    );
+
+    error.status = response.status;
+    error.code = errorData?.code ?? errorData?.errorCode ?? null;
+
+    throw error;
   }
 
   return response;

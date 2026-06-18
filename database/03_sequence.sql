@@ -23,6 +23,11 @@ CREATE SEQUENCE department_seq START
 WITH
     10 INCREMENT BY 1 NOCACHE NOCYCLE;
 
+-- 연차 잔액 시퀀스
+CREATE SEQUENCE annual_leave_balance_seq START 
+WITH 
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
 -- 근무 시간 규칙 시퀀스
 CREATE SEQUENCE attendance_time_policies_seq START
 WITH

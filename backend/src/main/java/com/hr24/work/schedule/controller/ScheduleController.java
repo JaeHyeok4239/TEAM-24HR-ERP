@@ -38,22 +38,22 @@ public class ScheduleController {
     @Operation(summary = "기간별 일정 조회", description = "시작일~종료일 범위에 걸치는 일정 목록을 반환합니다.")
     @GetMapping
     public ResponseEntity<List<ScheduleResponse>> getSchedules(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDt,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDt) {
+            @RequestParam("startDt") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDt,
+            @RequestParam("endDt") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDt) {
         return ResponseEntity.ok(scheduleService.getSchedules(startDt, endDt));
     }
 
     // 연도별 공휴일 목록 조회
     @Operation(summary = "공휴일 조회", description = "해당 연도의 공휴일 목록을 반환합니다.")
     @GetMapping("/holidays")
-    public ResponseEntity<List<HolidayResponse>> getHolidays(@RequestParam Integer year) {
+    public ResponseEntity<List<HolidayResponse>> getHolidays(@RequestParam("year") Integer year) {
         return ResponseEntity.ok(scheduleService.getHolidays(year));
     }
 
     // 공공 API에서 공휴일 데이터 가져와 DB 저장 (관리자용)
     @Operation(summary = "공휴일 갱신", description = "공공데이터 API에서 해당 연도의 공휴일을 가져와 DB에 저장합니다.")
     @PostMapping("/holidays/fetch")
-    public ResponseEntity<String> fetchHolidays(@RequestParam Integer year) {
+    public ResponseEntity<String> fetchHolidays(@RequestParam("year") Integer year) {
         int count = holidayFetchService.fetchAndSave(year);
         return ResponseEntity.ok(year + "년 공휴일 " + count + "건 저장 완료");
     }
@@ -62,7 +62,7 @@ public class ScheduleController {
     @Operation(summary = "일정 등록", description = "새 일정을 등록합니다. DEPT 타입이면 deptId 필수.")
     @PostMapping
     public ResponseEntity<ScheduleResponse> createSchedule(
-            @RequestParam Long userId,
+            @RequestParam("userId") Long userId,
             @RequestBody ScheduleRequest request) {
         return ResponseEntity.ok(scheduleService.createSchedule(userId, request));
     }
