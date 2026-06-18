@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -19,7 +18,6 @@ import com.hr24.approval.entity.ApprovalLine;
 import com.hr24.approval.repository.ApprovalLineRepository;
 import com.hr24.approval.repository.ApprovalHistoryRepository;
 import com.hr24.document.dto.DocumentRequestDto;
-import com.hr24.document.dto.DocumentRequestDto.DocumentContentDto;
 import com.hr24.document.dto.DocumentResponseDto;
 import com.hr24.document.dto.HrRequestDto;
 import com.hr24.document.entity.Document;
@@ -150,14 +148,15 @@ public class DocumentService {
 			// 결재 로직 추가
 			createApprovalHistory(document);
 		}
-		
-		if ("REQ".equals(document.getStatus()) && (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
-		    throw new IllegalArgumentException("문서 내용을 입력해주세요.");
+
+		if ("REQ".equals(document.getStatus())
+				&& (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
+			throw new IllegalArgumentException("문서 내용을 입력해주세요.");
 		}
-		
+
 		// detailTable에 따른 분기별 처리
 		processDetailTable(document, documentDto, "REQ".equals(saved.getStatus()));
-		
+
 		return saved.getDocumentId();
 
 	}
@@ -205,14 +204,15 @@ public class DocumentService {
 			createApprovalHistory(document);
 			document.setRequestedAt(LocalDateTime.now());
 		}
-		
-		if ("REQ".equals(document.getStatus()) && (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
-		    throw new IllegalArgumentException("문서 내용을 입력해주세요.");
+
+		if ("REQ".equals(document.getStatus())
+				&& (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
+			throw new IllegalArgumentException("문서 내용을 입력해주세요.");
 		}
-		
+
 		// detailTable에 따른 분기별 처리
 		processDetailTable(document, documentDto, "REQ".equals(document.getStatus()));
-		
+
 	}
 
 	// 문서 삭제(임시 저장 상태일 때만 가능 / 문서 삭제 시 매핑 데이터 삭제 -> 파일 데이터 삭제 -> 실제 파일 삭제
@@ -276,14 +276,13 @@ public class DocumentService {
 
 		Long userId = user.getEmployeeId();
 
-		// 기안자, 처리자 체크
+		// 기안자 체크
 		boolean isRequester = document.getRequester().getEmployeeId().equals(userId);
-		boolean isProcessor = document.getProcessor() != null && document.getProcessor().getEmployeeId().equals(userId);
 
-		// 결재자 체크 (approval_history에 있는지)
+		// 결재자 체크 (approval_history에 있는지) 문서 상세 열람은 결재자 권한 있으면 가능
 		boolean isApprover = approvalHistoryRepository.existsByDocumentAndApprover(document, user);
 
-		if (!isRequester && !isProcessor && !isApprover) {
+		if (!isRequester && !isApprover) {
 			throw new BusinessException(ErrorCode.ACCESS_DENIED);
 		}
 
@@ -297,5 +296,4 @@ public class DocumentService {
 		return DocumentResponseDto.DocumentDto.of(document, approvalHistories, documentFileList);
 	}
 
-	
 }

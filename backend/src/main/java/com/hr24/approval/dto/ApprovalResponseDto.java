@@ -5,9 +5,11 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hr24.approval.entity.ApprovalHistory;
 import com.hr24.approval.entity.ApprovalLine;
+import com.hr24.document.entity.Document;
 
 import lombok.Builder;
 import lombok.Getter;
+
 
 //결재 조회(응답)용 Dto
 public class ApprovalResponseDto {
@@ -17,25 +19,40 @@ public class ApprovalResponseDto {
 	public static class ApprovalHistoryDto {
 		private Long historyId;
 		private Long documentId;
+		private String documentTitle;
 		private Integer stepOrder;
 		private Long approverId;
+		private String approver;
 		private String status;
 		private String approverComment;
 		@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private LocalDateTime actedAt;
 		@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private LocalDateTime createdAt;
+		private String requester;
+		private Long requesterId;
+		
 		public static ApprovalHistoryDto from(ApprovalHistory approvalHistory) {
+			
+			Document document = approvalHistory.getDocument();
+			
 			return ApprovalHistoryDto.builder()
 					.historyId(approvalHistory.getHistoryId())
 					.documentId(approvalHistory.getDocument().getDocumentId())
+					.documentTitle(approvalHistory.getDocument().getDocumentTitle())
 					.stepOrder(approvalHistory.getStepOrder())
+					.approverId(approvalHistory.getApprover().getEmployeeId())
+					.approver(approvalHistory.getApprover().getName())
+					.status(approvalHistory.getStatus())
 					.approverComment(approvalHistory.getApproverComment())
 					.actedAt(approvalHistory.getActedAt())
-					.createdAt(approvalHistory.getCreateAt())
+					.createdAt(approvalHistory.getCreatedAt())
+					.requester(document.getRequester().getName())
+					.requesterId(document.getRequester().getEmployeeId())
 					.build();
 		}
 	}
+	
 	
 	@Getter
 	@Builder
@@ -46,6 +63,8 @@ public class ApprovalResponseDto {
 		private Integer stepOrder;
 		private Long defaultApprover;
 		private String approverName;
+		private Long departmentId;
+		private String departmentName;
 		
 		public static ApprovalLineDto from(ApprovalLine approvalLine) {
 			return ApprovalLineDto.builder()
@@ -55,9 +74,9 @@ public class ApprovalResponseDto {
 					.stepOrder(approvalLine.getStepOrder())
 					.defaultApprover(approvalLine.getApprover().getEmployeeId())
 					.approverName(approvalLine.getApprover().getName())
+					.departmentId(approvalLine.getDepartment() != null ? approvalLine.getDepartment().getDepartmentId() : null)
+					.departmentName(approvalLine.getDepartment() != null ? approvalLine.getDepartment().getDepartmentName() : null)
 					.build();
 		}
 	}
-	
-	
 }

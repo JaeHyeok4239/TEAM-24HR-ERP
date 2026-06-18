@@ -23,6 +23,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -66,7 +67,7 @@ public class Document {
 	@Column(name = "status")	
 	private String status;
 	
-	@Column(name = "current_step", insertable = false, updatable = false)
+	@Column(name = "current_step", insertable = false)
 	private Integer currentStep;
 	
 	@Column(name = "created_at", insertable = false, updatable = false)
@@ -84,4 +85,6 @@ public class Document {
 	@Column(name = "reject_reason")
 	private String rejectReason;
 	
+	@Version
+	private Long version;
 }

@@ -1,9 +1,8 @@
 package com.hr24.approval.entity;
 
-import java.time.LocalDateTime;
 
-import com.hr24.document.entity.Document;
 import com.hr24.document.entity.DocumentType;
+import com.hr24.employee.entity.Department;
 import com.hr24.employee.entity.User;
 
 import jakarta.persistence.Column;
@@ -42,6 +41,10 @@ public class ApprovalLine {
 	
 	@Column(name = "step_order")
 	private Integer stepOrder;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "department_id")
+	private Department department;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "default_approver")

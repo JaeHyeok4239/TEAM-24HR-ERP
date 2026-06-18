@@ -33,7 +33,16 @@ import {
 // 메뉴 props 영역(링크, 아이콘, 라벨, 하위메뉴)
 const NAV_ITEMS = [
   { href: '/', icon: Home, label: '홈' },
-  { href: '/attendance', icon: Clock, label: '근태 관리' },
+  { 
+    href: '/attendance', 
+    icon: Clock, 
+    label: '근태 관리',
+    children: [
+        { href: '/attendance/my', label: '내 근태 현황' },
+        { href: '/attendance/regular', label: '정규직 근태 관리' },
+        { href: '/attendance/daily', label: '일용직 근태 관리' },
+      ], 
+  },
   { href: '/payroll', icon: DollarSign, label: '급여 관리' },
   { 
     href: '/hr',
