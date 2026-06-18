@@ -57,6 +57,14 @@ public class DocumentService {
 		documentFileRepository.save(documentFile);
 	}
 
+	// 작성자 검증
+	private boolean isOwner(String loginId, Long requesterId) {
+		User user = userRepository.findByLoginId(loginId)
+				.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
+
+		return user.getEmployeeId().equals(requesterId);
+	}
+
 	// 여러 파일 등록
 	private void createDocumentFiles(Document document, List<Attachment> attachments) {
 		for (Attachment attachment : attachments) {
@@ -65,14 +73,14 @@ public class DocumentService {
 	}
 
 	// documentContent를 Map으로 변환
-	private Map<String, Object> toDocumentContentMap(List<DocumentRequestDto.DocumentContentDto> contentList) {
-		if (contentList == null || contentList.isEmpty()) {
-			return new HashMap<>();
-		}
-
-		return contentList.stream().collect(Collectors.toMap(DocumentRequestDto.DocumentContentDto::getField,
-				DocumentRequestDto.DocumentContentDto::getData));
-	}
+//	private Map<String, Object> toDocumentContentMap(List<DocumentRequestDto.DocumentContentDto> contentList) {
+//		if (contentList == null || contentList.isEmpty()) {
+//			return new HashMap<>();
+//		}
+//
+//		return contentList.stream().collect(Collectors.toMap(DocumentRequestDto.DocumentContentDto::getField,
+//				DocumentRequestDto.DocumentContentDto::getData));
+//	}
 
 	// 결재 연동
 	private void createApprovalHistory(Document document) {
@@ -83,8 +91,14 @@ public class DocumentService {
 			throw new IllegalStateException("해당 문서 종류의 결재선이 없습니다.");
 		}
 
-		List<ApprovalHistory> histories = lines.stream().map(line -> ApprovalHistory.builder().document(document)
-				.stepOrder(line.getStepOrder()).approver(line.getApprover()).status("PND").build()).toList();
+		List<ApprovalHistory> histories = lines.stream()
+				.map(line -> ApprovalHistory.builder()
+						.document(document)
+						.stepOrder(line.getStepOrder())
+						.approver(line.getApprover())
+						.status("PND")
+						.documentVersion(document.getDocumentVersion())
+						.build()).toList();
 
 		approvalHistoryRepository.saveAll(histories);
 	}
@@ -93,6 +107,9 @@ public class DocumentService {
 		String detailTable = document.getDocumentType().getDetailTable();
 
 		if ("leave".equals(detailTable)) {
+
+			// 연차/반차 사용 시 잔여 연차 계산해서 차단
+
 			if (isSubmit) {
 				hrService.createLeaveFromContent(document, document.getDocumentContent());
 			} else {
@@ -123,11 +140,9 @@ public class DocumentService {
 			status = "TMP";
 		}
 
-		Map<String, Object> documentContent = toDocumentContentMap(documentDto.getDocumentContent());
-
 		Document document = Document.builder().documentType(documentType).requester(user)
-				.documentTitle(documentDto.getDocumentTitle()).documentContent(documentContent).status(status)
-				.requestedAt("REQ".equals(status) ? now : null).build();
+				.documentTitle(documentDto.getDocumentTitle()).documentContent(documentDto.getDocumentContent())
+				.status(status).requestedAt("REQ".equals(status) ? now : null).build();
 
 		Document saved = documentRepository.save(document);
 
@@ -168,26 +183,54 @@ public class DocumentService {
 
 		Document document = documentRepository.findById(documentId)
 				.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
+		
+		boolean isOwner = isOwner(loginId, document.getRequester().getEmployeeId());
 
-		if (!"TMP".equals(document.getStatus())) {
-			throw new IllegalStateException("임시저장 상태의 문서만 수정할 수 있습니다");
+		if (!isOwner) {
+			throw new BusinessException(ErrorCode.ACCESS_DENIED);
 		}
-
+		
+		if (!"TMP".equals(document.getStatus()) && !"REJ".equals(document.getStatus())) {
+			throw new IllegalStateException("수정 불가능한 상태입니다.");
+		}
+		
 		String newStatus = documentDto.getStatus();
-		if (newStatus == null || newStatus.isBlank()) {
-			newStatus = "TMP";
+
+		if (!"TMP".equals(newStatus) && !"REQ".equals(newStatus)) {
+		    throw new IllegalArgumentException("허용되지 않는 상태값입니다.");
 		}
 
+		if ("REQ".equals(newStatus)
+				&& (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
+			throw new IllegalArgumentException("문서 내용을 입력해주세요.");
+		}
+
+		boolean isResubmit = "REJ".equals(document.getStatus()) && "REQ".equals(newStatus);
+
+		// 반려 재기안 시 처리
+		if (isResubmit) {
+			document.setRejectReason(null);
+			document.setCurrentStep(1);
+			document.setUpdatedAt(LocalDateTime.now());
+			document.setDocumentVersion(document.getDocumentVersion() + 1);
+		}
+		
+		if ("REQ".equals(newStatus)) {
+			createApprovalHistory(document);
+			document.setRequestedAt(LocalDateTime.now());
+		}
+		
 		document.setDocumentTitle(documentDto.getDocumentTitle());
-		document.setDocumentContent(toDocumentContentMap(documentDto.getDocumentContent()));
+		document.setDocumentContent(documentDto.getDocumentContent());
 		document.setStatus(newStatus);
 
 		// 파일 삭제
-		if (documentDto.getDeleteAttachmentIds() != null && !documentDto.getDeleteAttachmentIds().isEmpty()) {
-			for (Long attachmentId : documentDto.getDeleteAttachmentIds()) {
-				documentFileRepository.deleteByAttachment_AttachmentId(attachmentId);
-				attachmentService.delete(attachmentId);
-			}
+		if (documentDto.getAttachmentIds() != null && !documentDto.getAttachmentIds().isEmpty()) {
+			// 매핑 삭제
+			documentFileRepository.deleteByAttachmentIdIn(documentDto.getAttachmentIds());
+			
+			// 파일 삭제
+			attachmentService.deleteAll(documentDto.getAttachmentIds());
 		}
 
 		// 파일 추가
@@ -198,16 +241,6 @@ public class DocumentService {
 						document.getRequester().getEmployeeId());
 				createDocumentFiles(document, attachments);
 			}
-		}
-
-		if ("REQ".equals(newStatus)) {
-			createApprovalHistory(document);
-			document.setRequestedAt(LocalDateTime.now());
-		}
-
-		if ("REQ".equals(document.getStatus())
-				&& (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
-			throw new IllegalArgumentException("문서 내용을 입력해주세요.");
 		}
 
 		// detailTable에 따른 분기별 처리
@@ -222,7 +255,13 @@ public class DocumentService {
 
 		Document document = documentRepository.findById(documentId)
 				.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
+		
+		
+		boolean isOwner = isOwner(loginId, document.getRequester().getEmployeeId());
 
+		if (!isOwner) {
+			throw new BusinessException(ErrorCode.ACCESS_DENIED);
+		}
 		if (!"TMP".equals(document.getStatus())) {
 			throw new IllegalStateException("임시저장 상태의 문서만 삭제할 수 있습니다");
 		}
@@ -237,10 +276,6 @@ public class DocumentService {
 
 		documentRepository.delete(document);
 	}
-
-	// 반려 문서 재기안(반려 상태일 때, 원본 반려 문서 조회 -> 내용 복사 후 임시저장 상태로 저장(기존 매핑되었던 첨부파일 불러온 뒤 최종
-	// 확정된 파일들만 재매핑)
-	// Long createReDraft(Long rejectedDocumentId)
 
 	// 업로드된 파일 종류 목록
 
@@ -277,7 +312,7 @@ public class DocumentService {
 		Long userId = user.getEmployeeId();
 
 		// 기안자 체크
-		boolean isRequester = document.getRequester().getEmployeeId().equals(userId);
+		boolean isRequester = isOwner(loginId, userId);
 
 		// 결재자 체크 (approval_history에 있는지) 문서 상세 열람은 결재자 권한 있으면 가능
 		boolean isApprover = approvalHistoryRepository.existsByDocumentAndApprover(document, user);
