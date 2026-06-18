@@ -1,3 +1,4 @@
+
 package com.hr24.work.meeting.controller;
 
 import java.time.LocalDate;
@@ -42,7 +43,7 @@ public class MeetingController {
     @Operation(summary = "날짜별 예약 조회", description = "해당 날짜의 전체 예약 목록을 반환합니다.")
     @GetMapping("/reservations")
     public ResponseEntity<List<ReservationResponse>> getReservationsByDate(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(meetingService.getReservationsByDate(date));
     }
 
@@ -50,7 +51,7 @@ public class MeetingController {
     @Operation(summary = "내 예약 목록 조회", description = "사용자 ID로 해당 사용자의 예약 목록을 반환합니다.")
     @GetMapping("/reservations/my")
     public ResponseEntity<List<ReservationResponse>> getMyReservations(
-            @RequestParam Long userId) {
+            @RequestParam("userId") Long userId) {
         return ResponseEntity.ok(meetingService.getMyReservations(userId));
     }
 
@@ -58,7 +59,7 @@ public class MeetingController {
     @Operation(summary = "예약 생성", description = "회의실 예약을 생성합니다. 시간 중복 시 400 반환.")
     @PostMapping("/reservations")
     public ResponseEntity<ReservationResponse> createReservation(
-            @RequestParam Long userId,
+            @RequestParam("userId") Long userId,
             @RequestBody ReservationRequest request) {
         return ResponseEntity.ok(meetingService.createReservation(userId, request));
     }
