@@ -45,4 +45,6 @@ public class GlobalExceptionHandler {
                 .status(errorCode.getStatus())
                 .body(response);
     }
+    
+
 }

@@ -299,6 +299,7 @@ CREATE TABLE document (
     processed_at   TIMESTAMP,                   -- 처리일시
     reject_reason  VARCHAR2(500 CHAR),          -- 반려 사유 (최종 반려 단계 기준)
     document_content JSON DEFAULT '{}' NOT NULL, -- 문서 본문 (JSON 형태로 다양한 필드 저장)
+    version        NUMBER DEFAULT 0 NOT NULL,   -- 결재 승인 시 충돌 방지
     CONSTRAINT document_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT document_fk_requester FOREIGN KEY (requester_id) REFERENCES users(employee_id),
     CONSTRAINT document_fk_processor FOREIGN KEY (processor_id) REFERENCES users(employee_id),
@@ -316,9 +317,10 @@ CREATE TABLE approval_history (
     approver_comment VARCHAR2(500 CHAR),
     acted_at         TIMESTAMP,
     created_at       TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
+    version          NUMBER DEFAULT 0 NOT NULL, -- 결재 승인 시 충돌 방지
     CONSTRAINT history_fk_document FOREIGN KEY (document_id) REFERENCES document(document_id),
     CONSTRAINT history_fk_approver FOREIGN KEY (approver_id) REFERENCES users(employee_id),
-    CONSTRAINT history_ck_status CHECK (status IN ('APR', 'REJ', 'PND')),
+    CONSTRAINT history_ck_status CHECK (status IN ('APR', 'REJ', 'PND', 'CAN')),
     CONSTRAINT history_uq_step UNIQUE (document_id, step_order)
 );
 -- 첨부파일 (업로드된 파일 메타정보 관리)
