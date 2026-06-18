@@ -62,3 +62,16 @@ a {
 .fc-day-sat .fc-col-header-cell-cushion {
   color: #3182ce !important;
 }
+
+/* 마커 툴팁의 기본 말풍선 모양을 제거 */
+.text-label {
+  border: none !important;
+  font-weight: bold;               
+  color: #1a1a1a;                    
+  font-size: 14px;                
+}
+
+/* 툴팁의 뾰족한 화살표 제거 */
+.text-label::before {
+  display: none !important;
+}

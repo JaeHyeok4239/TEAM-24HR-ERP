@@ -35,6 +35,16 @@ public enum ErrorCode {
 			HttpStatus.UNAUTHORIZED,
 			"아이디 또는 비밀번호가 올바르지 않습니다."),
 	
+	CURRENT_PASSWORD_MISMATCH(
+	        HttpStatus.BAD_REQUEST,
+	        "현재 비밀번호가 일치하지 않습니다."
+	),
+
+	SAME_AS_CURRENT_PASSWORD(
+	        HttpStatus.BAD_REQUEST,
+	        "새 비밀번호는 현재 비밀번호와 다르게 입력해주세요."
+	),
+	
 	ACCESS_DENIED(
 			HttpStatus.FORBIDDEN,
 			"접근 권한이 없습니다."),

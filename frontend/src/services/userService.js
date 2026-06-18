@@ -19,3 +19,14 @@ export const updateMyInfoRequest = async (requestData) => {
 
   return response.json();
 };
+
+//비밀번호 변경 요청
+export const changePasswordRequest = async (requestData) => {
+  await apiRequest('/api/users/me/password', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestData),
+  });
+};
