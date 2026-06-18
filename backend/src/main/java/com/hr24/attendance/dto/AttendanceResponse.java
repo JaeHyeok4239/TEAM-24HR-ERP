@@ -12,9 +12,10 @@ import lombok.Setter;
 @Setter
 public class AttendanceResponse {
 
-	// (출근/지각/결근) 선언 및 초기화
+	// (출근/지각/조퇴/결근/휴가) 선언 및 초기화
 	private int workCount = 0;
 	private int lateCount = 0;
+	private int earlyLeaveCount = 0;
 	private int absentCount = 0;
 	private int leaveCount = 0;
 	private List<AttendanceResult> attendance;

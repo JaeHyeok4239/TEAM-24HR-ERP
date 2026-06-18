@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,19 @@ public class AttendanceService{
 	private final AttendanceLogRepository attendanceLogRepository;
 	private final AttendanceResultRepository attendanceResultRepository;
 	private final WorkplaceRepository workplaceRepository;
+	
+	// 매일 밤 오후 11시 배치 프로그램
+	// status WORK, LATE인 사람들 중 퇴근 안 찍힌 사람 missing 'Y'으로 변경
+	// 오후 11시 ~ 오전 6시 출퇴근 버튼 못 누르게 막기(저장 안 되게)
+	public void processMissingCheckouts() {
+		
+	}
+	
+	// 매일 오전 6시 배치 프로그램
+	// 휴가자 제외 모든 직원들의 results 테이블 생성(상태 READY)
+	public void createDailyAttendanceResults() {
+		
+	}
 	
 	// 호버사인 계산식
 	public static Double LocationUtils(Double user_latitude, Double user_longitude, Double HR_latitude, Double HR_longitude) {
@@ -119,37 +134,26 @@ public class AttendanceService{
 		// 한 달 근태 기록 목록
 		List<AttendanceResult> monthList = attendanceResultRepository.findByEmployeeIdAndWorkDateBetween(employeeId, monthStart, monthEnd);
 		
-		// (출근/지각/결근/휴가) 선언 및 초기화
+		// 상태 번호 확인(출근/지각/조퇴/결근/휴가)
+		// 원래 statuses 종류 근무/지각/조퇴/결근/휴가
 		int workCount = 0;
 		int lateCount = 0;
+		int earlyLeaveCount = 0;
 		int absentCount = 0;
 		int leavecount = 0;
 		
-		// 출근/지각/결근 몇 번 했는지 검사하는 코드
-		for(int i=0; i < monthList.size(); i++){
-			AttendanceResult attendance = monthList.get(i);
-			// 상태 번호 확인(출근/지각/확인/휴가 중 무엇인지)
-			if(attendance.getAttendanceStatusId() == 1) {
-				workCount++;
-			}else if(attendance.getAttendanceStatusId() == 2) {
-				lateCount++;
-			}else if(attendance.getAttendanceStatusId() == 3) {
-				absentCount++;
-			}else if(attendance.getAttendanceStatusId() == 4) {
-				leavecount++;
-			}else {
-				// 1, 2, 3이 아닌 다른 값이 들어왔을 때 예외 던지기
-				throw new IllegalArgumentException("잘못된 근태 상태 ID입니다: " + attendance.getAttendanceStatusId());
-			}
-		}
-		
-		// 위 for문 결과 넣고 리턴
-		AttendanceResponse response = new AttendanceResponse();
-		response.setAbsentCount(absentCount);
-		response.setLateCount(lateCount);
-		response.setWorkCount(workCount);
-		response.setLeaveCount(leavecount);
-		response.setAttendance(monthList);
+		// 출근/지각/조퇴/결근/휴가 몇 번 했는지 검사하는 코드
+		Map<Long, Long> counts = monthList.stream()
+		        .collect(Collectors.groupingBy(AttendanceResult::getAttendanceStatusId, Collectors.counting()));
+		    
+		    AttendanceResponse response = new AttendanceResponse();
+		    response.setWorkCount(counts.getOrDefault(1L, 0L).intValue());
+		    response.setLateCount(counts.getOrDefault(2L, 0L).intValue());
+		    response.setEarlyLeaveCount(counts.getOrDefault(3L, 0L).intValue());
+		    response.setAbsentCount(counts.getOrDefault(4L, 0L).intValue());
+		    response.setLeaveCount(counts.getOrDefault(5L, 0L).intValue());
+		    response.setAttendance(monthList);
+
 		return response;
 	}
 	
