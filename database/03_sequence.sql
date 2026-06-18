@@ -48,28 +48,13 @@ CREATE SEQUENCE attendance_results_seq START
 WITH
     1 INCREMENT BY 1 CACHE 50 NOCYCLE;
 
--- 정정 종류 시퀀스
-CREATE SEQUENCE correction_types_seq START
+-- 근태 정정 이력
+CREATE SEQUENCE attendance_correction_seq START
 WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
--- 정정 사유 구분 시퀀스
-CREATE SEQUENCE correction_reason_types_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
--- 결재 상태 시퀀스
-CREATE SEQUENCE approval_statuses_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+    1 INCREMENT BY 1 CACHE 50 NOCYCLE;
 
 -- 근태 상태 시퀀스
 CREATE SEQUENCE attendance_statuses_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
--- 반차 종류 시퀀스
-CREATE SEQUENCE half_day_types_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
