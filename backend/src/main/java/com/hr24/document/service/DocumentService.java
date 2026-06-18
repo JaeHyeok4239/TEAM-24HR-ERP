@@ -131,9 +131,14 @@ public class DocumentService {
 			status = "TMP";
 		}
 
-		Document document = Document.builder().documentType(documentType).requester(user)
-				.documentTitle(documentDto.getDocumentTitle()).documentContent(documentDto.getDocumentContent())
-				.status(status).requestedAt("REQ".equals(status) ? now : null).build();
+		Document document = Document.builder()
+				.documentType(documentType).requester(user)
+				.documentTitle(documentDto.getDocumentTitle())
+				.documentContent(documentDto.getDocumentContent())
+				.status(status)
+				.requestedAt("REQ".equals(status) ? now : null)
+				.documentVersion(1)
+				.build();
 
 		Document saved = documentRepository.save(document);
 
