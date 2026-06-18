@@ -186,7 +186,7 @@ CREATE TABLE
         holiday_id NUMBER NULL, -- FK 공휴일
         employee_id NUMBER NOT NULL, -- FK 유저 테이블
         attendance_correction_id NUMBER NULL, -- FK 정정 이력 테이블
-        leave_id NUMBER NOT NULL, -- FK 연차/반차/조퇴 등 휴가 신청 데이터 테이블
+        leave_id NUMBER NULL, -- FK 연차/반차/조퇴 등 휴가 신청 데이터 테이블
 
         work_date DATE NOT NULL, -- 근무 기준 날짜
         workplace_id NUMBER NULL, -- 근무지
@@ -197,12 +197,14 @@ CREATE TABLE
         overtime_minutes NUMBER NULL, -- 초과 근무 시간(분)
         is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
         is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
+        use_leave CHAR(1) DEFAULT 'N' NOT NULL, -- 휴가 사용 여부(Y/N)
         is_fixed CHAR(1) DEFAULT 'N' NOT NULL --(Y/N) 정정 여부
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
 
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
-        CONSTRAINT fk_attendance_correction_id FOREIGN KEY (attendance_correction_id) REFERENCES attendance_correction(attendance_correction_id),
+        CONSTRAINT fk_att_leave_id FOREIGN KEY (leave_id) REFERENCES leave(leave_id),
+        CONSTRAINT fk_att_correction_id FOREIGN KEY (attendance_correction_id) REFERENCES attendance_correction(attendance_correction_id),
         CONSTRAINT fk_att_attendance_status_id FOREIGN KEY (attendance_status_id) REFERENCES attendance_statuses (attendance_status_id),
         CONSTRAINT fk_att_attendance_threshold_id FOREIGN KEY (attendance_threshold_id) REFERENCES attendance_thresholds (attendance_threshold_id),
         CONSTRAINT fk_att_employee_id FOREIGN KEY (employee_id) REFERENCES users (employee_id),
@@ -229,8 +231,8 @@ create table attendance_correction(
 CREATE TABLE
     attendance_statuses (
         attendance_status_id NUMBER NOT NULL,
-        status_code VARCHAR2 (30) NOT NULL, -- 상태 코드(WORK/LATE/EARLY_LEAVE/ABSENT/LEAVE/MISSING_CHECKOUT)
-        status_name VARCHAR2 (50) NOT NULL, -- 상태 이름(근무/지각/조퇴/결근/휴가/미퇴근)
+        status_code VARCHAR2 (30) NOT NULL, -- 상태 코드(WORK/LATE/EARLY_LEAVE/ABSENT/LEAVE)
+        status_name VARCHAR2 (50) NOT NULL, -- 상태 이름(근무/지각/조퇴/결근/휴가)
         status_priority NUMBER NOT NULL, -- 상태 판정 우선순위(휴가(연차>반차)>결근>반차>조퇴>지각>근무)
         CONSTRAINT pk_attendance_statuses PRIMARY KEY (attendance_status_id)
     );
