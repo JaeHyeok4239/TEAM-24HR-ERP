@@ -1,10 +1,10 @@
 package com.hr24.payroll.repository;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.hr24.payroll.entity.Payroll;
 
@@ -24,4 +24,20 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
             """)
     
     List<Payroll> findAllWithEmployee();
+    
+    @Query("""
+    	    SELECT p
+    	    FROM Payroll p
+    	    JOIN FETCH p.user u
+    	    JOIN FETCH u.department d
+    	    WHERE (:month IS NULL OR p.payMonth = :month)
+    	    AND (:employeeNo IS NULL OR u.employeeNo = :employeeNo)
+    	    AND (:departmentId IS NULL OR d.departmentId = :departmentId)
+    	    ORDER BY p.payMonth DESC
+    	""")
+    	List<Payroll> searchPayrolls(
+    	        @Param("month") String month,
+    	        @Param("employeeNo") String employeeNo,
+    	        @Param("departmentId") Long departmentId
+    	);
 }
