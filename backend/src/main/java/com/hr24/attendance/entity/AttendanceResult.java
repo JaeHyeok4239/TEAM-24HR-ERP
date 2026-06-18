@@ -36,23 +36,17 @@ public class AttendanceResult{
 	@Column(name="attendance_threshold_id")
 	private Long attendanceThresholdId;
 	
-	@Column(name="approval_status_id")
-	private Long approvalStatusId;
-	
-	@Column(name="half_day_type_id")
-	private Long halfDayTypeId;
-	
 	@Column(name="holiday_id")
 	private Long holidayId;
 	
-	@Column(name="correction_type_id")
-	private Long correctionTypeId; 
-	
-	@Column(name="correction_reason_type_id")
-	private Long correctionReasonTypeId;
-	
 	@Column(name="employee_id")
 	private Long employeeId;
+	
+	@Column(name="attendance_correction_id")
+	private Long attendanceCorrectionId;
+	
+	@Column(name="leave_id")
+	private Long leaveId;
 	
 	@Column(name="work_date")
 	private LocalDate workDate;
@@ -81,14 +75,11 @@ public class AttendanceResult{
 	@Column(name="is_missing_checkout")
 	private String isMissingCheckout;
 	
-	@Column(name="is_correction_required")
-	private String isCorrectionRequired;
+	@Column(name="use_leave")
+	private String useLeave;
 	
-	@Column(name="processing_status")
-	private String processingStatus;
-	
-	@Column(name="correction_reason")
-	private String correctionReason;
+	@Column(name="is_fixed")
+	private String isFixed;
 	
 	@Column(name="created_at")
 	private LocalDateTime createdAt;
