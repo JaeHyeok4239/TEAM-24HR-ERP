@@ -30,22 +30,12 @@ export default function MeetingRoom() {
   const [rooms, setRooms] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [myReservations, setMyReservations] = useState([]);
-  const [userId, setUserId] = useState(null);
+  const userId = userInfo?.employeeId;
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(INIT_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [detailReservation, setDetailReservation] = useState(null);
-
-  // JWT에서 userId 추출
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      if (payload?.employeeId) setUserId(payload.employeeId);
-    } catch {}
-  }, []);
 
   // 회의실 목록
   useEffect(() => {
