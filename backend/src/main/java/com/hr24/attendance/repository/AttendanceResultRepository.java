@@ -26,8 +26,8 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	@Query("UPDATE AttendanceResult a " +
 		       "SET a.isMissingCheckout = 'Y' " +
 		       "WHERE a.checkOutTime IS NULL " +
-		       "AND a.attendanceStatusId IN :attendanceStatusId")
-	int updateMissingCheckouts(@Param("attendanceStatusId") List<Long> attendanceStatusId);
+		       "AND a.attendanceStatus IN :attendanceStatus")
+	int updateMissingCheckouts(@Param("attendanceStatus") List<Long> attendanceStatus);
 	
 	//중복 막기
 	boolean existsByWorkDate(LocalDateTime workDate);
