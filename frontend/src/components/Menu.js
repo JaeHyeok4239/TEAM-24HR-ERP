@@ -1,14 +1,23 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
-  Home, Clock, DollarSign, Users, CheckCircle, ChevronDown, LogOut,
-} from 'lucide-react';
+  Home,
+  Clock,
+  DollarSign,
+  Users,
+  CheckCircle,
+  ChevronDown,
+} from "lucide-react";
 
-import { logoutRequest } from '@/services/authService';
-import { useAuthStore } from '@/store/authStore';
+import { logoutRequest } from "@/services/authService";
+import { useAuthStore } from "@/store/authStore";
+
+// Base UI 컴포넌트 임포트
+import { Collapsible } from "@base-ui/react/collapsible";
+import { Menu } from "@base-ui/react/menu";
 
 import {
   Sidebar,
@@ -23,83 +32,74 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from '@/components/ui/sidebar';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+} from "@/components/ui/sidebar";
 
-// 메뉴 props 영역(링크, 아이콘, 라벨, 하위메뉴)
 const NAV_ITEMS = [
-  { href: '/', icon: Home, label: '홈' },
-  { 
-    href: '/attendance', 
-    icon: Clock, 
-    label: '근태 관리',
+  { href: "/", icon: Home, label: "홈" },
+  {
+    href: "/attendance",
+    icon: Clock,
+    label: "근태 관리",
     children: [
-        { href: '/attendance/my', label: '내 근태 현황' },
-        { href: '/attendance/regular', label: '정규직 근태 관리' },
-        { href: '/attendance/daily', label: '일용직 근태 관리' },
-      ], 
+      { href: "/attendance/my", label: "내 근태 현황" },
+      { href: "/attendance/regular", label: "정규직 근태 관리" },
+      { href: "/attendance/daily", label: "일용직 근태 관리" },
+    ],
   },
-  { href: '/payroll', icon: DollarSign, label: '급여 관리' },
-  { 
-    href: '/hr',
+  { href: "/payroll", icon: DollarSign, label: "급여 관리" },
+  {
+    href: "/hr",
     icon: Users,
-    label: '인사 관리',
+    label: "인사 관리",
     children: [
-      { href: '/hr/employees', label: '직원 목록' },
-      { href: '/hr/employees/new', label: '직원 등록' },
-      { href: '/hr/reference-data', label: '기준정보 관리' },
+      { href: "/hr/employees", label: "직원 목록" },
+      { href: "/hr/employees/new", label: "직원 등록" },
+      { href: "/hr/reference-data", label: "기준정보 관리" },
     ],
   },
   {
-    href: '/work',
+    href: "/work",
     icon: Users,
-    label: '업무 관리',
+    label: "업무 관리",
     children: [
-      { href: '/work/schedule', label: '일정 관리' },
-      { href: '/work/meeting', label: '회의실 예약' },
+      { href: "/work/schedule", label: "일정 관리" },
+      { href: "/work/meeting", label: "회의실 예약" },
     ],
   },
-
   {
-    href: '/approval',
+    href: "/approval",
     icon: CheckCircle,
-    label: '전자 결재',
+    label: "전자 결재",
     children: [
-      { href: '/approval', label: '내 문서함' },
-      { href: '/approval/write', label: '문서 작성' },
-      { href: '/approval/pending', label: '결재함' },
-      { href: '/approval/process', label: '업무 처리함' },
-      { href: '/approval/lines', label: '결재선 관리' },
-      { href: '/approval/delegate', label: '대리 결재 관리' },
+      { href: "/approval", label: "내 문서함" },
+      { href: "/approval/write", label: "문서 작성" },
+      { href: "/approval/pending", label: "결재함" },
+      { href: "/approval/process", label: "업무 처리함" },
+      { href: "/approval/lines", label: "결재선 관리" },
+      { href: "/approval/delegate", label: "대리 결재 관리" },
     ],
   },
 ];
 
-export default function Menu() {
+export default function MainMenu() {
   const pathname = usePathname();
 
   const authLogout = useAuthStore((state) => state.logout);
   const userInfo = useAuthStore((state) => state.userInfo);
-  
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
       await logoutRequest();
     } catch (error) {
-      console.error('로그아웃 API 호출 실패', error);
+      console.error("로그아웃 API 호출 실패", error);
     } finally {
       authLogout();
     }
   };
 
   return (
-    <Sidebar collapsible="none" className="w-40 bg-[#1a2f4e] border-r-0">
-      {/* 로고 영역(추후 수정) */}
+    <Sidebar collapsible="none" className="w-46 bg-[#1a2f4e] border-r-0">
+      {/* 로고 영역 */}
       <SidebarHeader>
         <div className="flex items-center p-2">
           <span className="font-bold text-white">24HR</span>
@@ -107,80 +107,38 @@ export default function Menu() {
       </SidebarHeader>
 
       {/* 네비게이션 */}
-      <SidebarContent>
+      <SidebarContent className="w-46">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV_ITEMS.map(({ href, icon: Icon, label, children }) => {
-                const isActive = pathname === href;
+              {NAV_ITEMS.map((item) => {
+                const isActive = pathname === item.href;
 
-                if (!children) {
+                if (!item.children) {
                   return (
-                    <SidebarMenuItem key={href}>
+                    <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
-                        asChild
+                        render={<Link href={item.href} />}
                         isActive={isActive}
                         className={
                           isActive
-                            ? 'bg-[#a4e6d2] text-[#1a2f4e] font-bold hover:bg-[#a4e6d2] hover:text-[#1a2f4e] rounded-none'
-                            : 'text-white/80 hover:text-white hover:bg-[#A6FFEA]/20 rounded-none'
+                            ? "bg-[#a4e6d2] text-[#1a2f4e] font-bold hover:bg-[#a4e6d2] hover:text-[#1a2f4e] rounded-none"
+                            : "text-white/80 hover:text-white hover:bg-[#A6FFEA]/20 rounded-none"
                         }
                       >
-                        <Link href={href}>
-                          <Icon size={20} strokeWidth={2} />
-                          <span>{label}</span>
-                        </Link>
+                        <item.icon size={20} strokeWidth={2} />
+                        <span>{item.label}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
                 }
 
-                const isChildActive = children.some((c) => pathname === c.href);
-
                 return (
-                  <Collapsible
-                    key={href}
-                    defaultOpen={isChildActive}
-                    className="group/collapsible"
-                  >
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton
-                          isActive={isActive || isChildActive}
-                          className={
-                            isActive || isChildActive
-                              ? 'bg-[#a4e6d2] text-[#1a2f4e] font-bold hover:bg-[#a4e6d2] hover:text-[#1a2f4e] rounded-none'
-                              : 'text-white/80 hover:text-white hover:bg-[#A6FFEA]/20 rounded-none'
-                          }
-                        >
-                          <Icon size={20} strokeWidth={2} />
-                          <span>{label}</span>
-                          <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub className="border-white/10">
-                          {children.map((child) => (
-                            <SidebarMenuSubItem key={child.href}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === child.href}
-                                className={
-                                  pathname === child.href
-                                    ? 'bg-[#A6FFEA]/30 text-white font-semibold'
-                                    : 'text-white/70 hover:text-white hover:bg-[#A6FFEA]/10'
-                                }
-                              >
-                                <Link href={child.href}>
-                                  <span>{child.label}</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </SidebarMenuItem>
-                  </Collapsible>
+                  <ControlledCollapsibleMenuItem
+                    key={item.href}
+                    item={item}
+                    pathname={pathname}
+                  />
                 );
               })}
             </SidebarMenu>
@@ -188,63 +146,121 @@ export default function Menu() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* 유저 정보(추후 수정) */}
-      {/* 로그인 사용자 영역 */}
       <SidebarFooter>
         <div className="relative w-full pb-2">
+          <Menu.Root>
+            {/* 프로필 메뉴 열기 버튼 */}
+            <Menu.Trigger
+              render={
+                <button
+                  type="button"
+                  className="flex w-full flex-col items-center gap-2 outline-none"
+                />
+              }
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#8a9bb0]">
+                <Users size={20} className="text-white" strokeWidth={1.5} />
+              </div>
+              <p className="text-sm text-white">
+                {userInfo?.name ?? "사용자"}
+                {userInfo?.positionName && `(${userInfo.positionName})`}
+              </p>
+            </Menu.Trigger>
 
-          {/* 프로필 메뉴 */}
-          {isProfileMenuOpen && (
-            <div className="absolute bottom-full left-2 right-2 mb-2 bg-white border">
-              <Link
-                href="/user/my-info"
-                onClick={() => setIsProfileMenuOpen(false)}
-                className="block px-3 py-2 text-sm text-black"
-              >
-                내 정보 수정
-              </Link>
+            <Menu.Portal>
+              <Menu.Positioner side="top" align="center" sideOffset={8}>
+                <Menu.Popup className="w-36 bg-white border border-gray-200 shadow-lg py-1 flex flex-col z-50 transition-opacity duration-200 opacity-100 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0">
+                  <Menu.Item
+                    render={<Link href="/user/my-info" />}
+                    className="block px-3 py-2 text-sm text-black hover:bg-gray-100 outline-none"
+                  >
+                    내 정보 수정
+                  </Menu.Item>
 
-              <Link
-                href="/user/password-change"
-                onClick={() => setIsProfileMenuOpen(false)}
-                className="block px-3 py-2 text-sm text-black"
-              >
-                비밀번호 변경
-              </Link>
+                  <Menu.Item
+                    render={<Link href="/user/password-change" />}
+                    className="block px-3 py-2 text-sm text-black hover:bg-gray-100 outline-none"
+                  >
+                    비밀번호 변경
+                  </Menu.Item>
 
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full px-3 py-2 text-left text-sm text-red-500"
-              >
-                로그아웃
-              </button>
-            </div>
-          )}
-
-          {/* 프로필 메뉴 열기 버튼 */}
-          <button
-            type="button"
-            onClick={() =>
-              setIsProfileMenuOpen((previous) => !previous)
-            }
-            className="flex w-full flex-col items-center gap-2"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#8a9bb0]">
-              <Users
-                size={20}
-                className="text-white"
-                strokeWidth={1.5}
-              />
-            </div>
-
-            <p className="text-sm text-white">
-              {userInfo?.name ?? '사용자'}
-              {userInfo?.positionName && `(${userInfo.positionName})`}
-            </p> 
-          </button>
+                  <Menu.Item
+                    render={
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-gray-100 outline-none"
+                      />
+                    }
+                  >
+                    로그아웃
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
         </div>
       </SidebarFooter>
     </Sidebar>
+  );
+}
+
+// 주소창 변경 시 상태 변화 경고를 방지하기 위한 제어형 서브메뉴 컴포넌트 (JavaScript 버전)
+function ControlledCollapsibleMenuItem({ item, pathname }) {
+  const Icon = item.icon;
+  const isChildActive = item.children.some((c) => pathname === c.href);
+  const isActive = pathname === item.href;
+
+  const [open, setOpen] = useState(isChildActive);
+
+  const handleOpenChange = (nextOpen) => {
+    setOpen(nextOpen);
+  };
+
+  return (
+    <Collapsible.Root
+      open={open}
+      onOpenChange={handleOpenChange}
+      className="group/collapsible"
+    >
+      <SidebarMenuItem>
+        <Collapsible.Trigger
+          render={
+            <SidebarMenuButton
+              isActive={isActive || isChildActive}
+              className={
+                isActive || isChildActive
+                  ? "bg-[#a4e6d2] text-[#1a2f4e] font-bold hover:bg-[#a4e6d2] hover:text-[#1a2f4e] rounded-none"
+                  : "text-white/80 hover:text-white hover:bg-[#A6FFEA]/20 rounded-none"
+              }
+            />
+          }
+        >
+          <Icon size={20} strokeWidth={2} />
+          <span>{item.label}</span>
+          <ChevronDown className="ml-auto transition-transform group-data-[open]:rotate-180" />
+        </Collapsible.Trigger>
+
+        <Collapsible.Panel>
+          <SidebarMenuSub className="p-2 border-white/10">
+            {item.children.map((child) => (
+              <SidebarMenuSubItem key={child.href}>
+                <SidebarMenuSubButton
+                  render={<Link href={child.href} />}
+                  isActive={pathname === child.href}
+                  className={
+                    pathname === child.href
+                      ? "bg-[#A6FFEA]/30 text-white font-semibold"
+                      : "text-white/70 hover:text-white hover:bg-[#A6FFEA]/10"
+                  }
+                >
+                  <span>{child.label}</span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            ))}
+          </SidebarMenuSub>
+        </Collapsible.Panel>
+      </SidebarMenuItem>
+    </Collapsible.Root>
   );
 }
