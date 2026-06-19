@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hr24.employee.dto.DepartmentCreateRequestDto;
-import com.hr24.employee.dto.DepartmentResponseDto;
-import com.hr24.employee.dto.DepartmentUpdateRequestDto;
+import com.hr24.employee.dto.department.DepartmentCreateRequestDto;
+import com.hr24.employee.dto.department.DepartmentResponseDto;
+import com.hr24.employee.dto.department.DepartmentUpdateRequestDto;
 import com.hr24.employee.service.DepartmentService;
 
 import jakarta.validation.Valid;

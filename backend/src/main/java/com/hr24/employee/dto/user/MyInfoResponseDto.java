@@ -1,4 +1,4 @@
-package com.hr24.employee.dto;
+package com.hr24.employee.dto.user;
 
 import java.time.LocalDate;
 import java.util.List;

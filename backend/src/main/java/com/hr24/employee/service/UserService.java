@@ -8,9 +8,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.hr24.employee.dto.MyInfoResponseDto;
-import com.hr24.employee.dto.MyInfoUpdateRequestDto;
-import com.hr24.employee.dto.PasswordChangeRequestDto;
+import com.hr24.employee.dto.user.MyInfoResponseDto;
+import com.hr24.employee.dto.user.MyInfoUpdateRequestDto;
+import com.hr24.employee.dto.user.PasswordChangeRequestDto;
 import com.hr24.employee.entity.Department;
 import com.hr24.employee.entity.Position;
 import com.hr24.employee.entity.User;

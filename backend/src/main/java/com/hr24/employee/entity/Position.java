@@ -1,5 +1,7 @@
 package com.hr24.employee.entity;
 
+import java.lang.invoke.StringConcatFactory;
+
 import com.hr24.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -47,5 +49,32 @@ public class Position extends BaseTimeEntity {
 
     @Column(name = "is_active", nullable = false, length = 1)
     private String isActive = "Y";
+    
+    public static Position create(
+            String positionCode,
+            String positionName,
+            String description,
+            Integer sortOrder
+    ) {
+        Position position = new Position();
+        position.positionCode = positionCode;
+        position.positionName = positionName;
+        position.description = description;
+        position.sortOrder = sortOrder;
+        position.isActive = "Y";
+        return position;
+    }
+
+    public void update(
+            String positionName,
+            String description,
+            Integer sortOrder,
+            String isActive
+    ) {
+        this.positionName = positionName;
+        this.description = description;
+        this.sortOrder = sortOrder;
+        this.isActive = isActive;
+    }
 
 }

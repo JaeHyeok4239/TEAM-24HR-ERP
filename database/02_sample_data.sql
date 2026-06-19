@@ -224,33 +224,10 @@ DELETE FROM attendance_time_policies;
 DELETE FROM attendance_thresholds;
 DELETE FROM workplaces;
 
--- 코드 테이블 삭제
-DELETE FROM correction_types;
-DELETE FROM correction_reason_types;
-DELETE FROM approval_statuses;
-DELETE FROM attendance_statuses;
-DELETE FROM half_day_types;
-
 -- 근무 시간 규칙
--- 월요일(출퇴근+점심시간)
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'MON', 900, 1800, CURRENT_TIMESTAMP, NULL);
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'MON', 1200, 1300, CURRENT_TIMESTAMP, NULL);
-
--- 화요일(출퇴근+점심시간)
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'TUE', 900, 1800, CURRENT_TIMESTAMP, NULL);
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'TUE', 1200, 1300, CURRENT_TIMESTAMP, NULL);
-
--- 수요일(출퇴근+점심시간)
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'WED', 900, 1800, CURRENT_TIMESTAMP, NULL);
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'WED', 1200, 1300, CURRENT_TIMESTAMP, NULL);
-
--- 목요일(출퇴근+점심시간)
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'THU', 900, 1800, CURRENT_TIMESTAMP, NULL);
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'THU', 1200, 1300, CURRENT_TIMESTAMP, NULL);
-
--- 금요일(출퇴근+점심시간)
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'FRI', 900, 1800, CURRENT_TIMESTAMP, NULL);
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'FRI', 1200, 1300, CURRENT_TIMESTAMP, NULL);
+-- 출퇴근, 점심시간
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 900, 1800, CURRENT_TIMESTAMP, NULL);
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 1200, 1300, CURRENT_TIMESTAMP, NULL);
 
 -- 근태 판정 기준
 INSERT INTO attendance_thresholds
@@ -265,42 +242,6 @@ VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'ABSENCE', 180, '출근 �
 -- 근무지
 INSERT INTO workplaces
 VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '강남역', 100, 37.4979420, 127.0276210, CURRENT_TIMESTAMP, NULL);
-
-INSERT INTO workplaces
-VALUES (workplaces_seq.NEXTVAL, 'WORK1', '근무지1', '여의도 더현대 서울', 100, 37.5258970, 126.9284260, CURRENT_TIMESTAMP, NULL);
-
-INSERT INTO workplaces
-VALUES (workplaces_seq.NEXTVAL, 'WORK2', '근무지2', '판교 테크노원', 100, 37.3947440, 127.1112040, CURRENT_TIMESTAMP, NULL);
-
--- 정정 종류
-INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'IN', '출근 정정');
-INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'OUT', '퇴근 정정');
-INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'STATUS', '근태 상태 정정');
-
--- 정정 사유
-INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'SIMPLE', '단순 입력 오류');
-INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'DELAY_DOCUMENT', '증빙 지연 제출');
-INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'ETC', '기타');
-
--- 결재 상태
-INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'PENDING', '승인 대기');
-INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'APPROVED', '승인 완료');
-INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'REJECTED', '반려');
-
--- 근태 상태
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'WORK', '근무', 1);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LATE', '지각', 2);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'EARLY_LEAVE', '조퇴', 3);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'ABSENT', '결근', 4);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LEAVE', '휴가', 5);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'MISSING_CHECKOUT', '미퇴근', 6);
-
--- 반차 종류
-INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'AM', '오전 반차');
-INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'PM', '오후 반차');
-
-
-
 
 
 -- 전자결재 샘플 데이터

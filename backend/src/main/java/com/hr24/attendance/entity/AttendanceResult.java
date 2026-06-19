@@ -15,10 +15,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
+@NoArgsConstructor 
+@AllArgsConstructor
 @SequenceGenerator(
 		name="attendance_results_seq",
 		sequenceName="attendance_results_seq",
@@ -35,17 +41,11 @@ public class AttendanceResult{
 	@Column(name="attendance_result_id")
 	private Long attendanceResultId;
 	
-	@Column(name="attendance_status_id")
-	private Long attendanceStatusId;
+	@Column(name="attendance_status")
+	private String attendanceStatus;
 	
 	@Column(name="attendance_threshold_id")
 	private Long attendanceThresholdId;
-	
-	@Column(name="approval_status_id")
-	private Long approvalStatusId;
-	
-	@Column(name="half_day_type_id")
-	private Long halfDayTypeId;
 	
 	@Column(name="holiday_id")
 	private Long holidayId;
@@ -60,8 +60,14 @@ public class AttendanceResult{
     @JoinColumn(name = "employee_id")
     private User employee;
 	
+	@Column(name="attendance_correction_id")
+	private Long attendanceCorrectionId;
+	
+	@Column(name="leave_id")
+	private Long leaveId;
+	
 	@Column(name="work_date")
-	private LocalDate workDate;
+	private LocalDateTime workDate;
 	
 	@Column(name="workplace_id")
 	private Long workplaceId;
@@ -87,14 +93,8 @@ public class AttendanceResult{
 	@Column(name="is_missing_checkout")
 	private String isMissingCheckout;
 	
-	@Column(name="is_correction_required")
-	private String isCorrectionRequired;
-	
-	@Column(name="processing_status")
-	private String processingStatus;
-	
-	@Column(name="correction_reason")
-	private String correctionReason;
+	@Column(name="is_fixed")
+	private String isFixed;
 	
 	@Column(name="created_at")
 	private LocalDateTime createdAt;
