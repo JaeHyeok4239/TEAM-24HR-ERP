@@ -22,6 +22,7 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	List<AttendanceResult> findByEmployeeIdAndWorkDateBetween(Long employeeId, LocalDate startDate, LocalDate endData);
 	
 	List<AttendanceResult> findByEmployeeEmployeeId(Long employeeId);
+	
 	//마감 배치 프로그램에서 쓰일 qeury문
 	@Modifying
 	@Query("UPDATE AttendanceResult a " +
