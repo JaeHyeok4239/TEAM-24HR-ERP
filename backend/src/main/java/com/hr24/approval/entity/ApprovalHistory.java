@@ -68,4 +68,7 @@ public class ApprovalHistory {
 	@Version
 	private Long version;
 	
+	@Column(name = "document_version")
+	private Integer documentVersion;
+	
 }
