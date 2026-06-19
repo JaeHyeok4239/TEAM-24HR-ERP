@@ -34,3 +34,28 @@ export const updateDepartmentRequest = async (
 
   return response.json();
 };
+
+const POSITION_API = "/api/hr/reference-data/positions";
+
+export const getPositionsRequest = async () => {
+  const response = await apiRequest(POSITION_API);
+  return response.json();
+};
+
+export const createPositionRequest = async (requestData) => {
+  const response = await apiRequest(POSITION_API, {
+    method: "POST",
+    body: JSON.stringify(requestData),
+  });
+
+  return response.json();
+};
+
+export const updatePositionRequest = async (positionId, requestData) => {
+  const response = await apiRequest(`${POSITION_API}/${positionId}`, {
+    method: "PATCH",
+    body: JSON.stringify(requestData),
+  });
+
+  return response.json();
+};

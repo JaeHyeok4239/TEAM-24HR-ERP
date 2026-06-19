@@ -1,7 +1,5 @@
 package com.hr24.employee.entity;
 
-import java.lang.invoke.StringConcatFactory;
-
 import com.hr24.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
