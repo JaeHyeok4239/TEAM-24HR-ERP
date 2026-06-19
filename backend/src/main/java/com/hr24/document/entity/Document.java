@@ -87,4 +87,7 @@ public class Document {
 	
 	@Version
 	private Long version;
+	
+	@Column(name = "document_version")
+	private Integer documentVersion;
 }

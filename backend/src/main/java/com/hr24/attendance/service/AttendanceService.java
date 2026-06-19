@@ -2,8 +2,12 @@ package com.hr24.attendance.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -13,11 +17,18 @@ import com.hr24.attendance.entity.AttendanceResult;
 import com.hr24.attendance.repository.AttendanceLogRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
 import com.hr24.attendance.repository.WorkplaceRepository;
+import com.hr24.document.entity.Leave;
+import com.hr24.document.repository.LeaveRepository;
+import com.hr24.employee.entity.User;
+import com.hr24.employee.enums.UserStatus;
+import com.hr24.employee.repository.UserRepository;
 import com.hr24.attendance.entity.Workplace;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -25,6 +36,80 @@ public class AttendanceService{
 	private final AttendanceLogRepository attendanceLogRepository;
 	private final AttendanceResultRepository attendanceResultRepository;
 	private final WorkplaceRepository workplaceRepository;
+	private final UserRepository userRepository;
+	private final LeaveRepository leaveRepository; 
+	
+	// 매일 밤 오후 11시 배치 프로그램
+	// status WORK, LATE인 사람들 중 퇴근 안 찍힌 사람 missing 'Y'으로 변경
+	@Transactional
+	public void processMissingCheckouts() {
+		List<Long> attendanceStatusId = List.of(7L, 8L);
+		int updatedCount = attendanceResultRepository.updateMissingCheckouts(attendanceStatusId);
+		log.info("미퇴근 처리 완료: {}건", updatedCount);
+		
+	}
+	
+	// 매일 오전 6시 배치 프로그램
+	// 모든 직원들의 results 테이블 생성 READY
+	// leave 조회해서 데이터 있을 경우 LEAVE
+	@Transactional
+	public void createDailyAttendanceResults() {
+		LocalDate todayDate = LocalDate.now();
+		LocalDateTime todayTimeDate = LocalDateTime.now();
+		
+		// 오늘 이미 결과가 생성되었는지 확인
+		boolean exists = attendanceResultRepository.existsByWorkDate(todayDate.atStartOfDay());
+		if (exists) {
+		    return; // 이미 데이터가 있으면 종료
+		}
+		List<User> allUsers = userRepository.findAll();
+		
+		// Active 직원 필터링
+		List<User> activeUsers = allUsers.stream()
+				.filter(user -> UserStatus.ACTIVE.equals(user.getStatus()))
+				.toList();
+		
+		// 휴가 테이블에 있는 모든 직원들
+		List<Leave> leaveUsers = leaveRepository.findAll();
+		// 승인+오늘 휴가 신청한 리스트
+		Set<Long> leaveEmployeeIds = leaveUsers.stream()
+				.filter(leave -> "Y".equals(leave.getIsProcessed()))
+				.filter(leave -> !todayDate.isBefore(leave.getStartDate().toLocalDate())
+							  && !todayDate.isAfter(leave.getEndDate().toLocalDate()))
+				.map(leave -> leave.getDocument().getRequester().getEmployeeId())
+				.collect(Collectors.toSet());
+		
+		List<AttendanceResult> dailyResults = activeUsers.stream()
+				.map(user -> {
+					// leaveEmployeeIds에 employeeId가 있으면 LEAVE 아니면 READY
+					String status = leaveEmployeeIds.contains(user.getEmployeeId()) ? "LEAVE" : "READY";
+					// LEAVE면 Y
+					String fixedStatus = status.equals("LEAVE") ? "Y" : "N";
+					
+					return AttendanceResult.builder()
+							.employeeId(user.getEmployeeId())
+							.workDate(todayDate.atStartOfDay())
+							.attendanceStatus(status)
+							.isHolidayWork("N")
+							.isMissingCheckout("N")
+							.isFixed(fixedStatus)
+							.createdAt(todayTimeDate)
+							.build();
+				})
+				.collect(Collectors.toList());
+				attendanceResultRepository.saveAll(dailyResults);
+	}
+	
+	// 시간 검증(오후 11시~오전 6시 출퇴근 막기)
+	private void validateOperatingTime() {
+	    LocalTime todayDate = LocalTime.now();
+	    LocalTime startTime = LocalTime.of(6, 0);
+	    LocalTime endTime = LocalTime.of(23, 0);
+
+	    if (todayDate.isBefore(startTime) || todayDate.isAfter(endTime)) {
+	        throw new IllegalStateException("운영 시간이 아닙니다. (06:00 ~ 23:00)");
+	    }
+	}
 	
 	// 호버사인 계산식
 	public static Double LocationUtils(Double user_latitude, Double user_longitude, Double HR_latitude, Double HR_longitude) {
@@ -61,10 +146,11 @@ public class AttendanceService{
 	
 	// [1] 출근 버튼(직원ID, 위도, 경도)
 	public void checkIn(Long employeeId, Double latitude, Double longitude) {
-		// 1. 중복 체크
-		// 오늘 날짜 구하기
-		LocalDate today = LocalDate.now();
-		if(attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeId, today).isPresent()) {
+		validateOperatingTime(); // 시간 검증
+		LocalDateTime todayDate = LocalDateTime.now(); // 오늘 날짜, 시간 구하기
+
+		// 중복 체크
+		if(attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeId, todayDate.toLocalDate()).isPresent()) {
 			throw new RuntimeException("오늘 자 출근 기록이 존재합니다.");
 		}
 		// 위의 위치검증 메서드 호출
@@ -73,24 +159,25 @@ public class AttendanceService{
 		AttendanceLog log = AttendanceLog.builder()
 				.employeeId(employeeId)
 				.logType("IN")
-				.logTime(LocalDateTime.now())
+				.logTime(todayDate)
 				.latitude(latitude)
 				.longitude(longitude)
 				.isLocationValid("Y")
 				.workplaceId(matchedWorkplaceId)
-				.workDate(LocalDate.now())
-				.createdAt(LocalDateTime.now())
+				.workDate(todayDate)
+				.createdAt(todayDate)
 				.build();
 		attendanceLogRepository.save(log);
 	}
 	
 	// [2] 퇴근 버튼(직원ID, 위도, 경도)
 	public void checkOut(Long employeeId, Double latitude, Double longitude) {
-		// 1. 중복 체크
-		// 오늘 날짜 구하기
-		LocalDate today = LocalDate.now();
-		if (attendanceLogRepository.findByEmployeeIdAndWorkDateAndLogType(employeeId, today, "OUT").isPresent()) {
-		    throw new RuntimeException("이미 오늘 자 퇴근 기록이 존재합니다.");
+		validateOperatingTime(); // 시간 검증
+		LocalDateTime todayDate = LocalDateTime.now(); // 오늘 날짜, 시간 구하기
+
+		// 중복 체크
+		if (attendanceLogRepository.findByEmployeeIdAndWorkDateAndLogType(employeeId, todayDate.toLocalDate(), "OUT").isPresent()) {
+		    throw new RuntimeException("오늘 자 퇴근 기록이 존재합니다.");
 		}
 		// 위의 위치검증 메서드 호출
 		Long matchedWorkplaceId = validateAndGetWorkplace(latitude, longitude);
@@ -98,13 +185,13 @@ public class AttendanceService{
 		AttendanceLog log = AttendanceLog.builder()
 				.employeeId(employeeId)
 				.logType("OUT")
-				.logTime(LocalDateTime.now())
+				.logTime(todayDate)
 				.latitude(latitude)
 				.longitude(longitude)
 				.isLocationValid("N")
 				.workplaceId(matchedWorkplaceId)
-				.workDate(LocalDate.now())
-				.createdAt(LocalDateTime.now())
+				.workDate(todayDate)
+				.createdAt(todayDate)
 				.build();
 		attendanceLogRepository.save(log);
 	}
@@ -119,37 +206,26 @@ public class AttendanceService{
 		// 한 달 근태 기록 목록
 		List<AttendanceResult> monthList = attendanceResultRepository.findByEmployeeIdAndWorkDateBetween(employeeId, monthStart, monthEnd);
 		
-		// (출근/지각/결근/휴가) 선언 및 초기화
+		// 상태 번호 확인(출근/지각/조퇴/결근/휴가)
+		// 원래 statuses 종류 근무/지각/조퇴/결근/휴가
 		int workCount = 0;
 		int lateCount = 0;
+		int earlyLeaveCount = 0;
 		int absentCount = 0;
 		int leavecount = 0;
 		
-		// 출근/지각/결근 몇 번 했는지 검사하는 코드
-		for(int i=0; i < monthList.size(); i++){
-			AttendanceResult attendance = monthList.get(i);
-			// 상태 번호 확인(출근/지각/확인/휴가 중 무엇인지)
-			if(attendance.getAttendanceStatusId() == 1) {
-				workCount++;
-			}else if(attendance.getAttendanceStatusId() == 2) {
-				lateCount++;
-			}else if(attendance.getAttendanceStatusId() == 3) {
-				absentCount++;
-			}else if(attendance.getAttendanceStatusId() == 4) {
-				leavecount++;
-			}else {
-				// 1, 2, 3이 아닌 다른 값이 들어왔을 때 예외 던지기
-				throw new IllegalArgumentException("잘못된 근태 상태 ID입니다: " + attendance.getAttendanceStatusId());
-			}
-		}
-		
-		// 위 for문 결과 넣고 리턴
-		AttendanceResponse response = new AttendanceResponse();
-		response.setAbsentCount(absentCount);
-		response.setLateCount(lateCount);
-		response.setWorkCount(workCount);
-		response.setLeaveCount(leavecount);
-		response.setAttendance(monthList);
+		// 출근/지각/조퇴/결근/휴가 몇 번 했는지 검사하는 코드
+		Map<String, Long> counts = monthList.stream()
+		        .collect(Collectors.groupingBy(AttendanceResult::getAttendanceStatus, Collectors.counting()));
+		    
+		    AttendanceResponse response = new AttendanceResponse();
+		    response.setWorkCount(counts.getOrDefault("WORK", 0L).intValue());
+		    response.setLateCount(counts.getOrDefault("LATE", 0L).intValue());
+		    response.setEarlyLeaveCount(counts.getOrDefault("EARLY_LEAVE", 0L).intValue());
+		    response.setAbsentCount(counts.getOrDefault("ABSENT", 0L).intValue());
+		    response.setLeaveCount(counts.getOrDefault("LEAVE", 0L).intValue());
+		    response.setAttendance(monthList);
+
 		return response;
 	}
 	

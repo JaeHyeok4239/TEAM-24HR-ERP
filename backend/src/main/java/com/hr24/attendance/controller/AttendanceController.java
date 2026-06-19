@@ -21,9 +21,25 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/attendance")
 @RequiredArgsConstructor
-@Tag(name = "Attendance", description = "근태 관리 API")
+@Tag(name = "근태 관리 API", description = "근태 관리 관련 API")
 public class AttendanceController {
 	private final AttendanceService attendanceService;
+	
+	// 오후 배치 프로그램 바구니
+    @PostMapping("/batch/closing-batch")
+    public ResponseEntity<String> closingBatch() {
+        attendanceService.processMissingCheckouts();
+        System.out.println(">>> 오후 배치 프로그램이 수동 실행되었습니다.");
+        return ResponseEntity.ok("오후 배치 프로그램이 실행되었습니다.");
+    }
+    
+    // 오전 배치 프로그램 바구니
+    @PostMapping("/batch/open-batch")
+    public ResponseEntity<String> openBatch() {
+    	attendanceService.createDailyAttendanceResults();
+    	System.out.println(">>> 오전 배치 프로그램이 수동 실행되었습니다.");
+    	return ResponseEntity.ok("오전 배치 프로그램이 실행되었습니다.");
+    }
 	
 	// 출근 바구니
 	@PostMapping("/check-in")
@@ -47,5 +63,6 @@ public class AttendanceController {
 		AttendanceResponse response = attendanceService.yearMonth(employeeId, yearMonth);
 	    return ResponseEntity.ok(response);
 	}
+	
 	
 }

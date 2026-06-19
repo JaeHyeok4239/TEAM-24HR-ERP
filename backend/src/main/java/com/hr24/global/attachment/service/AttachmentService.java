@@ -59,12 +59,23 @@ public class AttachmentService {
 		storageService.delete(attachment.getStoredName()); // 삭제 위임
 		attachmentRepository.delete(attachment);
 	}
+	
 
 	public AttachmentDto findById(@NonNull Long attachmentId) {
 		Attachment attachment = attachmentRepository.findById(attachmentId)
 				.orElseThrow(() -> new EntityNotFoundException("첨부파일을 찾을 수 없습니다."));
 
 		return AttachmentDto.from(attachment);
+	}
+	
+	//여러 파일 삭제
+	@Transactional
+	public void deleteAll(List<Long> attachmentIds) {
+	    List<Attachment> attachments = attachmentRepository.findAllById(attachmentIds); // SELECT 1번
+
+	    attachments.forEach(attachment -> storageService.delete(attachment.getStoredName())); // 파일 삭제는 IO라 N번 불가피
+
+	    attachmentRepository.deleteAllByIdInBatch(attachmentIds); // DB row는 단일 DELETE
 	}
 
 	public AttachmentDownloadDto download(@NonNull Long attachmentId) {

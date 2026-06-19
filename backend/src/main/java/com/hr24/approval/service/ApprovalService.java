@@ -35,6 +35,7 @@ public class ApprovalService {
 	private final ApprovalHistoryRepository approvalHistoryRepository;
 	private final DocumentRepository documentRepository;
 	
+	//결재선 조회
 	public List<ApprovalResponseDto.ApprovalLineDto> listOrSearchApprovalLines(Long departmentId, Long documentType, String keyword) {
 	    
 		List<ApprovalLine> lines;
@@ -89,12 +90,13 @@ public class ApprovalService {
 
 	    User approver = userRepository.findByLoginId(loginId)
 	            .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
-
+	    
 	    Document document = documentRepository.findById(documentId)
 	            .orElseThrow(() -> new EntityNotFoundException("문서를 찾을 수 없습니다"));
 	    
 	    Long approverId = approver.getEmployeeId();
-	    		
+	    
+	    //문서가 요청 상태일때만 승인 처리가 가능하도록
 	    if (!"REQ".equals(document.getStatus())) {
 	        throw new BusinessException(ErrorCode.ALREADY_PROCESSED);
 	    }
@@ -102,7 +104,8 @@ public class ApprovalService {
 	    ApprovalHistory currentHistory = approvalHistoryRepository
 	            .findCurrentStepApproval(documentId, approverId)
 	            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_YOUR_TURN));
-
+	    
+	    //본인 담당 결재 이력 승인 처리
 	    currentHistory.setStatus("APR");
 	    currentHistory.setApproverComment(comment);
 	    currentHistory.setActedAt(LocalDateTime.now());
@@ -121,4 +124,43 @@ public class ApprovalService {
 	    }
 	
 	}
+	
+	@Transactional
+	public void rejectDocument(String loginId, Long documentId, String comment) {
+		
+		if(comment == null || comment.isBlank()) {
+			throw new IllegalArgumentException("반려 사유를 입력해주세요.");
+		}
+		
+		User approver = userRepository.findByLoginId(loginId)
+	            .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
+
+	    Document document = documentRepository.findById(documentId)
+	            .orElseThrow(() -> new EntityNotFoundException("문서를 찾을 수 없습니다"));
+
+	    //문서 상태 검증(REQ 상태에만 반려 가능)
+	    if (!"REQ".equals(document.getStatus())) {
+	        throw new BusinessException(ErrorCode.ALREADY_PROCESSED);
+	    }
+
+	    Long approverId = approver.getEmployeeId();
+
+	    ApprovalHistory currentHistory = approvalHistoryRepository
+	            .findCurrentStepApproval(documentId, approverId)
+	            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_YOUR_TURN));
+
+	    currentHistory.setStatus("REJ");
+	    currentHistory.setApproverComment(comment);
+	    currentHistory.setActedAt(LocalDateTime.now());
+
+	    document.setStatus("REJ");
+	    document.setRejectReason(comment);
+		
+	    Integer currentStep = currentHistory.getStepOrder();
+	    
+	    //결재 다음 단계가 있는 경우에 처리
+	    approvalHistoryRepository.cancelFutureSteps(documentId, currentStep);
+	   
+	}
+	
 	}
