@@ -2,6 +2,7 @@ package com.hr24.attendance.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,9 @@ import com.hr24.attendance.entity.Workplace;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -30,15 +33,30 @@ public class AttendanceService{
 	
 	// 매일 밤 오후 11시 배치 프로그램
 	// status WORK, LATE인 사람들 중 퇴근 안 찍힌 사람 missing 'Y'으로 변경
-	// 오후 11시 ~ 오전 6시 출퇴근 버튼 못 누르게 막기(저장 안 되게)
+	@Transactional
 	public void processMissingCheckouts() {
+		List<Long> attendanceStatusId = List.of(7L, 8L);
+		int updatedCount = attendanceResultRepository.updateMissingCheckouts(attendanceStatusId);
+		log.info("미퇴근 처리 완료: {}건", updatedCount);
 		
 	}
 	
 	// 매일 오전 6시 배치 프로그램
-	// 휴가자 제외 모든 직원들의 results 테이블 생성(상태 READY)
+	// 모든 직원들의 results 테이블 생성 READY
+	// leave 조회해서 데이터 있을 경우 LEAVE
 	public void createDailyAttendanceResults() {
 		
+	}
+	
+	// 시간 검증(오후 11시~오전 6시 출퇴근 막기)
+	private void validateOperatingTime() {
+	    LocalTime todayDate = LocalTime.now();
+	    LocalTime startTime = LocalTime.of(6, 0);
+	    LocalTime endTime = LocalTime.of(23, 0);
+
+	    if (todayDate.isBefore(startTime) || todayDate.isAfter(endTime)) {
+	        throw new IllegalStateException("운영 시간이 아닙니다. (06:00 ~ 23:00)");
+	    }
 	}
 	
 	// 호버사인 계산식
@@ -76,10 +94,11 @@ public class AttendanceService{
 	
 	// [1] 출근 버튼(직원ID, 위도, 경도)
 	public void checkIn(Long employeeId, Double latitude, Double longitude) {
-		// 1. 중복 체크
-		// 오늘 날짜 구하기
-		LocalDate today = LocalDate.now();
-		if(attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeId, today).isPresent()) {
+		validateOperatingTime(); // 시간 검증
+		LocalDateTime todayDate = LocalDateTime.now(); // 오늘 날짜, 시간 구하기
+
+		// 중복 체크
+		if(attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeId, todayDate.toLocalDate()).isPresent()) {
 			throw new RuntimeException("오늘 자 출근 기록이 존재합니다.");
 		}
 		// 위의 위치검증 메서드 호출
@@ -88,24 +107,25 @@ public class AttendanceService{
 		AttendanceLog log = AttendanceLog.builder()
 				.employeeId(employeeId)
 				.logType("IN")
-				.logTime(LocalDateTime.now())
+				.logTime(todayDate)
 				.latitude(latitude)
 				.longitude(longitude)
 				.isLocationValid("Y")
 				.workplaceId(matchedWorkplaceId)
-				.workDate(LocalDate.now())
-				.createdAt(LocalDateTime.now())
+				.workDate(todayDate)
+				.createdAt(todayDate)
 				.build();
 		attendanceLogRepository.save(log);
 	}
 	
 	// [2] 퇴근 버튼(직원ID, 위도, 경도)
 	public void checkOut(Long employeeId, Double latitude, Double longitude) {
-		// 1. 중복 체크
-		// 오늘 날짜 구하기
-		LocalDate today = LocalDate.now();
-		if (attendanceLogRepository.findByEmployeeIdAndWorkDateAndLogType(employeeId, today, "OUT").isPresent()) {
-		    throw new RuntimeException("이미 오늘 자 퇴근 기록이 존재합니다.");
+		validateOperatingTime(); // 시간 검증
+		LocalDateTime todayDate = LocalDateTime.now(); // 오늘 날짜, 시간 구하기
+
+		// 중복 체크
+		if (attendanceLogRepository.findByEmployeeIdAndWorkDateAndLogType(employeeId, todayDate.toLocalDate(), "OUT").isPresent()) {
+		    throw new RuntimeException("오늘 자 퇴근 기록이 존재합니다.");
 		}
 		// 위의 위치검증 메서드 호출
 		Long matchedWorkplaceId = validateAndGetWorkplace(latitude, longitude);
@@ -113,13 +133,13 @@ public class AttendanceService{
 		AttendanceLog log = AttendanceLog.builder()
 				.employeeId(employeeId)
 				.logType("OUT")
-				.logTime(LocalDateTime.now())
+				.logTime(todayDate)
 				.latitude(latitude)
 				.longitude(longitude)
 				.isLocationValid("N")
 				.workplaceId(matchedWorkplaceId)
-				.workDate(LocalDate.now())
-				.createdAt(LocalDateTime.now())
+				.workDate(todayDate)
+				.createdAt(todayDate)
 				.build();
 		attendanceLogRepository.save(log);
 	}

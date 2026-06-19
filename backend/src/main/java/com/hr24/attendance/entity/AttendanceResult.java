@@ -49,7 +49,7 @@ public class AttendanceResult{
 	private Long leaveId;
 	
 	@Column(name="work_date")
-	private LocalDate workDate;
+	private LocalDateTime workDate;
 	
 	@Column(name="workplace_id")
 	private Long workplaceId;
