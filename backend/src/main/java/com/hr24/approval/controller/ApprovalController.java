@@ -82,7 +82,7 @@ public class ApprovalController {
 	
 	//더티 체킹을 통한 결재 승인 처리
 	@PostMapping("/{documentId}/approve")
-	public ResponseEntity<Void> approve(
+	public ResponseEntity<Void> process(
 	        @PathVariable("documentId") Long documentId,
 	        @RequestBody ApprovalRequestDto.ApprovalProcessDto request,
 	        Authentication authInfo) {
@@ -90,13 +90,16 @@ public class ApprovalController {
 	    if (authInfo == null) {
 	        throw new BusinessException(ErrorCode.ACCESS_DENIED);
 	    }
-
-	    try {
-	        approvalService.approveDocument(authInfo.getName(), documentId, request.comment());
-	    } catch (OptimisticLockingFailureException e) {
-	        throw new BusinessException(ErrorCode.ALREADY_PROCESSED);
+	    
+	    String loginId = authInfo.getName();
+	    
+	    switch (request.getAction()) {
+	    case APR -> approvalService.approveDocument(loginId, documentId, request.getComment());
+	    case REJ -> approvalService.rejectDocument(loginId, documentId, request.getComment());
 	    }
 
 	    return ResponseEntity.ok().build();
 	}
+	
+
 }

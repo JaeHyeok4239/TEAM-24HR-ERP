@@ -4,13 +4,11 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hr24.approval.entity.ApprovalHistory;
 import com.hr24.document.entity.Document;
 import com.hr24.document.entity.DocumentFile;
-import com.hr24.employee.entity.User;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -26,9 +24,7 @@ public class DocumentResponseDto {
 		private Long documentId;
 		private Long documentType;
 		private Long requesterId;
-		private Long processorId;
 		private String requester;
-		private String processor;
 		private String documentTitle;
 		private String status;
 		private Integer currentStep;
@@ -40,9 +36,7 @@ public class DocumentResponseDto {
 					.documentId(document.getDocumentId())
 					.documentType(document.getDocumentType().getTypeId())
 					.requesterId(document.getRequester().getEmployeeId())
-					.processorId(document.getProcessor() != null ? document.getProcessor().getEmployeeId() : null)
 					.requester(document.getRequester().getName())
-					.processor(document.getProcessor() != null ? document.getProcessor().getName() : null)
 					.documentTitle(document.getDocumentTitle())
 					.status(document.getStatus())
 					.currentStep(document.getCurrentStep())
@@ -52,24 +46,24 @@ public class DocumentResponseDto {
 	}
 	
 	//Map -> List 변환 메소드
-	private static List<DocumentContentDto> toContentList(Map<String, Object> contentMap) {
-	    if (contentMap == null || contentMap.isEmpty()) {
-	        return Collections.emptyList();
-	    }
-	    return contentMap.entrySet().stream()
-	            .map(entry -> DocumentContentDto.builder()
-	                    .field(entry.getKey())
-	                    .data(entry.getValue())
-	                    .build())
-	            .toList();
-	}
-	
-	@Getter
-	@Builder
-	public static class DocumentContentDto {
-	    private String field;
-	    private Object data;
-	}
+//	private static List<DocumentContentDto> toContentList(Map<String, Object> contentMap) {
+//	    if (contentMap == null || contentMap.isEmpty()) {
+//	        return Collections.emptyList();
+//	    }
+//	    return contentMap.entrySet().stream()
+//	            .map(entry -> DocumentContentDto.builder()
+//	                    .field(entry.getKey())
+//	                    .data(entry.getValue())
+//	                    .build())
+//	            .toList();
+//	}
+//	
+//	@Getter
+//	@Builder
+//	public static class DocumentContentDto {
+//	    private String field;
+//	    private Object data;
+//	}
 	
 	//문서 상세
 	@Getter
@@ -82,7 +76,7 @@ public class DocumentResponseDto {
 		private String requester;
 		private String processor;
 		private String rejectReason;
-		private List<DocumentContentDto> content;
+		private Map<String, Object> documentContent;
 		@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private LocalDateTime requestedAt;
 		@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -104,7 +98,7 @@ public class DocumentResponseDto {
 					.requestedAt(document.getCreatedAt())
 					.processedAt(document.getUpdatedAt())
 					.rejectReason(document.getRejectReason())
-					.content(toContentList(document.getDocumentContent()))
+					.documentContent(document.getDocumentContent())
 					.approvalHistories(approvalHistories)
 					.documentFileList(documentFileList == null ? Collections.emptyList() : documentFileList)
 					.build();
@@ -150,23 +144,6 @@ public class DocumentResponseDto {
 					.attachmentId(documentFile.getAttachment().getAttachmentId())
 					.fileName(documentFile.getAttachment().getOriginalName())
 					.fileType(documentFile.getAttachment().getAttachmentType())
-					.build();
-		}
-	}
-	
-	//문서 상세(TMP : 임시저장)
-	@Getter
-    @Builder
-	public static class DocumentTmpDto{
-		private Long documentId;
-		private Long documentType;
-		private String documentTitle;
-		
-		public static DocumentTmpDto from(Document document) {
-			return DocumentTmpDto.builder()
-					.documentId(document.getDocumentId())
-					.documentType(document.getDocumentType().getTypeId())
-					.documentTitle(document.getDocumentTitle())
 					.build();
 		}
 	}
