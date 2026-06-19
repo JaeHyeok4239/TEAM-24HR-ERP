@@ -15,11 +15,11 @@ import com.hr24.attendance.entity.AttendanceResult;
 
 public interface AttendanceResultRepository extends JpaRepository<AttendanceResult, Long>{
 	//직원ID와 근무 날짜로 근태 결과 있는지 찾기
-	Optional<AttendanceResult> findByEmployeeIdAndWorkDate(Long employeeId, LocalDate workDate);
+	Optional<AttendanceResult> findByEmployeeIdAndWorkDate(Long employeeId, LocalDateTime workDate);
 	
 	//한 달치 데이터 긁어오기
 	//Optional은 데이터 1개만 나올 때 쓰기에 List 사용
-	List<AttendanceResult> findByEmployeeIdAndWorkDateBetween(Long employeeId, LocalDate startDate, LocalDate endData);
+	List<AttendanceResult> findByEmployeeIdAndWorkDateBetween(Long employeeId, LocalDateTime startDate, LocalDateTime endData);
 	
 	List<AttendanceResult> findByEmployeeEmployeeId(Long employeeId);
 	

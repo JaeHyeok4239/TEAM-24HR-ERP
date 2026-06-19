@@ -34,6 +34,8 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
+
+
 const NAV_ITEMS = [
   { href: "/", icon: Home, label: "홈" },
   {
@@ -150,14 +152,7 @@ export default function MainMenu() {
         <div className="relative w-full pb-2">
           <Menu.Root>
             {/* 프로필 메뉴 열기 버튼 */}
-            <Menu.Trigger
-              render={
-                <button
-                  type="button"
-                  className="flex w-full flex-col items-center gap-2 outline-none"
-                />
-              }
-            >
+            <Menu.Trigger className="flex w-full flex-col items-center gap-2 outline-none cursor-pointer">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#8a9bb0]">
                 <Users size={20} className="text-white" strokeWidth={1.5} />
               </div>
@@ -169,32 +164,35 @@ export default function MainMenu() {
 
             <Menu.Portal>
               <Menu.Positioner side="top" align="center" sideOffset={8}>
-                <Menu.Popup className="w-36 bg-white border border-gray-200 shadow-lg py-1 flex flex-col z-50 transition-opacity duration-200 opacity-100 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0">
+                <Menu.Popup className="w-40 h-45 bg-[#e2fcffc5] rounded-xl shadow-lg py-1 flex flex-col z-50 transition-opacity duration-200 opacity-100 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0">
+                  <div className="flex flex-col justify-center gap-1">
                   <Menu.Item
                     render={<Link href="/user/my-info" />}
-                    className="block px-3 py-2 text-sm text-black hover:bg-gray-100 outline-none"
+                    className="mt-3 p-3 text-sm text-[#051a3a] hover:text-[#59a3c0] hover:bg-[#e2f8ff] outline-none"
                   >
                     내 정보 수정
                   </Menu.Item>
 
                   <Menu.Item
                     render={<Link href="/user/password-change" />}
-                    className="block px-3 py-2 text-sm text-black hover:bg-gray-100 outline-none"
+                    className="p-3 text-sm text-[#073468] hover:text-[#59a3c0] hover:bg-[#e2f8ff] outline-none"
                   >
                     비밀번호 변경
                   </Menu.Item>
 
                   <Menu.Item
                     render={
-                      <button
+                      <div
+                        style={{cursor : "pointer"}}
                         type="button"
                         onClick={handleLogout}
-                        className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-gray-100 outline-none"
+                        className="p-3 text-left text-sm text-[#ff3737] hover:text-[#ec9494] hover:bg-[#e2f8ff] outline-none"
                       />
                     }
                   >
                     로그아웃
                   </Menu.Item>
+                  </div>
                 </Menu.Popup>
               </Menu.Positioner>
             </Menu.Portal>
