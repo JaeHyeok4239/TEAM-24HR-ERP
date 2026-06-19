@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hr24.employee.dto.MyInfoResponseDto;
-import com.hr24.employee.dto.MyInfoUpdateRequestDto;
-import com.hr24.employee.dto.PasswordChangeRequestDto;
+import com.hr24.employee.dto.user.MyInfoResponseDto;
+import com.hr24.employee.dto.user.MyInfoUpdateRequestDto;
+import com.hr24.employee.dto.user.PasswordChangeRequestDto;
 import com.hr24.employee.service.UserService;
 
 import jakarta.validation.Valid;

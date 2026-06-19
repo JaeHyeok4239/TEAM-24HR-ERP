@@ -7,9 +7,9 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.hr24.employee.dto.DepartmentCreateRequestDto;
-import com.hr24.employee.dto.DepartmentResponseDto;
-import com.hr24.employee.dto.DepartmentUpdateRequestDto;
+import com.hr24.employee.dto.department.DepartmentCreateRequestDto;
+import com.hr24.employee.dto.department.DepartmentResponseDto;
+import com.hr24.employee.dto.department.DepartmentUpdateRequestDto;
 import com.hr24.employee.entity.Department;
 import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.DepartmentRepository;

@@ -1,4 +1,4 @@
-package com.hr24.employee.dto;
+package com.hr24.employee.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
