@@ -51,7 +51,7 @@ const NAV_ITEMS = [
     children: [
       { href: '/hr/employees', label: '직원 목록' },
       { href: '/hr/employees/new', label: '직원 등록' },
-      { href: '/hr/master-data', label: '기준정보 관리' },
+      { href: '/hr/reference-data', label: '기준정보 관리' },
     ],
   },
   {
@@ -60,6 +60,7 @@ const NAV_ITEMS = [
     label: '업무 관리',
     children: [
       { href: '/work/schedule', label: '일정 관리' },
+      { href: '/work/meeting', label: '회의실 예약' },
     ],
   },
 

@@ -103,9 +103,25 @@ CREATE TABLE
         CONSTRAINT uk_user_roles_user_role UNIQUE (employee_id, role_id)
     );
 
+    -- 직원별 연차 잔액
+CREATE TABLE annual_leave_balances (
+    annual_leave_balance_id NUMBER NOT NULL,
+    employee_id NUMBER NOT NULL,
+    leave_year NUMBER(4) NOT NULL,
+    total_days NUMBER(5, 2) DEFAULT 0 NOT NULL,
+    remaining_days NUMBER(5, 2) DEFAULT 0 NOT NULL,
+    granted_at TIMESTAMP NULL,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NULL,
 
-
-
+    CONSTRAINT pk_annual_leave_balances PRIMARY KEY (annual_leave_balance_id),
+    CONSTRAINT fk_annual_leave_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
+    CONSTRAINT uk_annual_leave_employee_year UNIQUE (employee_id, leave_year),
+    CONSTRAINT chk_annual_leave_total_days CHECK (total_days >= 0),
+    CONSTRAINT chk_annual_leave_remaining_days CHECK (remaining_days >= 0),
+    CONSTRAINT chk_annual_leave_remaining_total CHECK (remaining_days <= total_days)
+);
 
 -- 근태관리: 근무 시간 규칙
 CREATE TABLE
@@ -264,9 +280,11 @@ CREATE TABLE approval_line (
     document_type    NUMBER NOT NULL,       -- 문서유형 ID (FK → document_type)
     step_order       NUMBER NOT NULL,       -- 결재 단계
     default_approver NUMBER NOT NULL,       -- 기본 결재자 (FK → users)
+    department_id    NUMBER, -- 결재 부서 (FK → departments, 결재자가 부서에 속해있지 않으면 NULL)
+    CONSTRAINT line_fk_department FOREIGN KEY (department_id) REFERENCES departments(department_id),
     CONSTRAINT line_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT line_fk_approver FOREIGN KEY (default_approver) REFERENCES users(employee_id),
-    CONSTRAINT line_uq_step UNIQUE (document_type, step_order) -- 유형별 단계 중복 방지
+    CONSTRAINT line_uq_dept_doc_step UNIQUE (document_type, step_order, department_id) -- 유형별 단계 중복 방지
 );
 
 -- 문서 처리 부서 (문서유형별 처리 가능 부서 및 권한 설정)
@@ -297,6 +315,7 @@ CREATE TABLE document (
     processed_at   TIMESTAMP,                   -- 처리일시
     reject_reason  VARCHAR2(500 CHAR),          -- 반려 사유 (최종 반려 단계 기준)
     document_content JSON DEFAULT '{}' NOT NULL, -- 문서 본문 (JSON 형태로 다양한 필드 저장)
+    version        NUMBER DEFAULT 0 NOT NULL,   -- 결재 승인 시 충돌 방지
     CONSTRAINT document_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT document_fk_requester FOREIGN KEY (requester_id) REFERENCES users(employee_id),
     CONSTRAINT document_fk_processor FOREIGN KEY (processor_id) REFERENCES users(employee_id),
@@ -314,9 +333,10 @@ CREATE TABLE approval_history (
     approver_comment VARCHAR2(500 CHAR),
     acted_at         TIMESTAMP,
     created_at       TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
+    version          NUMBER DEFAULT 0 NOT NULL, -- 결재 승인 시 충돌 방지
     CONSTRAINT history_fk_document FOREIGN KEY (document_id) REFERENCES document(document_id),
     CONSTRAINT history_fk_approver FOREIGN KEY (approver_id) REFERENCES users(employee_id),
-    CONSTRAINT history_ck_status CHECK (status IN ('APR', 'REJ', 'PND')),
+    CONSTRAINT history_ck_status CHECK (status IN ('APR', 'REJ', 'PND', 'CAN')),
     CONSTRAINT history_uq_step UNIQUE (document_id, step_order)
 );
 -- 첨부파일 (업로드된 파일 메타정보 관리)
