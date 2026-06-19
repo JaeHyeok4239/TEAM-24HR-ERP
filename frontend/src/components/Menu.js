@@ -98,7 +98,7 @@ export default function MainMenu() {
   };
 
   return (
-    <Sidebar collapsible="none" className="w-46 bg-[#1a2f4e] border-r-0">
+    <Sidebar collapsible="none" className="h-full w-46 bg-[#1a2f4e] border-r-0">
       {/* 로고 영역 */}
       <SidebarHeader>
         <div className="flex items-center p-2">
