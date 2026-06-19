@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-
 import LoginForm from "@/components/auth/LoginForm";
 import { SidebarProvider } from "../ui/sidebar";
 
@@ -25,7 +24,6 @@ export default function ClientLayout({ children }) {
     }
 
     initializedRef.current = true;
-
     const restoreAuth = async () => {
       // 1. localStorage에서 토큰 복구
       const hasAccessToken = initializeAuth();
@@ -53,7 +51,16 @@ export default function ClientLayout({ children }) {
 
   // 로그인 상태 확인이 끝날 때까지 화면 분기 대기
   if (isAuthLoading) {
-    return <div>로그인 정보 확인 중</div>;
+    return (
+      <div className="flex w-full h-screen justify-center items-center bg-gradient-to-br from-[#eefdff] via-[#2a436b] to-[#061429]">
+        <div className="relative w-14 h-14">
+          {/* 바깥 회전 링 */}
+          <div className="absolute inset-0 rounded-full border-4 border-[#669da0]/20 border-t-[#669da0] animate-spin" />
+          {/* 안쪽 역회전 링 ([animation-direction:reverse]로 반대로 돌게 설정) */}
+          <div className="absolute inset-2 rounded-full border-4 border-[#669da0]/10 border-b-[#669da0] animate-spin [animation-direction:reverse] [animation-duration:1.5s]" />
+        </div>
+      </div>
+    );
   }
 
   // 로그인하지 않은 상태

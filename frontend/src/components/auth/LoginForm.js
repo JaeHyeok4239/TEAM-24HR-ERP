@@ -1,127 +1,3 @@
-// "use client";
-
-// import { useState } from "react";
-// import { loginRequest } from "@/services/authService";
-// import { getMyInfoRequest } from "@/services/userService";
-// import { useAuthStore } from "@/store/authStore";
-// import {
-//   Card,
-//   CardAction,
-//   CardContent,
-//   CardDescription,
-//   CardFooter,
-//   CardHeader,
-//   CardTitle,
-// } from "@/components/ui/card";
-// import { Field, FieldLabel } from "@/components/ui/field";
-
-// import { Button } from "@/components/ui/button";
-// import { Label } from "@/components/ui/label";
-// import { Input } from "@/components/ui/input";
-
-// export default function LoginForm() {
-//   const authLogin = useAuthStore((state) => state.login);
-//   const setUserInfo = useAuthStore((state) => state.setUserInfo);
-//   const authLogout = useAuthStore((state) => state.logout);
-
-//   const [loginId, setLoginId] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [message, setMessage] = useState("");
-
-//   const handleLogin = async (e) => {
-//     e.preventDefault();
-
-//     try {
-//       // 1. 아이디와 비밀번호로 로그인 요청
-//       const tokenData = await loginRequest(loginId, password);
-
-//       // 2. Access Token과 Refresh Token 저장
-//       authLogin(tokenData.accessToken, tokenData.refreshToken);
-
-//       // 3. Access Token을 이용해 현재 사용자 정보 조회
-//       const userInfo = await getMyInfoRequest();
-
-//       // 4. 사용자 정보를 Zustand 전역 상태에 저장
-//       setUserInfo(userInfo);
-
-//       // 5. 기존 오류 메시지 초기화
-//       setMessage("");
-//     } catch (error) {
-//       // 로그인 처리 중 일부만 성공한 경우에도 인증 정보 초기화
-//       authLogout();
-
-//       console.error("로그인 처리 실패:", error);
-//       setMessage("아이디 또는 비밀번호를 확인해주세요.");
-//     }
-//   };
-
-//   return (
-//     <div className="h-full bg-slate-100">
-//       <hr className="mt-15"></hr>
-//       <div className="flex justify-center items-center h-screen">
-//         <Card className="flex flex-col justify-center w-full max-w-lg h-[60%] bg-[#1a2f4e]">
-
-//           <CardHeader className="flex flex-0.5 flex-col justify-center items-center">
-//             <CardTitle className="p-2 font-bold text-3xl text-center text-blue-200">
-//               24HR
-//             </CardTitle>
-//           </CardHeader>
-
-//           <form onSubmit={handleLogin} className="flex flex-col flex-[3]">
-//             <CardContent className="flex flex-2 flex-col gap-5 justify-center px-6">
-//               <Field>
-//                 <Field
-//                   htmlFor="loginId"
-//                   className="text-blue-200"
-//                 >
-//                   아이디
-//                 </Field>
-//                 <Input
-//                   id="loginId"
-//                   type="text"
-//                   value={loginId}
-//                   className="w-full text-blue-200 h-10 border border-blue-200 rounded-lg mt-1"
-//                   onChange={(e) => setLoginId(e.target.value)}
-//                 />
-//               </Field>
-
-//               <Field>
-//                 <FieldLabel
-//                   htmlFor="password"
-//                   className="text-blue-200"
-//                 >
-//                   비밀번호
-//                 </FieldLabel>
-//                 <Input
-//                   id="password"
-//                   type="password"
-//                   value={password}
-//                   className="w-full text-blue-200 h-10 border border-blue-200 rounded-lg mt-1"
-//                   onChange={(e) => setPassword(e.target.value)}
-//                 />
-//               </Field>
-
-//               {message && (
-//                 <div className="text-red-300 text-sm mt-1">{message}</div>
-//               )}
-//             </CardContent>
-
-//             <CardFooter className="flex flex-1 flex-col justify-center">
-//               <Button
-//                 type="submit"
-//                 variant="outline"
-//                 className="w-full font-bold bg-blue-200 h-12 text-[#1a2f4e] hover:bg-blue-300 transition-colors"
-//               >
-//                 로그인
-//               </Button>
-//             </CardFooter>
-//           </form>
-//         </Card>
-
-//       </div>
-//     </div>
-//   );
-// }
 "use client";
 
 import { useState } from "react";
@@ -130,7 +6,6 @@ import { getMyInfoRequest } from "@/services/userService";
 import { useAuthStore } from "@/store/authStore";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -140,7 +15,6 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
 export default function LoginForm() {
