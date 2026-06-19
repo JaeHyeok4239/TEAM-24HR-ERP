@@ -14,8 +14,12 @@ import org.springframework.stereotype.Service;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceResult;
+import com.hr24.attendance.entity.AttendanceTimePolicy;
 import com.hr24.attendance.repository.AttendanceLogRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
+import com.hr24.attendance.repository.AttendanceThresholdRepository;
+import com.hr24.attendance.repository.AttendanceThresholdRepository;
+import com.hr24.attendance.repository.AttendanceTimePolicyRepository;
 import com.hr24.attendance.repository.WorkplaceRepository;
 import com.hr24.document.entity.Leave;
 import com.hr24.document.repository.LeaveRepository;
@@ -38,6 +42,8 @@ public class AttendanceService{
 	private final WorkplaceRepository workplaceRepository;
 	private final UserRepository userRepository;
 	private final LeaveRepository leaveRepository; 
+	private final AttendanceTimePolicyRepository attendanceTimePolicyrepository;
+	private final AttendanceThresholdRepository attendanceThresholdRepository;
 	
 	// 매일 밤 오후 11시 배치 프로그램
 	// status WORK, LATE인 사람들 중 퇴근 안 찍힌 사람 missing 'Y'으로 변경
@@ -144,17 +150,43 @@ public class AttendanceService{
 		throw new RuntimeException("근무지 근처가 아닙니다.");
 	}
 	
+//	// 출근 판정
+//	private String determineCheckInStatus(Long employeeId, LocalDateTime logTime) {
+//		User user = userRepository.findById(employeeId)
+//	            .orElseThrow(() -> new RuntimeException("직원을 찾을 수 없습니다."));
+//		
+//		// 근무 시작 시간(Policy) 조회
+//	    AttendanceTimePolicy policy = attendanceTimePolicyrepository.findByEmploymentTypeAndPolicyType(user.getEmploymentType().name(), "WORK")
+//	    		.orElseThrow();
+//	    LocalTime startTime = parse(policy.getStartTime());
+//	    
+//		return;
+//	}
+//	
+//	// 퇴근 판정
+//	private String determineCheckoutStatus() {
+//		return status;
+//	}
+	
 	// [1] 출근 버튼(직원ID, 위도, 경도)
 	public void checkIn(Long employeeId, Double latitude, Double longitude) {
 		validateOperatingTime(); // 시간 검증
 		LocalDateTime todayDate = LocalDateTime.now(); // 오늘 날짜, 시간 구하기
+		LocalDateTime startOfDay = todayDate.toLocalDate().atStartOfDay(); // 00:00:00으로 만듦
 
 		// 중복 체크
-		if(attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeId, todayDate.toLocalDate()).isPresent()) {
-			throw new RuntimeException("오늘 자 출근 기록이 존재합니다.");
+		AttendanceResult result = attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeId, startOfDay)
+								  .orElseThrow(() -> new RuntimeException("오늘 생성된 근태 결과가 없습니다."));
+		
+		if(!"READY".equals(result.getAttendanceStatus())) {
+			throw new RuntimeException("이미 출근 처리되었습니다.");
 		}
 		// 위의 위치검증 메서드 호출
 		Long matchedWorkplaceId = validateAndGetWorkplace(latitude, longitude);
+		
+		result.setAttendanceStatus("WORK");
+		result.setCheckInTime(todayDate);
+		result.setIsFixed("N");
 		
 		AttendanceLog log = AttendanceLog.builder()
 				.employeeId(employeeId)
@@ -174,11 +206,27 @@ public class AttendanceService{
 	public void checkOut(Long employeeId, Double latitude, Double longitude) {
 		validateOperatingTime(); // 시간 검증
 		LocalDateTime todayDate = LocalDateTime.now(); // 오늘 날짜, 시간 구하기
+		LocalDateTime startOfDay = todayDate.toLocalDate().atStartOfDay(); // 00:00:00으로 만듦
 
-		// 중복 체크
-		if (attendanceLogRepository.findByEmployeeIdAndWorkDateAndLogType(employeeId, todayDate.toLocalDate(), "OUT").isPresent()) {
-		    throw new RuntimeException("오늘 자 퇴근 기록이 존재합니다.");
-		}
+		// 출근 시 만들어둔 Result를 조회
+	    AttendanceResult result = attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeId, startOfDay)
+	                              .orElseThrow(() -> new RuntimeException("오늘 출근 기록이 없습니다."));
+	    
+	    String status = result.getAttendanceStatus();
+	    
+	    // 퇴근 가능한 상태인지 확인
+	    if ("READY".equals(status)) {
+	        throw new RuntimeException("출근 처리가 되지 않았습니다. 먼저 출근 버튼을 눌러주세요.");
+	    }
+	    
+	    // 이미 퇴근 처리가 된 경우
+	    // out 로그가 있는지 확인 --------------
+	    
+	    // WORK가 아닌 경우
+	    if (!"WORK".equals(status)) {
+	        throw new RuntimeException("현재 퇴근 처리가 가능한 근무 상태가 아닙니다.");
+	    }
+	    
 		// 위의 위치검증 메서드 호출
 		Long matchedWorkplaceId = validateAndGetWorkplace(latitude, longitude);
 		
@@ -201,8 +249,8 @@ public class AttendanceService{
 		// 오늘 날짜 구하기
 		LocalDate today = LocalDate.now();
 		//YearMonth로 시작일 종료일 구하기
-		LocalDate monthStart = yearMonth.atDay(1);
-		LocalDate monthEnd = yearMonth.atEndOfMonth();
+		LocalDateTime monthStart = yearMonth.atDay(1).atStartOfDay();
+	    LocalDateTime monthEnd = yearMonth.atEndOfMonth().atTime(LocalTime.MAX);
 		// 한 달 근태 기록 목록
 		List<AttendanceResult> monthList = attendanceResultRepository.findByEmployeeIdAndWorkDateBetween(employeeId, monthStart, monthEnd);
 		
