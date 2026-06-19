@@ -19,6 +19,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	        List<UserStatus> statuses
 	);
 	
+	boolean existsByPosition_PositionIdAndStatusIn(
+	        Long positionId,
+	        List<UserStatus> statuses
+	);
+	
 	@Query("""
 	    select u
 	    from User u
