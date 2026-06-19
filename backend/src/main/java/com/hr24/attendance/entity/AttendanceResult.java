@@ -3,11 +3,16 @@ package com.hr24.attendance.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.hr24.employee.entity.User;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -51,8 +56,9 @@ public class AttendanceResult{
 	@Column(name="correction_reason_type_id")
 	private Long correctionReasonTypeId;
 	
-	@Column(name="employee_id")
-	private Long employeeId;
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
+    private User employee;
 	
 	@Column(name="work_date")
 	private LocalDate workDate;

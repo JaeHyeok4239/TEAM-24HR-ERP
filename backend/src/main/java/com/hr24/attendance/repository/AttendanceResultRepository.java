@@ -15,4 +15,6 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	//한 달치 데이터 긁어오기
 	//Optional은 데이터 1개만 나올 때 쓰기에 List 사용
 	List<AttendanceResult> findByEmployeeIdAndWorkDateBetween(Long employeeId, LocalDate startDate, LocalDate endData);
+	
+	List<AttendanceResult> findByEmployeeEmployeeId(Long employeeId);
 }

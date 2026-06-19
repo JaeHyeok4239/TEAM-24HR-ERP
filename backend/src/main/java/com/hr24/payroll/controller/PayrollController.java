@@ -4,16 +4,16 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hr24.payroll.dto.PayrollDetailResponseDto;
 import com.hr24.payroll.dto.PayrollResponseDto;
 import com.hr24.payroll.service.PayrollService;
 
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequiredArgsConstructor
@@ -42,5 +42,18 @@ public class PayrollController {
                         departmentId
                 )
         );
-    }    
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<PayrollDetailResponseDto>
+    getPayrollDetail(
+            @PathVariable("id") Long payrollId
+    ) {
+
+        return ResponseEntity.ok(
+                payrollService.getPayrollDetail(
+                        payrollId
+                )
+        );
+    }
 }
