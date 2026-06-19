@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hr24.payroll.dto.PayrollResponseDto;
+import com.hr24.payroll.entity.Payroll;
 import com.hr24.payroll.repository.PayrollRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -17,24 +18,38 @@ public class PayrollService {
 
     private final PayrollRepository payrollRepository;
 
-    public List<PayrollResponseDto> getPayrolls() {
+    public List<PayrollResponseDto> searchPayrolls(
+            String month,
+            String employeeNo,
+            Long departmentId
+    ) {
 
-        return payrollRepository.findAllWithEmployee()
+        return payrollRepository.searchPayrolls(
+                        month,
+                        employeeNo,
+                        departmentId
+                )
                 .stream()
-                .map(p -> PayrollResponseDto.builder()
-                        .payrollId(p.getPayrollId())
-                        .employeeNo(p.getUser().getEmployeeNo())
-                        .employeeName(p.getUser().getName())
-                        .departmentName(
-                                p.getUser()
-                                 .getDepartment()
-                                 .getDepartmentName())
-                        .payMonth(p.getPayMonth())
-                        .totalPay(p.getTotalPay())
-                        .totalDeduction(p.getTotalDeduction())
-                        .netSalary(p.getNetSalary())
-                        .status(p.getStatus())
-                        .build())
+                .map(this::toDto)
                 .toList();
+    }
+
+    private PayrollResponseDto toDto(Payroll payroll) {
+
+        return PayrollResponseDto.builder()
+                .payrollId(payroll.getPayrollId())
+                .employeeNo(payroll.getUser().getEmployeeNo())
+                .employeeName(payroll.getUser().getName())
+                .departmentName(
+                        payroll.getUser()
+                                .getDepartment()
+                                .getDepartmentName()
+                )
+                .payMonth(payroll.getPayMonth())
+                .totalPay(payroll.getTotalPay())
+                .totalDeduction(payroll.getTotalDeduction())
+                .netSalary(payroll.getNetSalary())
+                .status(payroll.getStatus())
+                .build();
     }
 }

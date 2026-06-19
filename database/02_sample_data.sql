@@ -224,33 +224,10 @@ DELETE FROM attendance_time_policies;
 DELETE FROM attendance_thresholds;
 DELETE FROM workplaces;
 
--- 코드 테이블 삭제
-DELETE FROM correction_types;
-DELETE FROM correction_reason_types;
-DELETE FROM approval_statuses;
-DELETE FROM attendance_statuses;
-DELETE FROM half_day_types;
-
 -- 근무 시간 규칙
--- 월요일(출퇴근+점심시간)
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'MON', 900, 1800, CURRENT_TIMESTAMP, NULL);
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'MON', 1200, 1300, CURRENT_TIMESTAMP, NULL);
-
--- 화요일(출퇴근+점심시간)
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'TUE', 900, 1800, CURRENT_TIMESTAMP, NULL);
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'TUE', 1200, 1300, CURRENT_TIMESTAMP, NULL);
-
--- 수요일(출퇴근+점심시간)
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'WED', 900, 1800, CURRENT_TIMESTAMP, NULL);
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'WED', 1200, 1300, CURRENT_TIMESTAMP, NULL);
-
--- 목요일(출퇴근+점심시간)
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'THU', 900, 1800, CURRENT_TIMESTAMP, NULL);
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'THU', 1200, 1300, CURRENT_TIMESTAMP, NULL);
-
--- 금요일(출퇴근+점심시간)
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 'FRI', 900, 1800, CURRENT_TIMESTAMP, NULL);
-INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 'FRI', 1200, 1300, CURRENT_TIMESTAMP, NULL);
+-- 출퇴근, 점심시간
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 900, 1800, CURRENT_TIMESTAMP, NULL);
+INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'BREAK', 1200, 1300, CURRENT_TIMESTAMP, NULL);
 
 -- 근태 판정 기준
 INSERT INTO attendance_thresholds
@@ -265,42 +242,6 @@ VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'ABSENCE', 180, '출근 �
 -- 근무지
 INSERT INTO workplaces
 VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '강남역', 100, 37.4979420, 127.0276210, CURRENT_TIMESTAMP, NULL);
-
-INSERT INTO workplaces
-VALUES (workplaces_seq.NEXTVAL, 'WORK1', '근무지1', '여의도 더현대 서울', 100, 37.5258970, 126.9284260, CURRENT_TIMESTAMP, NULL);
-
-INSERT INTO workplaces
-VALUES (workplaces_seq.NEXTVAL, 'WORK2', '근무지2', '판교 테크노원', 100, 37.3947440, 127.1112040, CURRENT_TIMESTAMP, NULL);
-
--- 정정 종류
-INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'IN', '출근 정정');
-INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'OUT', '퇴근 정정');
-INSERT INTO correction_types VALUES (correction_types_seq.NEXTVAL, 'STATUS', '근태 상태 정정');
-
--- 정정 사유
-INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'SIMPLE', '단순 입력 오류');
-INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'DELAY_DOCUMENT', '증빙 지연 제출');
-INSERT INTO correction_reason_types VALUES (correction_reason_types_seq.NEXTVAL, 'ETC', '기타');
-
--- 결재 상태
-INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'PENDING', '승인 대기');
-INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'APPROVED', '승인 완료');
-INSERT INTO approval_statuses VALUES (approval_statuses_seq.NEXTVAL, 'REJECTED', '반려');
-
--- 근태 상태
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'WORK', '근무', 1);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LATE', '지각', 2);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'EARLY_LEAVE', '조퇴', 3);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'ABSENT', '결근', 4);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LEAVE', '휴가', 5);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'MISSING_CHECKOUT', '미퇴근', 6);
-
--- 반차 종류
-INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'AM', '오전 반차');
-INSERT INTO half_day_types VALUES (half_day_types_seq.NEXTVAL, 'PM', '오후 반차');
-
-
-
 
 
 -- 전자결재 샘플 데이터
@@ -675,7 +616,65 @@ VALUES (schedule_seq.NEXTVAL, 7, 3, '하반기 현장 안전교육', 'DEPT', DAT
 
 -- 1. 급여 내역 테이블 샘플 데이터 삽입
 INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
-VALUES (payrolls_seq.NEXTVAL, 1, '202605', 6846000, 760295, 6085705, 'Paid', CURRENT_TIMESTAMP);
+VALUES (payrolls_seq.NEXTVAL, 1, '2026-05', 8038000, 849039, 7188961, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 2, '2026-05', 5266000, 605134, 4660866, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 3, '2026-05', 6846000, 760295, 6085705, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 4, '2026-05', 7028000, 773845, 6254155, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 5, '2026-05', 6254155, 561893, 4342107, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 6, '2026-05', 4698000, 537286, 4160714, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 7, '2026-05', 4332000, 493567, 3838433, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 8, '2026-05', 5190000, 596056, 4593944, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 9, '2026-05', 5249000, 603103, 4645897, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 10, '2026-05', 4541000, 518532, 4022468, 'Paid', CURRENT_TIMESTAMP);
+
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 1, '2026-06', 8038000, 849039, 7188961, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 2, '2026-06', 5266000, 605134, 4660866, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 3, '2026-06', 6846000, 760295, 6085705, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 4, '2026-06', 7028000, 773845, 6254155, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 5, '2026-06', 4904000, 561893, 4342107, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 6, '2026-06', 4759000, 544573, 4214427, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 7, '2026-06', 4332000, 493567, 3838433, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 8, '2026-06', 5062000, 580766, 4481234, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 9, '2026-06', 5223000, 599997, 4623003, 'Paid', CURRENT_TIMESTAMP);
+
+INSERT INTO payrolls (payroll_id, employee_id, pay_month, total_pay, total_deduction, net_salary, status, created_at)
+VALUES (payrolls_seq.NEXTVAL, 10, '2026-06', 4439000, 506349, 3932651, 'Paid', CURRENT_TIMESTAMP);
 
 
 -- 2. 급여 상세 항목 테이블 샘플 데이터 삽입

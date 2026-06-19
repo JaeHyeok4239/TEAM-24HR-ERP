@@ -1,4 +1,4 @@
-package com.hr24.employee.dto;
+package com.hr24.employee.dto.department;
 
 import com.hr24.employee.entity.Department;
 

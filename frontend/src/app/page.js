@@ -17,10 +17,7 @@ export default function MainPage() {
           <AttendanceAction />
         </div>
       </div>
-        <div className="grid grid-rows-2 gap-4">
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <h1>상단 영역 1</h1>
-          </div>
+        <div className="grid gap-4">
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <h1>상단 영역 2</h1>
           </div>
