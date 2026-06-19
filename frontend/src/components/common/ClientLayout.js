@@ -2,12 +2,12 @@
 
 import { useEffect, useRef } from "react";
 
-import Menu from "@/components/Menu";
 import LoginForm from "@/components/auth/LoginForm";
 import { SidebarProvider } from "../ui/sidebar";
 
 import { getMyInfoRequest } from "@/services/userService";
 import { useAuthStore } from "@/store/authStore";
+import MainMenu from "@/components/Menu";
 
 export default function ClientLayout({ children }) {
   const initializedRef = useRef(false);
@@ -65,7 +65,7 @@ export default function ClientLayout({ children }) {
   return (
     <div className="flex h-screen bg-slate-100">
       <SidebarProvider>
-        <Menu />
+        <MainMenu />
         <main className="flex-1">{children}</main>
       </SidebarProvider>
     </div>
