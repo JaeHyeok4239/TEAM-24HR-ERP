@@ -224,9 +224,6 @@ DELETE FROM attendance_time_policies;
 DELETE FROM attendance_thresholds;
 DELETE FROM workplaces;
 
--- 코드 테이블 삭제
-DELETE FROM attendance_statuses;
-
 -- 근무 시간 규칙
 -- 출퇴근, 점심시간
 INSERT INTO attendance_time_policies VALUES (attendance_time_policies_seq.NEXTVAL, 'REGULAR', 'WORK', 900, 1800, CURRENT_TIMESTAMP, NULL);
@@ -245,20 +242,6 @@ VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'ABSENCE', 180, '출근 �
 -- 근무지
 INSERT INTO workplaces
 VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '강남역', 100, 37.4979420, 127.0276210, CURRENT_TIMESTAMP, NULL);
-
-INSERT INTO workplaces
-VALUES (workplaces_seq.NEXTVAL, 'WORK1', '근무지1', '여의도 더현대 서울', 100, 37.5258970, 126.9284260, CURRENT_TIMESTAMP, NULL);
-
-INSERT INTO workplaces
-VALUES (workplaces_seq.NEXTVAL, 'WORK2', '근무지2', '판교 테크노원', 100, 37.3947440, 127.1112040, CURRENT_TIMESTAMP, NULL);
-
--- 근태 상태
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'WORK', '근무', 1);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LATE', '지각', 2);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'EARLY_LEAVE', '조퇴', 3);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'ABSENT', '결근', 4);
-INSERT INTO attendance_statuses VALUES (attendance_statuses_seq.NEXTVAL, 'LEAVE', '휴가', 5);
-
 
 
 -- 전자결재 샘플 데이터

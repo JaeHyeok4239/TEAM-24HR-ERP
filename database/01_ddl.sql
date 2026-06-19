@@ -103,25 +103,9 @@ CREATE TABLE
         CONSTRAINT uk_user_roles_user_role UNIQUE (employee_id, role_id)
     );
 
-    -- 직원별 연차 잔액
-CREATE TABLE annual_leave_balances (
-    annual_leave_balance_id NUMBER NOT NULL,
-    employee_id NUMBER NOT NULL,
-    leave_year NUMBER(4) NOT NULL,
-    total_days NUMBER(5, 2) DEFAULT 0 NOT NULL,
-    remaining_days NUMBER(5, 2) DEFAULT 0 NOT NULL,
-    granted_at TIMESTAMP NULL,
-    expires_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NULL,
 
-    CONSTRAINT pk_annual_leave_balances PRIMARY KEY (annual_leave_balance_id),
-    CONSTRAINT fk_annual_leave_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
-    CONSTRAINT uk_annual_leave_employee_year UNIQUE (employee_id, leave_year),
-    CONSTRAINT chk_annual_leave_total_days CHECK (total_days >= 0),
-    CONSTRAINT chk_annual_leave_remaining_days CHECK (remaining_days >= 0),
-    CONSTRAINT chk_annual_leave_remaining_total CHECK (remaining_days <= total_days)
-);
+
+
 
 -- 근태관리: 근무 시간 규칙
 CREATE TABLE
@@ -195,8 +179,7 @@ CREATE TABLE
 CREATE TABLE
     attendance_results (
         attendance_result_id NUMBER NOT NULL, -- PK
-        attendance_status_id NUMBER NOT NULL, -- FK 근태 상태
-        attendance_threshold_id NUMBER NOT NULL, -- FK 근태 판정 기준
+        attendance_threshold_id NUMBER NULL, -- FK 근태 판정 기준
         holiday_id NUMBER NULL, -- FK 공휴일
         employee_id NUMBER NOT NULL, -- FK 유저 테이블
         attendance_correction_id NUMBER NULL, -- FK 정정 이력 테이블
@@ -209,17 +192,17 @@ CREATE TABLE
         total_work_minutes NUMBER NULL, -- 총 출근 시간(휴게 포함)
         actual_work_minutes NUMBER NULL, -- 기본 근무 시간(휴게, 초과 근무 제외)
         overtime_minutes NUMBER NULL, -- 초과 근무 시간(분)
+        attendance_status VARCHAR2(20) NOT NULL, -- 근태 상태(대기/근무/지각/조퇴/결근/휴가)
         is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
         is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
-        use_leave CHAR(1) DEFAULT 'N' NOT NULL, -- 휴가 사용 여부(Y/N)
         is_fixed CHAR(1) DEFAULT 'N' NOT NULL --(Y/N) 정정 여부
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
 
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
+        CONSTRAINT ck_att_attendance_status CHECK IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE'),
         CONSTRAINT fk_att_leave_id FOREIGN KEY (leave_id) REFERENCES leave(leave_id),
         CONSTRAINT fk_att_correction_id FOREIGN KEY (attendance_correction_id) REFERENCES attendance_correction(attendance_correction_id),
-        CONSTRAINT fk_att_attendance_status_id FOREIGN KEY (attendance_status_id) REFERENCES attendance_statuses (attendance_status_id),
         CONSTRAINT fk_att_attendance_threshold_id FOREIGN KEY (attendance_threshold_id) REFERENCES attendance_thresholds (attendance_threshold_id),
         CONSTRAINT fk_att_employee_id FOREIGN KEY (employee_id) REFERENCES users (employee_id),
         CONSTRAINT fk_att_holiday_id FOREIGN KEY (holiday_id) REFERENCES holidays (holiday_id),
@@ -240,16 +223,6 @@ create table attendance_correction(
 	CONSTRAINT correction_ck_type CHECK (correction_type IN ('IN', 'OUT')),
 	CONSTRAINT correction_ck_is_processed CHECK (is_processed IN ('Y', 'N'))
 )
-
--- 근태관리: 근태 상태(근무/지각/조퇴/결근/휴가/미퇴근)
-CREATE TABLE
-    attendance_statuses (
-        attendance_status_id NUMBER NOT NULL,
-        status_code VARCHAR2 (30) NOT NULL, -- 상태 코드(WORK/LATE/EARLY_LEAVE/ABSENT/LEAVE)
-        status_name VARCHAR2 (50) NOT NULL, -- 상태 이름(근무/지각/조퇴/결근/휴가)
-        status_priority NUMBER NOT NULL, -- 상태 판정 우선순위(휴가(연차>반차)>결근>반차>조퇴>지각>근무)
-        CONSTRAINT pk_attendance_statuses PRIMARY KEY (attendance_status_id)
-    );
 
 
 
@@ -280,11 +253,9 @@ CREATE TABLE approval_line (
     document_type    NUMBER NOT NULL,       -- 문서유형 ID (FK → document_type)
     step_order       NUMBER NOT NULL,       -- 결재 단계
     default_approver NUMBER NOT NULL,       -- 기본 결재자 (FK → users)
-    department_id    NUMBER, -- 결재 부서 (FK → departments, 결재자가 부서에 속해있지 않으면 NULL)
-    CONSTRAINT line_fk_department FOREIGN KEY (department_id) REFERENCES departments(department_id),
     CONSTRAINT line_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT line_fk_approver FOREIGN KEY (default_approver) REFERENCES users(employee_id),
-    CONSTRAINT line_uq_dept_doc_step UNIQUE (document_type, step_order, department_id) -- 유형별 단계 중복 방지
+    CONSTRAINT line_uq_step UNIQUE (document_type, step_order) -- 유형별 단계 중복 방지
 );
 
 -- 문서 처리 부서 (문서유형별 처리 가능 부서 및 권한 설정)
@@ -315,7 +286,6 @@ CREATE TABLE document (
     processed_at   TIMESTAMP,                   -- 처리일시
     reject_reason  VARCHAR2(500 CHAR),          -- 반려 사유 (최종 반려 단계 기준)
     document_content JSON DEFAULT '{}' NOT NULL, -- 문서 본문 (JSON 형태로 다양한 필드 저장)
-    version        NUMBER DEFAULT 0 NOT NULL,   -- 결재 승인 시 충돌 방지
     CONSTRAINT document_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT document_fk_requester FOREIGN KEY (requester_id) REFERENCES users(employee_id),
     CONSTRAINT document_fk_processor FOREIGN KEY (processor_id) REFERENCES users(employee_id),
@@ -333,10 +303,9 @@ CREATE TABLE approval_history (
     approver_comment VARCHAR2(500 CHAR),
     acted_at         TIMESTAMP,
     created_at       TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
-    version          NUMBER DEFAULT 0 NOT NULL, -- 결재 승인 시 충돌 방지
     CONSTRAINT history_fk_document FOREIGN KEY (document_id) REFERENCES document(document_id),
     CONSTRAINT history_fk_approver FOREIGN KEY (approver_id) REFERENCES users(employee_id),
-    CONSTRAINT history_ck_status CHECK (status IN ('APR', 'REJ', 'PND', 'CAN')),
+    CONSTRAINT history_ck_status CHECK (status IN ('APR', 'REJ', 'PND')),
     CONSTRAINT history_uq_step UNIQUE (document_id, step_order)
 );
 -- 첨부파일 (업로드된 파일 메타정보 관리)

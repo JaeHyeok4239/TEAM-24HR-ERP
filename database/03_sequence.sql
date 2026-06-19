@@ -58,11 +58,6 @@ CREATE SEQUENCE attendance_correction_seq START
 WITH
     1 INCREMENT BY 1 CACHE 50 NOCYCLE;
 
--- 근태 상태 시퀀스
-CREATE SEQUENCE attendance_statuses_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
 -- 결재문서 PK
 CREATE SEQUENCE approval_document_seq START
 WITH
