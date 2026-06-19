@@ -25,11 +25,20 @@ import lombok.RequiredArgsConstructor;
 public class AttendanceController {
 	private final AttendanceService attendanceService;
 	
-	//마감 배치 프로그램 바구니
+	// 오후 배치 프로그램 바구니
     @PostMapping("/batch/closing-batch")
-    public String closingBatch() {
+    public ResponseEntity<String> closingBatch() {
         attendanceService.processMissingCheckouts();
-        return "마감 배치 프로그램이 실행되었습니다.";
+        System.out.println(">>> 오후 배치 프로그램이 수동 실행되었습니다.");
+        return ResponseEntity.ok("오후 배치 프로그램이 실행되었습니다.");
+    }
+    
+    // 오전 배치 프로그램 바구니
+    @PostMapping("/batch/open-batch")
+    public ResponseEntity<String> openBatch() {
+    	attendanceService.createDailyAttendanceResults();
+    	System.out.println(">>> 오전 배치 프로그램이 수동 실행되었습니다.");
+    	return ResponseEntity.ok("오전 배치 프로그램이 실행되었습니다.");
     }
 	
 	// 출근 바구니

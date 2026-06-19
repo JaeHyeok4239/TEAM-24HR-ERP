@@ -10,10 +10,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
+@NoArgsConstructor 
+@AllArgsConstructor
 @SequenceGenerator(
 		name="attendance_results_seq",
 		sequenceName="attendance_results_seq",
@@ -30,8 +36,8 @@ public class AttendanceResult{
 	@Column(name="attendance_result_id")
 	private Long attendanceResultId;
 	
-	@Column(name="attendance_status_id")
-	private Long attendanceStatusId;
+	@Column(name="attendance_status")
+	private String attendanceStatus;
 	
 	@Column(name="attendance_threshold_id")
 	private Long attendanceThresholdId;
@@ -74,9 +80,6 @@ public class AttendanceResult{
 	
 	@Column(name="is_missing_checkout")
 	private String isMissingCheckout;
-	
-	@Column(name="use_leave")
-	private String useLeave;
 	
 	@Column(name="is_fixed")
 	private String isFixed;
