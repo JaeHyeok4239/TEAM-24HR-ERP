@@ -56,7 +56,7 @@ public class AttendanceCorrection{
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="document_id")
-	private Document documentId;
+	private Document document;
 	
 	@Column(name="created_at")
 	private LocalDateTime createdAt;

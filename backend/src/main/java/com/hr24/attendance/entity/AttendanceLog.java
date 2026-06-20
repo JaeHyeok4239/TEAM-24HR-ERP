@@ -42,7 +42,7 @@ public class AttendanceLog{
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="employee_id")
-	private User employeeId;
+	private User employee;
 	
 	@Column(name="log_type")
 	private String logType;
@@ -61,7 +61,7 @@ public class AttendanceLog{
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="workplace_id")
-	private Workplace workplaceId;
+	private Workplace workplace;
 	
 	@Column(name="work_date")
 	private LocalDateTime workDate;

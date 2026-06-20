@@ -53,26 +53,26 @@ public class AttendanceResult{
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="holiday_id")
-	private Holiday holidayId;
+	private Holiday holiday;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="employee_id")
-	private User employeeId;
+	private User employee;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="attendance_correction_id")
-	private AttendanceCorrection attendanceCorrectionId;
+	private AttendanceCorrection attendanceCorrection;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="leave_id")
-	private Leave leaveId;
+	private Leave leave;
 	
 	@Column(name="work_date")
 	private LocalDateTime workDate;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="workplace_id")
-	private Workplace workplaceId;
+	private Workplace workplace;
 	
 	@Column(name="check_in_time")
 	private LocalDateTime checkInTime;
