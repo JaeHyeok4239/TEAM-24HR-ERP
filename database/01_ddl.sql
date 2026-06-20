@@ -195,12 +195,12 @@ CREATE TABLE
         attendance_status VARCHAR2(20) NOT NULL, -- 근태 상태(대기/근무/지각/조퇴/결근/휴가)
         is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
         is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
-        is_fixed CHAR(1) DEFAULT 'N' NOT NULL --(Y/N) 정정 여부
+        is_fixed CHAR(1) DEFAULT 'N' NOT NULL, --(Y/N) 정정 여부
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
 
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
-        CONSTRAINT ck_att_attendance_status CHECK IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE'),
+        CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE')),
         CONSTRAINT fk_att_leave_id FOREIGN KEY (leave_id) REFERENCES leave(leave_id),
         CONSTRAINT fk_att_correction_id FOREIGN KEY (attendance_correction_id) REFERENCES attendance_correction(attendance_correction_id),
         CONSTRAINT fk_att_attendance_threshold_id FOREIGN KEY (attendance_threshold_id) REFERENCES attendance_thresholds (attendance_threshold_id),
@@ -310,7 +310,7 @@ CREATE TABLE approval_history (
     CONSTRAINT history_fk_document FOREIGN KEY (document_id) REFERENCES document(document_id),
     CONSTRAINT history_fk_approver FOREIGN KEY (approver_id) REFERENCES users(employee_id),
     CONSTRAINT history_ck_status CHECK (status IN ('APR', 'REJ', 'PND', 'CAN')),
-    CONSTRAINT HISTORY_UQ_DOC_VERSION_STEP UNIQUE (document_id, document_version, step_order); -- 동일 문서, 버전, 단계에 대한 중복 결재 방지
+    CONSTRAINT HISTORY_UQ_DOC_VERSION_STEP UNIQUE (document_id, document_version, step_order) -- 동일 문서, 버전, 단계에 대한 중복 결재 방지
 );
 -- 첨부파일 (업로드된 파일 메타정보 관리)
 CREATE TABLE
