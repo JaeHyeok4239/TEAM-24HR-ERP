@@ -4,6 +4,7 @@ import java.time.YearMonth;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,26 +42,31 @@ public class AttendanceController {
     	return ResponseEntity.ok("오전 배치 프로그램이 실행되었습니다.");
     }
 	
-	// 출근 바구니
+    // 출근 바구니
 	@PostMapping("/check-in")
-	public ResponseEntity<String> checkIn(@RequestBody AttendanceRequest request){
-		attendanceService.checkIn(request.getEmployeeId(), request.getLatitude(), request.getLongitude());
-		return ResponseEntity.ok("정상적으로 출근 처리되었습니다.");
+	public ResponseEntity<String> checkIn(Authentication authentication, @RequestBody AttendanceRequest request){
+	    // authentication에서 loginId 뽑기
+	    String loginId = authentication.getName();
+	    
+	    // 서비스로 loginId 넘김
+	    attendanceService.checkIn(loginId, request.getLatitude(), request.getLongitude());
+	    return ResponseEntity.ok("정상적으로 출근 처리되었습니다.");
 	}
 	
 	// 퇴근 바구니
 	@PostMapping("/check-out")
-	public ResponseEntity<String> checkOut(@RequestBody AttendanceRequest request){
-		attendanceService.checkOut(request.getEmployeeId(), request.getLatitude(), request.getLongitude());
+	public ResponseEntity<String> checkOut(Authentication authentication, @RequestBody AttendanceRequest request){
+		String loginId = authentication.getName();
+		attendanceService.checkOut(loginId, request.getLatitude(), request.getLongitude());
 		return ResponseEntity.ok("정상적으로 퇴근 처리되었습니다.");
 	}
 	
 	// 달력 바구니
 	@GetMapping("/summary")
 	public ResponseEntity<AttendanceResponse> getMonthlyAttendance(
-			@RequestParam("employeeId") Long employeeId,
+			@RequestParam("employee") String loginId,
 			@RequestParam("yearMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth){
-		AttendanceResponse response = attendanceService.yearMonth(employeeId, yearMonth);
+		AttendanceResponse response = attendanceService.yearMonth(loginId, yearMonth);
 	    return ResponseEntity.ok(response);
 	}
 	

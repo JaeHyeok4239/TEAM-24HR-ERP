@@ -12,16 +12,41 @@ import org.springframework.data.repository.query.Param;
 
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceResult;
+import com.hr24.employee.entity.User;
+import com.hr24.employee.enums.UserStatus;
 
 public interface AttendanceResultRepository extends JpaRepository<AttendanceResult, Long>{
-	//직원ID와 근무 날짜로 근태 결과 있는지 찾기
-	Optional<AttendanceResult> findByEmployeeIdAndWorkDate(Long employeeId, LocalDateTime workDate);
 	
-	//한 달치 데이터 긁어오기
-	//Optional은 데이터 1개만 나올 때 쓰기에 List 사용
-	List<AttendanceResult> findByEmployeeIdAndWorkDateBetween(Long employeeId, LocalDateTime startDate, LocalDateTime endData);
+	Optional<AttendanceResult> findByEmployeeAndWorkDate(User employee, LocalDateTime workDate);
 	
-	//마감 배치 프로그램에서 쓰일 qeury문
+	// 특정 직원의 특정 날짜 근태 정보+그 직원의 상세 정보
+	@Query("select ar from AttendanceResult ar join fetch ar.employee " +
+	           "where ar.employee.employeeId = :employeeId " +
+	           "and ar.workDate = :workDate")
+	    Optional<AttendanceResult> findByEmployeeIdWithUser(
+	        @Param("employeeId") Long employeeId, 
+	        @Param("workDate") LocalDateTime workDate
+	    );
+	
+	// 특정 기간 직원 한 명의 근태 조회
+	@Query("select ar from AttendanceResult ar join fetch ar.employee " +
+	           "where ar.employee = :employee " +
+	           "and ar.workDate between :start and :end")
+	    List<AttendanceResult> findByEmployeeWithUser(
+	        @Param("employee") User employee, 
+	        @Param("start") LocalDateTime start, 
+	        @Param("end") LocalDateTime end
+	    );
+	
+	// 특정 기간 모든 직원의 근태 조회
+	@Query("select ar from AttendanceResult ar join fetch ar.employee " +
+	       "where ar.workDate between :start and :end")
+	List<AttendanceResult> findAllWithEmployeeByWorkDateBetween(
+	    @Param("start") LocalDateTime start, 
+	    @Param("end") LocalDateTime end
+	);
+	
+	// 마감 배치 프로그램에서 쓰일 qeury문
 	@Modifying
 	@Query("UPDATE AttendanceResult a " +
 		       "SET a.isMissingCheckout = 'Y' " +
@@ -29,6 +54,6 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 		       "AND a.attendanceStatus IN :attendanceStatus")
 	int updateMissingCheckouts(@Param("attendanceStatus") List<Long> attendanceStatus);
 	
-	//중복 막기
+	// 중복 막기
 	boolean existsByWorkDate(LocalDateTime workDate);
 }

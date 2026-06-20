@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public class AttendanceRequest {
 
-    private Long employeeId;
+    private String employeeId;
     private Double latitude;
     private Double longitude;
 
