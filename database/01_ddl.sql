@@ -205,9 +205,9 @@ CREATE TABLE
         employee_id NUMBER NOT NULL, -- FK 유저 테이블
         attendance_correction_id NUMBER NULL, -- FK 정정 이력 테이블
         leave_id NUMBER NULL, -- FK 연차/반차/조퇴 등 휴가 신청 데이터 테이블
+        workplace_id NUMBER NULL, -- FK 근무지
 
         work_date DATE NOT NULL, -- 근무 기준 날짜
-        workplace_id NUMBER NULL, -- 근무지
         check_in_time TIMESTAMP NULL, -- 출근 시간
         check_out_time TIMESTAMP NULL, -- 퇴근 시간
         total_work_minutes NUMBER NULL, -- 총 출근 시간(휴게 포함)
@@ -221,7 +221,8 @@ CREATE TABLE
         updated_at TIMESTAMP NULL,
 
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
-        CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE')),
+        CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE', 'OUT')),
+        CONSTRAINT fk_att_workplace_id FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
         CONSTRAINT fk_att_leave_id FOREIGN KEY (leave_id) REFERENCES leave(leave_id),
         CONSTRAINT fk_att_correction_id FOREIGN KEY (attendance_correction_id) REFERENCES attendance_correction(attendance_correction_id),
         CONSTRAINT fk_att_attendance_threshold_id FOREIGN KEY (attendance_threshold_id) REFERENCES attendance_thresholds (attendance_threshold_id),
