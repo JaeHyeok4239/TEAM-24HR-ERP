@@ -18,5 +18,6 @@ public class AttendanceResponse {
 	private int earlyLeaveCount = 0;
 	private int absentCount = 0;
 	private int leaveCount = 0;
-	private List<AttendanceResult> attendance;
+	private List<AttendanceResultDto> attendance;
+	
 }

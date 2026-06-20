@@ -43,7 +43,7 @@ public class AttendanceCorrection{
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="correction_target")
-	private String correctionTarget;
+	private AttendanceResult correctionTarget;
 	
 	@Column(name="correction_type")
 	private String correctionType;

@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.hr24.attendance.dto.AttendanceResponse;
+import com.hr24.attendance.dto.AttendanceResultDto;
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceResult;
 import com.hr24.attendance.entity.AttendanceTimePolicy;
@@ -50,8 +51,8 @@ public class AttendanceService{
 	// status WORK, LATE인 사람들 중 퇴근 안 찍힌 사람 missing 'Y'으로 변경
 	@Transactional
 	public void processMissingCheckouts() {
-		List<Long> attendanceStatusId = List.of(7L, 8L);
-		int updatedCount = attendanceResultRepository.updateMissingCheckouts(attendanceStatusId);
+		List<String> targetStatuses = List.of("WORK", "LATE");
+		int updatedCount = attendanceResultRepository.updateMissingCheckouts(targetStatuses);
 		log.info("미퇴근 처리 완료: {}건", updatedCount);
 		
 	}
@@ -62,10 +63,11 @@ public class AttendanceService{
 	public void createDailyAttendanceResults() {
 		LocalDate todayDate = LocalDate.now();
 		LocalDateTime todayTimeDate = LocalDateTime.now();
-		
+	
 		// 오늘 결과가 생성되어 있는지 확인
 		boolean exists = attendanceResultRepository.existsByWorkDate(todayDate.atStartOfDay());
 		if (exists) {
+			System.out.println(">>> 이미 오늘 데이터가 존재함: " + exists);
 		    return; // 데이터가 있으면 종료
 		}
 		
@@ -198,7 +200,7 @@ public class AttendanceService{
 				.isLocationValid("Y")
 				.workplace(matchedWorkplace)
 				.workDate(todayDate)
-				.createdAt(todayDate)
+				.updatedAt(todayDate)
 				.build();
 		attendanceLogRepository.save(log);
 	}
@@ -262,7 +264,7 @@ public class AttendanceService{
 				.isLocationValid("N")
 				.workplace(matchedWorkplace)
 				.workDate(todayDate)
-				.createdAt(todayDate)
+				.updatedAt(todayDate)
 				.build();
 		attendanceLogRepository.save(log);
 	}
@@ -282,12 +284,17 @@ public class AttendanceService{
 		List<AttendanceResult> monthList = attendanceResultRepository.findByEmployeeWithUser(user, monthStart, monthEnd);
 		
 		// 상태 번호 확인(출근/지각/조퇴/결근/휴가)
-		// 원래 statuses 종류 근무/지각/조퇴/결근/휴가
 		int workCount = 0;
 		int lateCount = 0;
 		int earlyLeaveCount = 0;
 		int absentCount = 0;
 		int leavecount = 0;
+		
+		// 엔티티 리스트 DTO 리스트로 변환
+		// 출근/지각/조퇴/결근/휴가 몇 번 했는지 검사
+		List<AttendanceResultDto> dtoList = monthList.stream()
+	            .map(AttendanceResultDto::new) 
+	            .collect(Collectors.toList());
 		
 		// 출근/지각/조퇴/결근/휴가 몇 번 했는지 검사하는 코드
 		Map<String, Long> counts = monthList.stream()
@@ -299,7 +306,8 @@ public class AttendanceService{
 		    response.setEarlyLeaveCount(counts.getOrDefault("EARLY_LEAVE", 0L).intValue());
 		    response.setAbsentCount(counts.getOrDefault("ABSENT", 0L).intValue());
 		    response.setLeaveCount(counts.getOrDefault("LEAVE", 0L).intValue());
-		    response.setAttendance(monthList);
+		    
+		    response.setAttendance(dtoList);
 
 		return response;
 	}

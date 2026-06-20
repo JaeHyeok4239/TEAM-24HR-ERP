@@ -16,6 +16,9 @@ import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.service.AttendanceService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -25,8 +28,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "근태 관리 API", description = "근태 관리 관련 API")
 public class AttendanceController {
 	private final AttendanceService attendanceService;
-	
-	// 오후 배치 프로그램 바구니
+	@Operation(summary = "오후 배치 프로그램", description = "오후 11시에 실행되는 프로그램입니다.")
     @PostMapping("/batch/closing-batch")
     public ResponseEntity<String> closingBatch() {
         attendanceService.processMissingCheckouts();
@@ -34,7 +36,7 @@ public class AttendanceController {
         return ResponseEntity.ok("오후 배치 프로그램이 실행되었습니다.");
     }
     
-    // 오전 배치 프로그램 바구니
+	@Operation(summary = "오전 배치 프로그램", description = "오전 6시에 실행되는 프로그램입니다.")
     @PostMapping("/batch/open-batch")
     public ResponseEntity<String> openBatch() {
     	attendanceService.createDailyAttendanceResults();
@@ -42,7 +44,7 @@ public class AttendanceController {
     	return ResponseEntity.ok("오전 배치 프로그램이 실행되었습니다.");
     }
 	
-    // 출근 바구니
+	@Operation(summary = "출근", description = "출근할 수 있습니다.")
 	@PostMapping("/check-in")
 	public ResponseEntity<String> checkIn(Authentication authentication, @RequestBody AttendanceRequest request){
 	    // authentication에서 loginId 뽑기
@@ -53,7 +55,7 @@ public class AttendanceController {
 	    return ResponseEntity.ok("정상적으로 출근 처리되었습니다.");
 	}
 	
-	// 퇴근 바구니
+	@Operation(summary = "퇴근", description = "퇴근할 수 있습니다.")
 	@PostMapping("/check-out")
 	public ResponseEntity<String> checkOut(Authentication authentication, @RequestBody AttendanceRequest request){
 		String loginId = authentication.getName();
@@ -61,14 +63,15 @@ public class AttendanceController {
 		return ResponseEntity.ok("정상적으로 퇴근 처리되었습니다.");
 	}
 	
-	// 달력 바구니
+	@Operation(summary = "개인 월별 근태 횟수 조회", description = "yyyy-mm 형태로 넣으면 해당 달의 근태 횟수를 조회할 수 있습니다.\n(출근/지각/조퇴/결근/휴가)")
 	@GetMapping("/summary")
-	public ResponseEntity<AttendanceResponse> getMonthlyAttendance(
-			@RequestParam("employee") String loginId,
-			@RequestParam("yearMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth){
-		AttendanceResponse response = attendanceService.yearMonth(loginId, yearMonth);
+	public ResponseEntity<AttendanceResponse> getMonthlyAttendanceStats(
+	        Authentication authentication, 
+	        @RequestParam(name="yearMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth) {
+		
+	    String loginId = authentication.getName(); 
+	    AttendanceResponse response = attendanceService.yearMonth(loginId, yearMonth);
 	    return ResponseEntity.ok(response);
 	}
-	
 	
 }
