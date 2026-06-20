@@ -239,12 +239,42 @@ create table attendance_correction(
 	is_processed CHAR(1) DEFAULT 'N' not null, -- (Y/N) results 테이블 수정해서 근태 정정 처리 되었는지 나타냄
 	correction_reason varchar2(300char) NOT NULL, -- 정정 사유
 	document_id NOT NULL, -- FK document 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NULL,
 
 	CONSTRAINT correction_fk_correction_target FOREIGN KEY (correction_target) REFERENCES attendance_results(attendance_result_id),
 	CONSTRAINT correction_fk_doc_id FOREIGN KEY (document_id) REFERENCES document(document_id),
 	CONSTRAINT correction_ck_type CHECK (correction_type IN ('IN', 'OUT')),
 	CONSTRAINT correction_ck_is_processed CHECK (is_processed IN ('Y', 'N'))
 )
+
+-- 일용직 근로자 출퇴근 기록 테이블
+CREATE TABLE attendance_logs_daily(
+    attendance_logs_daily_id NUMBER PRIMARY KEY,
+    employee_id NUMBER NOT NULL, -- FK users(department_id 사용 목적)해서 동명이인 이슈 차단
+    work_date DATE NOT NULL, -- 근무 기준 날짜
+    workplace_id NUMBER NOT NULL, -- 근무지 ID
+    check_in_time TIMESTAMP NULL, -- 출근 시간
+    check_out_time TIMESTAMP NULL, -- 퇴근 시간
+    is_attended CHAR(1) DEFAULT 'N' NOT NULL, -- 출근 여부(Y/N)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_attendance_logs_daily_user FOREIGN KEY (employee_id) REFERENCES users(employee_id),
+    CONSTRAINT fk_attendance_logs_daily_workplace FOREIGN KEY (workplace_id) REFERENCES workplaces(workplace_id),
+    CONSTRAINT ck_attendance_logs_daily_is_attended CHECK (is_attended IN ('Y', 'N')),
+    CONSTRAINT uq_attendance_logs_daily UNIQUE (employee_id, work_date, workplace_id)
+);
+
+-- 관리자의 특정 날짜별/부서별/전체 직원 조회용
+CREATE INDEX idx_att_results_date ON attendance_results(work_date);
+
+-- 일용직 특정 사원 기간 조회용
+CREATE INDEX idx_att_daily_emp_date ON attendance_logs_daily(employee_id, work_date);
+
+-- 관리자 대시보드 조회용
+CREATE INDEX idx_att_daily_work_date ON attendance_logs_daily(work_date);
+
 
 
 
