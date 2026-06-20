@@ -3,11 +3,18 @@ package com.hr24.attendance.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.hr24.document.entity.Leave;
+import com.hr24.employee.entity.User;
+import com.hr24.work.schedule.entity.Holiday;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -44,23 +51,28 @@ public class AttendanceResult{
 	@Column(name="attendance_threshold_id")
 	private Long attendanceThresholdId;
 	
-	@Column(name="holiday_id")
-	private Long holidayId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="holiday_id")
+	private Holiday holidayId;
 	
-	@Column(name="employee_id")
-	private Long employeeId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="employee_id")
+	private User employeeId;
 	
-	@Column(name="attendance_correction_id")
-	private Long attendanceCorrectionId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="attendance_correction_id")
+	private AttendanceCorrection attendanceCorrectionId;
 	
-	@Column(name="leave_id")
-	private Long leaveId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="leave_id")
+	private Leave leaveId;
 	
 	@Column(name="work_date")
 	private LocalDateTime workDate;
 	
-	@Column(name="workplace_id")
-	private Long workplaceId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="workplace_id")
+	private Workplace workplaceId;
 	
 	@Column(name="check_in_time")
 	private LocalDateTime checkInTime;
