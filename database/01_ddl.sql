@@ -253,7 +253,7 @@ CREATE TABLE attendance_logs_daily(
     attendance_logs_daily_id NUMBER PRIMARY KEY,
     employee_id NUMBER NOT NULL, -- FK users(department_id 사용 목적)해서 동명이인 이슈 차단
     work_date DATE NOT NULL, -- 근무 기준 날짜
-    workplace_id NUMBER NOT NULL, -- 근무지 ID
+    workplace_id NUMBER NOT NULL, -- FK 근무지 ID
     check_in_time TIMESTAMP NULL, -- 출근 시간
     check_out_time TIMESTAMP NULL, -- 퇴근 시간
     is_attended CHAR(1) DEFAULT 'N' NOT NULL, -- 출근 여부(Y/N)
