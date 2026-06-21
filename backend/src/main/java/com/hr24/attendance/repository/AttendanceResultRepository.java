@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceResult;
+import com.hr24.attendance.entity.Workplace;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.enums.UserStatus;
 
@@ -56,4 +57,7 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	
 	// 중복 막기
 	boolean existsByWorkDate(LocalDateTime workDate);
+
+	@Query("SELECT ar FROM AttendanceResult ar WHERE ar.employee.employeeId = :employeeId AND ar.workDate = :workDate")
+	Optional<AttendanceResult> findByEmployeeIdAndWorkDate(@Param("employeeId") Long employeeId, @Param("workDate") LocalDateTime workDate);
 }

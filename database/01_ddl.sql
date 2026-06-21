@@ -238,7 +238,9 @@ create table attendance_correction(
 	correction_type varchar2(3char) not null, -- (IN/OUT) 출근/퇴근 정정 종류
 	is_processed CHAR(1) DEFAULT 'N' not null, -- (Y/N) results 테이블 수정해서 근태 정정 처리 되었는지 나타냄
 	correction_reason varchar2(300char) NOT NULL, -- 정정 사유
-	document_id NOT NULL, -- FK document 
+	document_id NOT NULL, -- FK document
+    before_time TIMESTAMP NOT NULL, -- 수정 전 시간 
+    after_time TIMESTAMP NOT NULL, -- 수정 후 시간
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NULL,
 

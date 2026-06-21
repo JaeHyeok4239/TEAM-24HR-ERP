@@ -1,27 +1,34 @@
 package com.hr24.attendance.controller;
 
+import java.security.Principal;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.service.AttendanceService;
+import com.hr24.employee.entity.User;
+import com.hr24.employee.repository.UserRepository;
+import com.hr24.global.exception.BusinessException;
+import com.hr24.global.exception.ErrorCode;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +38,8 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "근태 관리 API", description = "근태 관리 관련 API")
 public class AttendanceController {
 	private final AttendanceService attendanceService;
+	private final UserRepository userRepository;
+	
 	@Operation(summary = "오후 배치 프로그램", description = "오후 11시에 실행되는 프로그램입니다.")
     @PostMapping("/batch/closing-batch")
     public ResponseEntity<String> closingBatch() {
@@ -47,10 +56,45 @@ public class AttendanceController {
     	return ResponseEntity.ok("오전 배치 프로그램이 실행되었습니다.");
     }
 	
+	// 일별 근태 상세 조회
+	// 관리자는 모든 사용자 조회 가능
+	// 일반 사용자는 본인 것만 조회 가능
+	@Operation(summary = "일별 근태 상세 조회", description = "특정 직원의 날짜별 근태 기록을 상세하게 조회합니다.(관리자/본인만 가능)")
+	@GetMapping("/{employeeId}")
+	public ResponseEntity<AttendanceDetailResponseDto> getAttendanceDetail(
+	        @PathVariable("employeeId") Long employeeId,
+	        @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+	) {
+	    // 보안 컨텍스트에서 인증 정보를 가져옴
+	    var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+	    // 인증 정보가 null이거나 인증되지 않은 사용자인지 확인
+	    if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+	        throw new BusinessException(ErrorCode.INVALID_TOKEN); // 혹은 UNAUTHORIZED 에러
+	    }
+
+	    String loginId = authentication.getName();
+
+	    // DB 조회 및 로직
+	    User currentUser = userRepository.findByLoginId(loginId)
+	            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+	    boolean isAdmin = authentication.getAuthorities().stream()
+	            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+	    
+	    boolean isOwner = currentUser.getEmployeeId().equals(employeeId);
+
+	    if (!isAdmin && !isOwner) {
+	        throw new BusinessException(ErrorCode.ACCESS_DENIED);
+	    }
+
+	    return ResponseEntity.ok(attendanceService.getAttendanceDetail(loginId, employeeId, date, isAdmin));
+	}
+	
 	// 일용직 명단 조회
 	@GetMapping("/daily-workers")
 	public List<DailyAttendanceInputDto> getDailyWorkers() {
-	    // userService를 통해 가져오되, 본인이 만든 DTO로 변환해서 반환
+	    // userService를 통해 가져오되 본인이 만든 DTO로 변환해서 반환
 	    return attendanceService.getDailyWorkerList();
 	}
 	

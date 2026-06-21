@@ -1,6 +1,7 @@
 package com.hr24.attendance.entity;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import com.hr24.document.entity.Document;
 
@@ -57,6 +58,12 @@ public class AttendanceCorrection{
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="document_id")
 	private Document document;
+	
+	@Column(name="before_time")
+	private LocalTime beforeTime;
+
+	@Column(name="after_time")
+	private LocalTime afterTime;
 	
 	@Column(name="created_at")
 	private LocalDateTime createdAt;

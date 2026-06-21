@@ -1,5 +1,6 @@
 package com.hr24.attendance.service;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -14,16 +15,22 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.hr24.attendance.dto.AdminAttendanceDetailResponseDto;
+import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.AttendanceResultDto;
+import com.hr24.attendance.dto.CorrectionDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
+import com.hr24.attendance.entity.AttendanceCorrection;
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceLogsDaily;
 import com.hr24.attendance.entity.AttendanceResult;
 import com.hr24.attendance.entity.AttendanceThreshold;
 import com.hr24.attendance.entity.AttendanceTimePolicy;
+import com.hr24.attendance.repository.AttendanceCorrectionRepository;
 import com.hr24.attendance.repository.AttendanceLogDailyRepository;
 import com.hr24.attendance.repository.AttendanceLogRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
@@ -31,6 +38,7 @@ import com.hr24.attendance.repository.AttendanceThresholdRepository;
 import com.hr24.attendance.repository.AttendanceThresholdRepository;
 import com.hr24.attendance.repository.AttendanceTimePolicyRepository;
 import com.hr24.attendance.repository.WorkplaceRepository;
+import com.hr24.attendance.utils.TimeUtils;
 import com.hr24.document.entity.Leave;
 import com.hr24.document.repository.LeaveRepository;
 import com.hr24.employee.entity.User;
@@ -39,7 +47,6 @@ import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.attendance.entity.Workplace;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,14 +63,14 @@ public class AttendanceService{
 	private final AttendanceLogDailyRepository attendanceLogDailyRepository;
 	private final AttendanceTimePolicyRepository attendanceTimePolicyRepository;
 	private final AttendanceThresholdRepository attendanceThresholdRepository;
-	
+	private final AttendanceCorrectionRepository attendanceCorrectionRepository;
 	
 	// 시간 관련 API 테스트용 메서드
 	private final boolean IS_TEST_MODE = true; 
 	private LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분
-	        return LocalDateTime.of(2026, 6, 21, 9, 0); 
+	        return LocalDateTime.of(2026, 6, 21, 18,0); 
 	    }
 	    return LocalDateTime.now();
 	}
@@ -129,6 +136,86 @@ public class AttendanceService{
 				})
 				.collect(Collectors.toList());
 				attendanceResultRepository.saveAll(dailyResults);
+	}
+	
+	// 일별 근태 상세 조회
+	@Transactional(readOnly = true)
+	public AttendanceDetailResponseDto getAttendanceDetail(String loginId, Long targetEmployeeId, LocalDate date, boolean isAdmin) {
+	    // 요청자 확인
+	    User requester = userRepository.findByLoginId(loginId)
+	            .orElseThrow(() -> new RuntimeException("요청자를 찾을 수 없습니다."));
+	    
+	    // 조회할 대상 ID(관리자는 타인 조회 가능, 사원은 본인 ID 고정)
+	    Long employeeIdToQuery = isAdmin ? targetEmployeeId : requester.getEmployeeId();
+
+	    // 근태 결과 조회
+	    AttendanceResult result = attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeIdToQuery, date.atStartOfDay())
+	            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 근태 기록이 없습니다."));
+
+	    // 정정 이력 조회 및 DTO 변환
+	    List<CorrectionDto> correctionDtos = attendanceCorrectionRepository.findByCorrectionTarget(result).stream()
+	            .map(this::convertToCorrectionDto)
+	            .collect(Collectors.toList());
+
+	    // 시간 계산
+	    long totalWorkTime = TimeUtils.calculateTotalTime(result);
+	    long basicWorkTime = TimeUtils.calculateBasicTime(totalWorkTime);
+	    long overtime = Math.max(0, (totalWorkTime - 60) - basicWorkTime);
+
+	    // 결과 반환
+	    if (isAdmin) {
+	        return AdminAttendanceDetailResponseDto.builder()
+	                .status(result.getAttendanceStatus())
+	                .checkIn(result.getCheckInTime())
+	                .checkOut(result.getCheckOutTime())
+	                .totalWorkTime(totalWorkTime)
+	                .basicWorkTime(basicWorkTime)
+	                .overtime(overtime)
+	                .corrections(correctionDtos)
+	                .userName(result.getEmployee().getName())
+	                .department(result.getEmployee().getDepartment().getDepartmentName())
+	                .userPosition(result.getEmployee().getPosition().getPositionName())
+	                .workplaceName(result.getWorkplace() != null ? result.getWorkplace().getWorkplaceName() : "미지정")
+	                .build();
+	    }
+
+	    return AttendanceDetailResponseDto.builder()
+	            .status(result.getAttendanceStatus())
+	            .checkIn(result.getCheckInTime())
+	            .checkOut(result.getCheckOutTime())
+	            .totalWorkTime(totalWorkTime)
+	            .basicWorkTime(basicWorkTime)
+	            .overtime(overtime)
+	            .build();
+	 
+	}
+
+	// CorrectionDto 변환 로직을 별도 메서드로 분리(유지보수 용이)
+	private CorrectionDto convertToCorrectionDto(AttendanceCorrection c) {
+	    return CorrectionDto.builder()
+	            .correctionType(c.getCorrectionType())
+	            .processStatus(convertStatusToLabel(c.getDocument().getStatus()))
+	            .requestedAt(c.getDocument().getRequestedAt())
+	            .beforeTime(c.getBeforeTime())
+	            .afterTime(c.getAfterTime())
+	            .managerName(c.getDocument().getProcessor() != null ? c.getDocument().getProcessor().getName() : "미정")
+	            .remarks(c.getCorrectionReason())
+	            .build();
+	}
+	
+    // 상태 코드 변환 메서드
+	private String convertStatusToLabel(String status) {
+	    if (status == null) return "알 수 없음";
+
+	    return switch (status) {
+	        case "TMP" -> "임시 저장";
+	        case "REQ" -> "결재 요청";
+	        case "APR" -> "승인 완료";
+	        case "REJ" -> "반려";
+	        case "PRC" -> "처리 중";
+	        case "COM" -> "처리 완료";
+	        default -> "알 수 없음"; // 정의되지 않은 상태값에 대한 처리
+	    };
 	}
 	
 	// 일용직 명단 조회
