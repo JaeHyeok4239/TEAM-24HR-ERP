@@ -84,7 +84,7 @@ public class AttendanceService{
 		List<User> allUsers = userRepository.findAll();
 		List<User> activeUsers = allUsers.stream()
 				.filter(user -> UserStatus.ACTIVE.equals(user.getStatus()))
-				.filter(user -> "DAILY".equals(user.getEmploymentType()))
+				.filter(user -> !EmploymentType.DAILY.equals(user.getEmploymentType()))
 				.toList();
 		// 휴가 테이블에 있는 모든 직원들
 		List<Leave> leaveUsers = leaveRepository.findAll();
