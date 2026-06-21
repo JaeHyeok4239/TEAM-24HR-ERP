@@ -1,6 +1,8 @@
 package com.hr24.attendance.controller;
 
 import java.time.YearMonth;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
+import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.service.AttendanceService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +46,23 @@ public class AttendanceController {
     	System.out.println(">>> 오전 배치 프로그램이 수동 실행되었습니다.");
     	return ResponseEntity.ok("오전 배치 프로그램이 실행되었습니다.");
     }
+	
+	// 일용직 명단 조회
+	@GetMapping("/daily-workers")
+	public List<DailyAttendanceInputDto> getDailyWorkers() {
+	    // userService를 통해 가져오되, 본인이 만든 DTO로 변환해서 반환
+	    return attendanceService.getDailyWorkerList();
+	}
+	
+	// 일용직 근태 기록 일괄 저장
+	@Operation(summary = "일용직 근태 기록 일괄 저장", description = "관리자가 화면에서 입력한 일용직 근태 명단을 저장합니다.")
+	@PostMapping("/batch/daily-batch")
+	public ResponseEntity<String> dailyBatch(
+	        @RequestBody List<AttendanceRequest> attendanceList) { // Map -> DTO 리스트로 변경
+	    
+	    attendanceService.saveDailyAttendanceLogs(attendanceList);
+	    return ResponseEntity.ok(attendanceList.size() + "명의 근태 기록이 성공적으로 저장되었습니다.");
+	}
 	
 	@Operation(summary = "출근", description = "출근할 수 있습니다.")
 	@PostMapping("/check-in")

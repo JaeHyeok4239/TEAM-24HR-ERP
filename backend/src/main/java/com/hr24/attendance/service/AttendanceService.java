@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,11 +14,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.AttendanceResultDto;
+import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.entity.AttendanceLog;
+import com.hr24.attendance.entity.AttendanceLogsDaily;
 import com.hr24.attendance.entity.AttendanceResult;
 import com.hr24.attendance.entity.AttendanceTimePolicy;
+import com.hr24.attendance.repository.AttendanceLogDailyRepository;
 import com.hr24.attendance.repository.AttendanceLogRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
 import com.hr24.attendance.repository.AttendanceThresholdRepository;
@@ -26,6 +32,7 @@ import com.hr24.attendance.repository.WorkplaceRepository;
 import com.hr24.document.entity.Leave;
 import com.hr24.document.repository.LeaveRepository;
 import com.hr24.employee.entity.User;
+import com.hr24.employee.enums.EmploymentType;
 import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.attendance.entity.Workplace;
@@ -43,7 +50,8 @@ public class AttendanceService{
 	private final AttendanceResultRepository attendanceResultRepository;
 	private final WorkplaceRepository workplaceRepository;
 	private final UserRepository userRepository;
-	private final LeaveRepository leaveRepository; 
+	private final LeaveRepository leaveRepository;
+	private final AttendanceLogDailyRepository attendanceLogDailyRepository;
 	private final AttendanceTimePolicyRepository attendanceTimePolicyrepository;
 	private final AttendanceThresholdRepository attendanceThresholdRepository;
 	
@@ -51,6 +59,7 @@ public class AttendanceService{
 	// status WORK, LATE인 사람들 중 퇴근 안 찍힌 사람 missing 'Y'으로 변경
 	@Transactional
 	public void processMissingCheckouts() {
+		//만약 데이터가 수만 건 쌓이면 느려질 수 있으니, work_date = TRUNC(SYSDATE) 조건을 꼭 쿼리에 포함
 		List<String> targetStatuses = List.of("WORK", "LATE");
 		int updatedCount = attendanceResultRepository.updateMissingCheckouts(targetStatuses);
 		log.info("미퇴근 처리 완료: {}건", updatedCount);
@@ -71,10 +80,11 @@ public class AttendanceService{
 		    return; // 데이터가 있으면 종료
 		}
 		
-		// Active 직원 필터링
+		// Active+!DAILY 직원 리스트
 		List<User> allUsers = userRepository.findAll();
 		List<User> activeUsers = allUsers.stream()
 				.filter(user -> UserStatus.ACTIVE.equals(user.getStatus()))
+				.filter(user -> "DAILY".equals(user.getEmploymentType()))
 				.toList();
 		// 휴가 테이블에 있는 모든 직원들
 		List<Leave> leaveUsers = leaveRepository.findAll();
@@ -108,6 +118,81 @@ public class AttendanceService{
 				attendanceResultRepository.saveAll(dailyResults);
 	}
 	
+	// 일용직 명단 조회
+	public List<DailyAttendanceInputDto> getDailyWorkerList() {
+	    return userRepository.findAll().stream()
+	        .filter(u -> u.getEmploymentType() == EmploymentType.DAILY)
+	        .map(u -> DailyAttendanceInputDto.builder()
+	            .employeeId(u.getEmployeeId())
+	            .name(u.getName())
+	            .employeeNo(u.getEmployeeNo())
+	            .build())
+	        .collect(Collectors.toList());
+	}
+	
+	// 일용직 근태 기록 추가 저장 배치 프로그램
+	@Transactional
+	public void saveDailyAttendanceLogs(List<AttendanceRequest> attendanceList) {
+		LocalDateTime todayDate = LocalDateTime.now(); // 오늘 날짜, 시간 구하기
+	    // 모든 ID 추출
+	    List<Long> empIds = attendanceList.stream()
+	        .map(req -> Long.valueOf(req.getEmployeeId()))
+	        .collect(Collectors.toList());
+	    List<User> foundUsers = userRepository.findAllById(empIds);
+	    
+	    // DAILY인 모든 사원 Map
+	    Map<Long, User> userMap = foundUsers.stream()
+	        .filter(user -> user.getEmploymentType() == EmploymentType.DAILY)
+	        .collect(Collectors.toMap(User::getEmployeeId, user -> user));
+
+	    List<AttendanceLogsDaily> logs = new ArrayList<>();
+	    
+	    // workplace 필요한 코드 추출
+	    Set<String> workplaceCodes = attendanceList.stream()
+	        .map(AttendanceRequest::getWorkplaceCode)
+	        .collect(Collectors.toSet());
+
+	    // 조회+TEMP로 시작하는 것만 가져오기
+	    Map<String, Workplace> workplaceMap = workplaceRepository
+	        .findByWorkplaceCodeInAndWorkplaceCodeStartingWith(workplaceCodes, "TEMP")
+	        .stream()
+	        .collect(Collectors.toMap(Workplace::getWorkplaceCode, w -> w));
+	    
+	    for (AttendanceRequest req : attendanceList) {
+	    	log.info(">>> 처리 중인 데이터: ID={}, WorkplaceCode={}", req.getEmployeeId(), req.getWorkplaceCode());
+	    	Long empId = Long.valueOf(req.getEmployeeId());
+	        User user = userMap.get(empId);
+	        Workplace workplace = workplaceMap.get(req.getWorkplaceCode());
+	        if (user == null) log.warn(">>> 유저를 못 찾음: {}", empId);
+	        if (workplace == null) log.warn(">>> 근무지를 못 찾음 (혹은 TEMP가 아님): {}", req.getWorkplaceCode());
+	        
+	        // 프론트에서 넘어온 데이터(attendanceList)가 userMap에 있는지 확인
+	        if (!userMap.containsKey(empId)) {
+	            continue; // 일용직이 아닐 시 건너뜀
+	        }
+	        
+	        // 데이터 유효성 검사 (일용직 아님/TEMP가 아님/없음)
+	        if (user == null || workplace == null) {
+	            continue; 
+	        }
+
+	        AttendanceLogsDaily log = AttendanceLogsDaily.builder()
+	            .employee(user)
+	            .workplace(workplace)
+	            .checkInTime(req.getCheckInDateTime())
+	            .checkOutTime(req.getCheckOutDateTime())
+	            .workDate(LocalDate.now())
+	            .isAttended("Y")
+				.createdAt(todayDate)
+				.updatedAt(todayDate)
+	            .build();
+	            
+	        logs.add(log);
+	    }
+	    
+	    attendanceLogDailyRepository.saveAll(logs);
+	}
+	
 	// 시간 검증(오후 11시~오전 6시 출퇴근 막기)
 	private void validateOperatingTime() {
 	    LocalTime todayDate = LocalTime.now();
@@ -136,17 +221,16 @@ public class AttendanceService{
 	
 	// 위치 검증
 	public Workplace validateAndGetWorkplace(Double latitude, Double longitude) {
-		// 근무지 전체 조회
-		var workplaces = workplaceRepository.findAll();
+		// 본사 값만 가져와 저장
+		Workplace wp = workplaceRepository.findByWorkplaceCode("HQ")
+				.orElseThrow(() -> new RuntimeException("본사 정보를 찾을 수 없습니다."));
+		
+		double distance = LocationUtils(latitude, longitude, wp.getLatitude(), wp.getLongitude());
 
-		// 가까운 곳 찾기
-		for (Workplace wp : workplaces) {
-			double distance = LocationUtils(latitude, longitude, wp.getLatitude(), wp.getLongitude());
-		    // 계산된 거리가 허용 반경(radius_meter) 이내인지 확인
-		    if (distance <= wp.getRadiusMeter()) {
-		        return wp;
-		    }
-		}
+	    // 허용 반경(radius_meter) 이내인지 확인
+	    if (distance <= wp.getRadiusMeter()) {
+	        return wp;
+	    }
 		throw new RuntimeException("근무지 근처가 아닙니다.");
 	}
 	
