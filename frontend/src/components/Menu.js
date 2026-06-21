@@ -20,6 +20,12 @@ import { Collapsible } from "@base-ui/react/collapsible";
 import { Menu } from "@base-ui/react/menu";
 
 import {
+  HR_MANAGE_ROLES,
+  HR_VIEW_ROLES,
+  filterNavItemsByRole,
+} from "@/lib/roles";
+
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -33,8 +39,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-
-
 
 const NAV_ITEMS = [
   { href: "/", icon: Home, label: "홈" },
@@ -54,9 +58,8 @@ const NAV_ITEMS = [
     icon: Users,
     label: "인사 관리",
     children: [
-      { href: "/hr/employees", label: "직원 목록" },
-      { href: "/hr/employees/new", label: "직원 등록" },
-      { href: "/hr/reference-data", label: "기준정보 관리" },
+      { href: "/hr/employees", label: "직원 목록", allowedRoles: HR_VIEW_ROLES },
+      { href: "/hr/reference-data", label: "기준정보 관리", allowedRoles: HR_MANAGE_ROLES },
     ],
   },
   {
@@ -89,6 +92,11 @@ export default function MainMenu() {
   const authLogout = useAuthStore((state) => state.logout);
   const userInfo = useAuthStore((state) => state.userInfo);
 
+  const filteredNavItems = filterNavItemsByRole(
+    NAV_ITEMS,
+    userInfo?.roles ?? [],
+  );
+
   const handleLogout = async () => {
     try {
       await logoutRequest();
@@ -113,7 +121,7 @@ export default function MainMenu() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV_ITEMS.map((item) => {
+              {filteredNavItems.map((item) => {
                 const isActive = pathname === item.href;
 
                 if (!item.children) {
