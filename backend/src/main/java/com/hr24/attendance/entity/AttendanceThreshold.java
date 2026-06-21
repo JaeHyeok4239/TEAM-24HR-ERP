@@ -23,7 +23,7 @@ import lombok.Getter;
 		allocationSize = 1
 		)
 @Table(name="attendance_thresholds")
-public class AttendanceThresholds{
+public class AttendanceThreshold{
 	@Id
 	@GeneratedValue(
 			strategy = GenerationType.SEQUENCE,
