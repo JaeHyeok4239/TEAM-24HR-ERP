@@ -240,9 +240,11 @@ INSERT INTO attendance_thresholds
 VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'ABSENCE', 180, '출근 시간 기준 3시간 초과(오후 12시) 출근 시 결근', CURRENT_TIMESTAMP, NULL);
 
 -- 근무지
-INSERT INTO workplaces
-VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '강남역', 100, 37.4979420, 127.0276210, CURRENT_TIMESTAMP, NULL);
-
+-- 정규직 근무지
+INSERT INTO workplaces VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '강남역', 100, 37.4979420, 127.0276210, CURRENT_TIMESTAMP, NULL);
+-- 일용직 근무지
+INSERT INTO workplaces VALUES (workplaces_seq.NEXTVAL, 'TEMP01', '근무지1', '부산광역시 강서구', 100, 35.1052000, 128.8450000, CURRENT_TIMESTAMP, NULL);
+INSERT INTO workplaces VALUES (workplaces_seq.NEXTVAL, 'TEMP02', '근무지2', '대전광역시 유성구', 100, 36.3350000, 127.3350000, CURRENT_TIMESTAMP, NULL);
 
 -- 전자결재 샘플 데이터
 -- 기존 사용자 테이블 참조

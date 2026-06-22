@@ -16,6 +16,32 @@ public enum ErrorCode {
 			HttpStatus.BAD_REQUEST,
 			"잘못된 요청입니다."),
 	
+    // 직원 관리
+    DUPLICATE_LOGIN_ID(
+            HttpStatus.CONFLICT,
+            "이미 사용 중인 로그인 ID입니다."
+    ),
+
+    DUPLICATE_EMAIL(
+            HttpStatus.CONFLICT,
+            "이미 사용 중인 이메일입니다."
+    ),
+
+    DUPLICATE_EMPLOYEE_NO(
+            HttpStatus.CONFLICT,
+            "이미 사용 중인 사번입니다."
+    ),
+
+    INVALID_EMPLOYEE_CREATE_REQUEST(
+            HttpStatus.BAD_REQUEST,
+            "직원 등록 정보가 올바르지 않습니다."
+    ),
+
+    ROLE_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "권한 정보를 찾을 수 없습니다."
+    ),
+	
 	//부서(조회 및 수정)
 	DEPARTMENT_NOT_FOUND(
 			HttpStatus.NOT_FOUND,

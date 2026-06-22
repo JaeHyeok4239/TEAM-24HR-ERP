@@ -58,6 +58,11 @@ CREATE SEQUENCE attendance_correction_seq START
 WITH
     1 INCREMENT BY 1 CACHE 50 NOCYCLE;
 
+-- 일용직 근태 기록 추가
+CREATE SEQUENCE attendance_logs_daily_seq START
+WITH
+    1 INCREMENT BY 1 CACHE 50 NOCYCLE;
+
 -- 결재문서 PK
 CREATE SEQUENCE approval_document_seq START
 WITH

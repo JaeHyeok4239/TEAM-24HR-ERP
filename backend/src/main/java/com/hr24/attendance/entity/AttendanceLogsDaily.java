@@ -24,53 +24,45 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 
 @Entity
-@Table(name = "attendance_logs")
+@Table(name = "attendance_logs_daily")
 @SequenceGenerator(
-		name="attendance_logs_seq",
-		sequenceName = "attendance_logs_seq",
+		name="attendance_logs_daily_seq",
+		sequenceName = "attendance_logs_daily_seq",
 		initialValue = 1,
 		allocationSize = 1
 		)
 
-public class AttendanceLog{
+public class AttendanceLogsDaily{
 	@Id
-	@Column(name="attendance_log_id")
+	@Column(name="attendance_logs_daily_id")
 	@GeneratedValue(
 			strategy = GenerationType.SEQUENCE,
-			generator = "attendance_logs_seq")
-	private Long attendanceLogId;
+			generator = "attendance_logs_daily_seq")
+	private Long attendanceLogsDailyId;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="employee_id")
 	private User employee;
-	
-	@Column(name="log_type")
-	private String logType;
-	
-	@Column(name="log_time")
-	private LocalDateTime logTime;
-	
-	@Column(name="latitude")
-	private Double latitude;
-	
-	@Column(name="longitude")
-	private Double longitude;
-	
-	@Column(name="is_location_valid")
-	private String isLocationValid;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="workplace_id")
 	private Workplace workplace;
 	
 	@Column(name="work_date")
-	private LocalDateTime workDate;
+	private LocalDate workDate;
+	
+	@Column(name="check_in_time")
+	private LocalDateTime checkInTime;
+	
+	@Column(name="check_out_time")
+	private LocalDateTime checkOutTime;
+	
+	@Column(name="is_attended")
+	private String isAttended;
 	
 	@Column(name="created_at")
 	private LocalDateTime createdAt;
 	
 	@Column(name="updated_at")
 	private LocalDateTime updatedAt;
-	
-	
 }
