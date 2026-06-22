@@ -234,16 +234,21 @@ CREATE TABLE
 -- 근태관리: 정정 이력 테이블(정정 종류/정정 사유/결재 상태)
 create table attendance_correction(
 	attendance_correction_id number primary key,
-	correction_target number not null, -- FK 근태 결과
+
+	correction_target number null, -- FK 근태 결과
+    document_id number NULL, -- FK document
+
+    correction_daily_log number null, -- FK 일용직 근태 정정 로그
+
 	correction_type varchar2(3char) not null, -- (IN/OUT) 출근/퇴근 정정 종류
 	is_processed CHAR(1) DEFAULT 'N' not null, -- (Y/N) results 테이블 수정해서 근태 정정 처리 되었는지 나타냄
 	correction_reason varchar2(300char) NOT NULL, -- 정정 사유
-	document_id NOT NULL, -- FK document
     before_time TIMESTAMP NOT NULL, -- 수정 전 시간 
     after_time TIMESTAMP NOT NULL, -- 수정 후 시간
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NULL,
 
+    CONSTRAINT correction_fk_correction_daily_log FOREIGN KEY (correction_daily_log) REFERENCES attendance_logs(attendance_log_id),
 	CONSTRAINT correction_fk_correction_target FOREIGN KEY (correction_target) REFERENCES attendance_results(attendance_result_id),
 	CONSTRAINT correction_fk_doc_id FOREIGN KEY (document_id) REFERENCES document(document_id),
 	CONSTRAINT correction_ck_type CHECK (correction_type IN ('IN', 'OUT')),

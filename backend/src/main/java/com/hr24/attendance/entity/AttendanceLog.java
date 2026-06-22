@@ -17,13 +17,17 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Builder                 
 @NoArgsConstructor       
 @AllArgsConstructor
 
 @Entity
+@Getter
+@Setter
 @Table(name = "attendance_logs")
 @SequenceGenerator(
 		name="attendance_logs_seq",
@@ -71,6 +75,4 @@ public class AttendanceLog{
 	
 	@Column(name="updated_at")
 	private LocalDateTime updatedAt;
-	
-	
 }
