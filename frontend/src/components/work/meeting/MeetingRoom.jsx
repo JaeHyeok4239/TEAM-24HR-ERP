@@ -30,7 +30,6 @@ export default function MeetingRoom() {
   const [rooms, setRooms] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [myReservations, setMyReservations] = useState([]);
-  const userId = userInfo?.employeeId;
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(INIT_FORM);
   const [saving, setSaving] = useState(false);
@@ -55,12 +54,12 @@ export default function MeetingRoom() {
 
   // 내 예약 목록
   const fetchMyReservations = useCallback(async () => {
-    if (!userId) return;
+    if (!userInfo) return;
     try {
-      const res = await apiRequest(`/api/meeting/reservations/my?userId=${userId}`);
+      const res = await apiRequest("/api/meeting/reservations/my");
       setMyReservations(await res.json());
     } catch {}
-  }, [userId]);
+  }, [userInfo]);
 
   useEffect(() => { fetchReservations(selectedDate); }, [selectedDate, fetchReservations]);
   useEffect(() => { fetchMyReservations(); }, [fetchMyReservations]);
@@ -101,7 +100,7 @@ export default function MeetingRoom() {
     setSaving(true);
     setError("");
     try {
-      await apiRequest(`/api/meeting/reservations?userId=${userId}`, {
+      await apiRequest("/api/meeting/reservations", {
         method: "POST",
         body: JSON.stringify({
           roomId: Number(form.roomId),

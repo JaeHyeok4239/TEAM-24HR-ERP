@@ -40,6 +40,9 @@ dependencies {
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+	// WebSocket + STOMP
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
