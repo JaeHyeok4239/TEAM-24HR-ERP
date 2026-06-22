@@ -680,7 +680,8 @@ CREATE TABLE salary (
 	updated_at TIMESTAMP NULL,
 	CONSTRAINT pk_salary PRIMARY KEY (salary_id),
 	CONSTRAINT fk_salary FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id)
+	REFERENCES users(employee_id),
+    CONSTRAINT uk_salary_employee UNIQUE (employee_id)
 );
 
 
