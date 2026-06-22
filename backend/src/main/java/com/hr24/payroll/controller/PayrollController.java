@@ -1,7 +1,9 @@
 package com.hr24.payroll.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +30,7 @@ public class PayrollController {
 	private final PayrollCalculateService payrollCalculateService;
 
     @GetMapping
-    public ResponseEntity<List<PayrollResponseDto>> getPayrolls(
+    public ResponseEntity<Page<PayrollResponseDto>> getPayrolls(
 
             @RequestParam(name = "month", required = false)
             String month,
@@ -37,11 +39,24 @@ public class PayrollController {
             String employeeNo,
 
             @RequestParam(name = "departmentId", required = false)
-            Long departmentId
-    ) {
+            Long departmentId,
+            
+            @RequestParam(name = "page", defaultValue = "0")
+            int page,
 
-        return ResponseEntity.ok(payrollService.searchPayrolls(month, employeeNo, departmentId));
+            @RequestParam(name = "size", defaultValue = "10")
+            int size
+    ) {
+    	Pageable pageable = PageRequest.of(page, size, Sort.by("payMonth").descending());
+    	
+        return ResponseEntity.ok(payrollService.searchPayrolls(
+        		month, 
+        		employeeNo, 
+        		departmentId, 
+        		pageable
+        		));
     }
+    
     
     @GetMapping("/{id}")
     public ResponseEntity<PayrollDetailResponseDto>
@@ -49,6 +64,7 @@ public class PayrollController {
 
         return ResponseEntity.ok(payrollService.getPayrollDetail(payrollId));
     }
+    
     
     @PostMapping("/calculate")
     public ResponseEntity<PayrollResponseDto>

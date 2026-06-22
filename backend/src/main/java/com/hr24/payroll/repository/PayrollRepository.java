@@ -3,6 +3,8 @@ package com.hr24.payroll.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,10 +38,11 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     	    AND (:departmentId IS NULL OR d.departmentId = :departmentId)
     	    ORDER BY p.payMonth DESC
     	""")
-    	List<Payroll> searchPayrolls(
+    	Page<Payroll> searchPayrolls(
     	        @Param("month") String month,
     	        @Param("employeeNo") String employeeNo,
-    	        @Param("departmentId") Long departmentId
+    	        @Param("departmentId") Long departmentId,
+    	        Pageable pageable
     	);
     
     @Query("""
