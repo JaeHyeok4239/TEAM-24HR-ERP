@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -106,15 +107,15 @@ public class DocumentController {
 	}
 	
 	// 내 문서함
-	@GetMapping("/")
+	@GetMapping
 	public ResponseEntity<Page<DocumentResponseDto.DocumentListDto>> myDocList(
-	        @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+	        @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
 	        Authentication authInfo) {
 
 	    if (authInfo == null) {
 	        throw new BusinessException(ErrorCode.ACCESS_DENIED);
 	    }
-
+	    
 
 	    return ResponseEntity.ok(documentService.myDocList(authInfo.getName(), pageable));
 	}
@@ -122,7 +123,7 @@ public class DocumentController {
 	// 임시저장함
 	@GetMapping("/tmp")
 	public ResponseEntity<Page<DocumentResponseDto.DocumentListDto>> myTmpDocList(
-	        @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+	        @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
 	        Authentication authInfo) {
 
 	    if (authInfo == null) {
