@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Builder                 
 @NoArgsConstructor       
@@ -26,6 +27,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Setter
 @Table(name = "attendance_correction")
 @SequenceGenerator(
 		name="attendance_correction_seq",
@@ -52,7 +54,7 @@ public class AttendanceCorrection{
 	@Column(name="is_processed")
 	private String isProcessed;
 	
-	@Column(name="correction_reason")
+	@Column(length = 100, name="correction_reason")
 	private String correctionReason;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -60,10 +62,14 @@ public class AttendanceCorrection{
 	private Document document;
 	
 	@Column(name="before_time")
-	private LocalTime beforeTime;
+	private LocalDateTime beforeTime;
+	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="correction_daily_log")
+	private AttendanceLog correctionDailyLog;
 
 	@Column(name="after_time")
-	private LocalTime afterTime;
+	private LocalDateTime afterTime;
 	
 	@Column(name="created_at")
 	private LocalDateTime createdAt;
