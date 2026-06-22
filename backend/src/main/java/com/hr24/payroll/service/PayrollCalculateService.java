@@ -153,7 +153,7 @@ public class PayrollCalculateService {
 	private BigDecimal calculateOvertimePay(Long employeeId) {
 
 	    List<AttendanceResult> results = attendanceResultRepository
-	    		.findByEmployeeId(employeeId);
+	    		.findByEmployeeEmployeeId(employeeId);
 
 	    long totalMinutes = results
 	    			   .stream()
