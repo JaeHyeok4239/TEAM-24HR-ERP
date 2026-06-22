@@ -54,16 +54,11 @@ public class PayrollService {
                 .build();
     }
     
-    public PayrollDetailResponseDto getPayrollDetail(
-            Long payrollId
-    ) {
+    public PayrollDetailResponseDto getPayrollDetail(Long payrollId) {
 
         Payroll payroll = payrollRepository
                 .findDetailById(payrollId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "급여 정보를 찾을 수 없습니다."
-                        ));
+                .orElseThrow(() -> new RuntimeException("급여 정보를 찾을 수 없습니다."));
 
         return PayrollDetailResponseDto.builder()
                 .payrollId(payroll.getPayrollId())

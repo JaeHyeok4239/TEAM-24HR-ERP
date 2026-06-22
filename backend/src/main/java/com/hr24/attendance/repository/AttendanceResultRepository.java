@@ -21,7 +21,7 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	//Optional은 데이터 1개만 나올 때 쓰기에 List 사용
 	List<AttendanceResult> findByEmployeeIdAndWorkDateBetween(Long employeeId, LocalDateTime startDate, LocalDateTime endData);
 	
-	List<AttendanceResult> findByEmployeeEmployeeId(Long employeeId);
+	List<AttendanceResult> findByEmployeeId(Long employeeId);
 	
 	//마감 배치 프로그램에서 쓰일 qeury문
 	@Modifying

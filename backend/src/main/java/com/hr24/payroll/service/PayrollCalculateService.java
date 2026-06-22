@@ -49,7 +49,7 @@ public class PayrollCalculateService {
 	    BigDecimal positionAllowance =
 	            calculatePositionAllowance(
 	                    user.getPosition()
-	                            .getPositionId()
+	                        .getPositionId()
 	            );
 
 	    // 식대
@@ -62,7 +62,7 @@ public class PayrollCalculateService {
 
 	    // 초과근무수당
 
-	    BigDecimal overtimePay = calculateOvertimePay(request.getEmployeeId(), baseSalary);
+	    BigDecimal overtimePay = calculateOvertimePay(request.getEmployeeId());
 
 	    // 총지급액
 
@@ -150,10 +150,10 @@ public class PayrollCalculateService {
 	}
 	
 	
-	private BigDecimal calculateOvertimePay(Long employeeId, BigDecimal baseSalary) {
+	private BigDecimal calculateOvertimePay(Long employeeId) {
 
 	    List<AttendanceResult> results = attendanceResultRepository
-	    		.findByEmployeeEmployeeId(employeeId);
+	    		.findByEmployeeId(employeeId);
 
 	    long totalMinutes = results
 	    			   .stream()

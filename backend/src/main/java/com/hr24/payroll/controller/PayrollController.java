@@ -5,12 +5,16 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hr24.payroll.dto.PayrollCalculateRequestDto;
 import com.hr24.payroll.dto.PayrollDetailResponseDto;
 import com.hr24.payroll.dto.PayrollResponseDto;
+import com.hr24.payroll.service.PayrollCalculateService;
 import com.hr24.payroll.service.PayrollService;
 
 import lombok.RequiredArgsConstructor;
@@ -19,8 +23,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/api/payrolls")
 public class PayrollController {
-
+	
     private final PayrollService payrollService;
+	private final PayrollCalculateService payrollCalculateService;
 
     @GetMapping
     public ResponseEntity<List<PayrollResponseDto>> getPayrolls(
@@ -35,25 +40,20 @@ public class PayrollController {
             Long departmentId
     ) {
 
-        return ResponseEntity.ok(
-                payrollService.searchPayrolls(
-                        month,
-                        employeeNo,
-                        departmentId
-                )
-        );
+        return ResponseEntity.ok(payrollService.searchPayrolls(month, employeeNo, departmentId));
     }
     
     @GetMapping("/{id}")
     public ResponseEntity<PayrollDetailResponseDto>
-    getPayrollDetail(
-            @PathVariable("id") Long payrollId
-    ) {
+    getPayrollDetail(@PathVariable("id") Long payrollId) {
 
-        return ResponseEntity.ok(
-                payrollService.getPayrollDetail(
-                        payrollId
-                )
-        );
+        return ResponseEntity.ok(payrollService.getPayrollDetail(payrollId));
+    }
+    
+    @PostMapping("/calculate")
+    public ResponseEntity<PayrollResponseDto>
+    calculatePayroll(@RequestBody PayrollCalculateRequestDto request) {
+
+        return ResponseEntity.ok(payrollCalculateService.calculatePayroll(request));
     }
 }

@@ -49,7 +49,5 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     	    JOIN FETCH u.department
     	    WHERE p.payrollId = :payrollId
     	""")
-    	Optional<Payroll> findDetailById(
-    	        @Param("payrollId") Long payrollId
-    	);
+    	Optional<Payroll> findDetailById(@Param("payrollId") Long payrollId);
 }
