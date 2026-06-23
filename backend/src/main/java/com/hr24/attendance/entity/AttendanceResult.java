@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import com.hr24.document.entity.Leave;
 import com.hr24.employee.entity.User;
 import com.hr24.work.schedule.entity.Holiday;
+import com.hr24.attendance.entity.Workplace; 
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -102,4 +103,14 @@ public class AttendanceResult{
 	
 	@Column(name="updated_at")
 	private LocalDateTime updatedAt;
+	
+	// 출퇴근 정정 IN/OUT 분류용
+	public LocalDateTime getTimeByType(String type) {
+	    if ("IN".equals(type)) {
+	        return this.checkInTime;
+	    } else if ("OUT".equals(type)) {
+	        return this.checkOutTime;
+	    }
+	    throw new IllegalArgumentException("올바르지 않은 정정 타입입니다: " + type);
+	}
 }

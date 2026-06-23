@@ -58,8 +58,16 @@ const NAV_ITEMS = [
     icon: Users,
     label: "인사 관리",
     children: [
-      { href: "/hr/employees", label: "직원 목록", allowedRoles: HR_VIEW_ROLES },
-      { href: "/hr/reference-data", label: "기준정보 관리", allowedRoles: HR_MANAGE_ROLES },
+      {
+        href: "/hr/employees",
+        label: "직원 목록",
+        allowedRoles: HR_VIEW_ROLES,
+      },
+      {
+        href: "/hr/reference-data",
+        label: "기준정보 관리",
+        allowedRoles: HR_MANAGE_ROLES,
+      },
     ],
   },
   {
@@ -76,7 +84,7 @@ const NAV_ITEMS = [
     icon: CheckCircle,
     label: "전자 결재",
     children: [
-      { href: "/approval", label: "내 문서함" },
+      { href: "/approval/document", label: "내 문서함" },
       { href: "/approval/write", label: "문서 작성" },
       { href: "/approval/pending", label: "결재함" },
       { href: "/approval/process", label: "업무 처리함" },
@@ -132,7 +140,7 @@ export default function MainMenu() {
                         isActive={isActive}
                         className={
                           isActive
-                            ? "bg-[#a4e6d2] text-[#1a2f4e] font-bold hover:bg-[#a4e6d2] hover:text-[#1a2f4e] rounded-none"
+                            ? "bg-[#a4e6d277] text-[#1a2f4e] font-bold hover:bg-[#a4e6d2] hover:text-[#1a2f4e] rounded-none"
                             : "text-white/80 hover:text-white hover:bg-[#A6FFEA]/20 rounded-none"
                         }
                       >
@@ -172,34 +180,34 @@ export default function MainMenu() {
 
             <Menu.Portal>
               <Menu.Positioner side="top" align="center" sideOffset={8}>
-                <Menu.Popup className="w-40 h-45 bg-[#e2fcffc5] rounded-xl shadow-lg py-1 flex flex-col z-50 transition-opacity duration-200 opacity-100 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0">
+                <Menu.Popup className="w-40 h-45 bg-[#e2fcff] rounded-xl shadow-lg py-1 flex flex-col z-50 transition-opacity duration-200 opacity-100 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0">
                   <div className="flex flex-col justify-center gap-1">
-                  <Menu.Item
-                    render={<Link href="/user/my-info" />}
-                    className="mt-3 p-3 text-sm text-[#051a3a] hover:text-[#59a3c0] hover:bg-[#e2f8ff] outline-none"
-                  >
-                    내 정보 수정
-                  </Menu.Item>
+                    <Menu.Item
+                      render={<Link href="/user/my-info" />}
+                      className="mt-3 p-3 text-sm text-[#051a3a] hover:text-[#59a3c0] hover:bg-[#bfe7ee] outline-none"
+                    >
+                      내 정보 수정
+                    </Menu.Item>
 
-                  <Menu.Item
-                    render={<Link href="/user/password-change" />}
-                    className="p-3 text-sm text-[#073468] hover:text-[#59a3c0] hover:bg-[#e2f8ff] outline-none"
-                  >
-                    비밀번호 변경
-                  </Menu.Item>
+                    <Menu.Item
+                      render={<Link href="/user/password-change" />}
+                      className="p-3 text-sm text-[#073468] hover:text-[#59a3c0] hover:bg-[#bfe7ee] outline-none"
+                    >
+                      비밀번호 변경
+                    </Menu.Item>
 
-                  <Menu.Item
-                    render={
-                      <div
-                        style={{cursor : "pointer"}}
-                        type="button"
-                        onClick={handleLogout}
-                        className="p-3 text-left text-sm text-[#ff3737] hover:text-[#ec9494] hover:bg-[#e2f8ff] outline-none"
-                      />
-                    }
-                  >
-                    로그아웃
-                  </Menu.Item>
+                    <Menu.Item
+                      render={
+                        <div
+                          style={{ cursor: "pointer" }}
+                          type="button"
+                          onClick={handleLogout}
+                          className="p-3 text-left text-sm text-[#ff3737] hover:text-[#ff0000] hover:bg-[#bfe7ee] outline-none"
+                        />
+                      }
+                    >
+                      로그아웃
+                    </Menu.Item>
                   </div>
                 </Menu.Popup>
               </Menu.Positioner>
@@ -236,7 +244,7 @@ function ControlledCollapsibleMenuItem({ item, pathname }) {
               isActive={isActive || isChildActive}
               className={
                 isActive || isChildActive
-                  ? "bg-[#a4e6d2] text-[#1a2f4e] font-bold hover:bg-[#a4e6d2] hover:text-[#1a2f4e] rounded-none"
+                  ? "bg-[#a4e6d277] text-[#1a2f4e] font-bold hover:bg-[#a4e6d277] hover:text-[#1a2f4e] rounded-none"
                   : "text-white/80 hover:text-white hover:bg-[#A6FFEA]/20 rounded-none"
               }
             />
@@ -248,7 +256,7 @@ function ControlledCollapsibleMenuItem({ item, pathname }) {
         </Collapsible.Trigger>
 
         <Collapsible.Panel>
-          <SidebarMenuSub className="p-2 border-white/10">
+          <SidebarMenuSub className="p-3 border-white/10">
             {item.children.map((child) => (
               <SidebarMenuSubItem key={child.href}>
                 <SidebarMenuSubButton
@@ -256,8 +264,8 @@ function ControlledCollapsibleMenuItem({ item, pathname }) {
                   isActive={pathname === child.href}
                   className={
                     pathname === child.href
-                      ? "bg-[#A6FFEA]/30 text-white font-semibold"
-                      : "text-white/70 hover:text-white hover:bg-[#A6FFEA]/10"
+                      ? "bg-[#8fc8cc]/80! font-bold transition-colors duration-200"
+                      : "text-white/70 hover:text-white hover:bg-[#A6FFEA]/10 transition-colors duration-200"
                   }
                 >
                   <span>{child.label}</span>

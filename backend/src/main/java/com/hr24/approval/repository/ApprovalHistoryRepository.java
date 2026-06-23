@@ -17,9 +17,11 @@ import com.hr24.employee.entity.User;
 public interface ApprovalHistoryRepository extends JpaRepository<ApprovalHistory, Long> {
 
 	List<ApprovalHistory> findByDocumentOrderByStepOrderAsc(Document document);
-
+	
+	List<ApprovalHistory> findByDocumentAndDocumentVersionOrderByStepOrderAsc(Document document, Integer documentVersion);
+	
 	boolean existsByDocumentAndApprover(Document document, User approver);
-
+	
 	// 결재 요청함
 	@Query("""
 			    SELECT ah

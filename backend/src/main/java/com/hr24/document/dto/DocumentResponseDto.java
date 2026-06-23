@@ -23,6 +23,7 @@ public class DocumentResponseDto {
 	public static class DocumentListDto{
 		private Long documentId;
 		private Long documentType;
+		private String documentTypeName;
 		private Long requesterId;
 		private String requester;
 		private String documentTitle;
@@ -35,6 +36,7 @@ public class DocumentResponseDto {
 			return DocumentListDto.builder()
 					.documentId(document.getDocumentId())
 					.documentType(document.getDocumentType().getTypeId())
+					.documentTypeName(document.getDocumentType().getTypeName())
 					.requesterId(document.getRequester().getEmployeeId())
 					.requester(document.getRequester().getName())
 					.documentTitle(document.getDocumentTitle())
@@ -83,6 +85,7 @@ public class DocumentResponseDto {
 		private LocalDateTime processedAt;
 		private List<DocumentApprovalDto> approvalHistories;
 		private List<DocumentFileResponseDto> documentFileList;
+		private Integer documentVersion;
 		
 		//of(A,B...) : 매개변수가 여러 개일 때 합쳐서 하나의 객체로 생성
 		public static DocumentDto of(Document document, 
@@ -101,6 +104,7 @@ public class DocumentResponseDto {
 					.documentContent(document.getDocumentContent())
 					.approvalHistories(approvalHistories)
 					.documentFileList(documentFileList == null ? Collections.emptyList() : documentFileList)
+					.documentVersion(document.getDocumentVersion())
 					.build();
 		}
 	}
