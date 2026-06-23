@@ -39,12 +39,13 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/refresh").permitAll()
                 .requestMatchers("/api/auth/logout").permitAll()
                 .requestMatchers("/attendance/**").permitAll()
+                .requestMatchers("/ws/**").permitAll() // WebSocket 핸드셰이크 허용
                 .requestMatchers(
                 		"/api.html",
                 	    "/swagger-ui/**",
                 	    "/swagger-ui.html",
                 	    "/v3/api-docs/**"
-                ).permitAll()
+                ).permitAll()                
                 .anyRequest().authenticated()
             )
             .exceptionHandling(exception -> exception

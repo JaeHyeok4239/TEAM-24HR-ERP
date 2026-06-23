@@ -24,6 +24,7 @@ import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.AttendanceResultDto;
 import com.hr24.attendance.dto.CorrectionDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
+import com.hr24.attendance.dto.DailyCorrectionDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceLogsDaily;
@@ -39,12 +40,16 @@ import com.hr24.attendance.repository.AttendanceThresholdRepository;
 import com.hr24.attendance.repository.AttendanceTimePolicyRepository;
 import com.hr24.attendance.repository.WorkplaceRepository;
 import com.hr24.attendance.utils.TimeUtils;
+import com.hr24.document.entity.Document;
 import com.hr24.document.entity.Leave;
 import com.hr24.document.repository.LeaveRepository;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.enums.EmploymentType;
 import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.UserRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import com.hr24.attendance.entity.Workplace;
 
 import lombok.RequiredArgsConstructor;
@@ -64,6 +69,7 @@ public class AttendanceService{
 	private final AttendanceTimePolicyRepository attendanceTimePolicyRepository;
 	private final AttendanceThresholdRepository attendanceThresholdRepository;
 	private final AttendanceCorrectionRepository attendanceCorrectionRepository;
+	private final AttendanceCalculator attendanceCalculator;
 	
 	// 시간 관련 API 테스트용 메서드
 	private final boolean IS_TEST_MODE = true; 
@@ -190,17 +196,53 @@ public class AttendanceService{
 	 
 	}
 
-	// CorrectionDto 변환 로직을 별도 메서드로 분리(유지보수 용이)
+	// CorrectionDto 변환 로직
 	private CorrectionDto convertToCorrectionDto(AttendanceCorrection c) {
+		Document doc = c.getDocument();
+		User processor = doc.getProcessor();
+		
 	    return CorrectionDto.builder()
 	            .correctionType(c.getCorrectionType())
 	            .processStatus(convertStatusToLabel(c.getDocument().getStatus()))
 	            .requestedAt(c.getDocument().getRequestedAt())
 	            .beforeTime(c.getBeforeTime())
 	            .afterTime(c.getAfterTime())
-	            .managerName(c.getDocument().getProcessor() != null ? c.getDocument().getProcessor().getName() : "미정")
-	            .remarks(c.getCorrectionReason())
+	            .managerTeam(processor != null && processor.getDepartment() != null 
+	             ? processor.getDepartment().getDepartmentName() : "미정")
+	            .managerPosition(processor != null && processor.getPosition() != null 
+	             ? processor.getPosition().getPositionName() : "미정")
+	            .correctionReason(c.getCorrectionReason())
 	            .build();
+	}
+	
+	@Transactional
+	public void correctDaily(Long logId, DailyCorrectionDto dto) {
+	    // 1. 로그 조회
+	    AttendanceLog log = attendanceLogRepository.findById(logId)
+	            .orElseThrow(() -> new EntityNotFoundException("기록 없음"));
+
+	    // 2. 비즈니스 로직(유효성 검사)은 여기서 수행
+	    if (dto.getAfterTime().isAfter(LocalDateTime.now())) {
+	        throw new IllegalArgumentException("미래 시간은 입력할 수 없습니다.");
+	    }
+
+	    // 수정 전 시간 저장
+	    LocalDateTime beforeTime = log.getLogTime();
+
+	    // 데이터 변경(서비스가 직접 값 변경)
+	    log.setLogTime(dto.getAfterTime()); 
+
+	    // 정정 테이블에 데이터 저장
+	    AttendanceCorrection correction = AttendanceCorrection.builder()
+	            .correctionDailyLog(log)
+	            .correctionType(log.getLogType()) // 'IN' / 'OUT'
+	            .beforeTime(beforeTime)
+	            .afterTime(dto.getAfterTime())
+	            .correctionReason(dto.getCorrectionReason())
+	            .isProcessed("Y")
+	            .build();
+	            
+	    attendanceCorrectionRepository.save(correction);
 	}
 	
     // 상태 코드 변환 메서드
@@ -346,76 +388,7 @@ public class AttendanceService{
 	    return LocalTime.of(hours, minutes);
 	}
 	
-	// 출근 시간 판정
-	private String determineCheckInStatus(User user, LocalDateTime logTime) {
-	    // 정책 조회(WORK 시작 시간)
-	    AttendanceTimePolicy policy = attendanceTimePolicyRepository
-	            .findByEmploymentTypeAndPolicyType(user.getEmploymentType().name(), "WORK")
-	            .orElseThrow(() -> new RuntimeException("근무 정책이 설정되지 않았습니다."));
-	    
-	    LocalTime policyStartTime = convertToLocalTime(policy.getStartTime());
-	    LocalTime actualTime = logTime.toLocalTime();
 
-	    // 지각/결근 기준 조회
-	    AttendanceThreshold lateThreshold = attendanceThresholdRepository
-	            .findByEmploymentTypeAndThresholdType(user.getEmploymentType().name(), "LATE")
-	            .orElse(null);
-	    AttendanceThreshold absenceThreshold = attendanceThresholdRepository
-	            .findByEmploymentTypeAndThresholdType(user.getEmploymentType().name(), "ABSENCE")
-	            .orElse(null);
-
-	    // 시간 차이 계산(분 단위)
-	    long diffMinutes = ChronoUnit.MINUTES.between(policyStartTime, actualTime);
-	    log.info(">>> [디버깅] 출근 지연시간(diffMinutes): {}", diffMinutes);
-	    log.info(">>> [디버깅] 지각 임계값(lateThreshold): {}", 
-	        lateThreshold != null ? lateThreshold.getThresholdMinutes() : "NULL");
-	    // 판정 로직
-	    // 9시 이전 혹은 9시 출근
-	    if (diffMinutes <= 0) {
-	        return "WORK"; // 정시 또는 일찍 출근
-	    }
-	    
-	    // 180분(오후 12시)동안 출근 기록이 없을 경우
-	    if (absenceThreshold != null && diffMinutes >= absenceThreshold.getThresholdMinutes()) {
-	        return "ABSENCE";
-	    }
-	    
-	    // 9시 초과 출근 시 지각
-	    if (lateThreshold != null && diffMinutes > lateThreshold.getThresholdMinutes()) {
-	        return "LATE";
-	    }
-
-	    // 그 외 케이스(나중에 지각을 5분으로 바꾸거나 했을 시 그 시간을 어떻게 처리할 건지에 대한 코드)
-	    return "WORK";
-	}
-
-	// 퇴근 판정 로직
-	private String determineCheckoutStatus(User user, LocalDateTime logTime) {
-	    // 정책 조회(WORK 종료 시간)
-	    AttendanceTimePolicy policy = attendanceTimePolicyRepository
-	            .findByEmploymentTypeAndPolicyType(user.getEmploymentType().name(), "WORK")
-	            .orElseThrow(() -> new RuntimeException("근무 정책이 설정되지 않았습니다."));
-	    
-	    LocalTime policyEndTime = convertToLocalTime(policy.getEndTime());
-	    LocalTime actualTime = logTime.toLocalTime();
-
-	    // 조퇴 기준 조회
-	    AttendanceThreshold earlyLeaveThreshold = attendanceThresholdRepository
-	            .findByEmploymentTypeAndThresholdType(user.getEmploymentType().name(), "EARLY_LEAVE")
-	            .orElse(null);
-
-	    // 퇴근 시간이 종료 시간보다 빠른지 비교
-	    if (actualTime.isBefore(policyEndTime)) {
-	        long diffMinutes = ChronoUnit.MINUTES.between(actualTime, policyEndTime);
-	        
-	        // 조퇴 기준보다 빨리 퇴근했다면
-	        if (earlyLeaveThreshold != null && diffMinutes >= earlyLeaveThreshold.getThresholdMinutes()) {
-	            return "EARLY_LEAVE";
-	        }
-	    }
-
-	    return "OUT"; // 정상 퇴근
-	}
 	
 	// [1] 출근 버튼(직원ID, 위도, 경도)
 	public void checkIn(String loginId, Double latitude, Double longitude) {
@@ -436,7 +409,7 @@ public class AttendanceService{
 		// 위치검증 메서드 호출
 		Workplace matchedWorkplace = validateAndGetWorkplace(latitude, longitude);
 		// 출근 시간 판정 메서드 호출
-		String resultStatus = determineCheckInStatus(user, todayDate);
+		String resultStatus = attendanceCalculator.determineCheckInStatus(user, todayDate);
 		
 		
 		result.setAttendanceStatus(resultStatus);
@@ -505,7 +478,7 @@ public class AttendanceService{
 	    // 위치검증 메서드 호출
  		Workplace matchedWorkplace = validateAndGetWorkplace(latitude, longitude);
 		// 출근 시간 판정 메서드 호출
-		String resultStatus = determineCheckoutStatus(user, todayDate);
+		String resultStatus = attendanceCalculator.determineCheckoutStatus(user, todayDate);
  		
 		result.setCheckOutTime(todayDate);
 		result.setAttendanceStatus(resultStatus);

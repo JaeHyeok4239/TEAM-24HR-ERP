@@ -47,8 +47,8 @@ public class MeetingService {
     }
 
     // 로그인한 사용자의 예약 목록 반환
-    public List<ReservationResponse> getMyReservations(Long userId) {
-        User user = userRepository.findById(userId)
+    public List<ReservationResponse> getMyReservations(String loginId) {
+        User user = userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
 
         return reservationRepository.findByUser(user).stream()
@@ -58,8 +58,8 @@ public class MeetingService {
 
     // 예약 생성 - 시간 중복 체크 후 예약 및 참석자 저장
     @Transactional
-    public ReservationResponse createReservation(Long userId, ReservationRequest request) {
-        User user = userRepository.findById(userId)
+    public ReservationResponse createReservation(String loginId, ReservationRequest request) {
+        User user = userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
 
         MeetingRoom room = meetingRoomRepository.findById(request.getRoomId())
@@ -102,7 +102,7 @@ public class MeetingService {
                 participantRepository.save(ReservationParticipant.builder()
                         .reservation(reservation)
                         .user(participant)
-                        .isOrganizer(participantId.equals(userId) ? 1 : 0)
+                        .isOrganizer(participantId.equals(user.getEmployeeId()) ? 1 : 0)
                         .build());
             }
         }

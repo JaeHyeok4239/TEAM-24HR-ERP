@@ -318,8 +318,10 @@ public class DocumentService {
 		}
 
 		List<DocumentResponseDto.DocumentApprovalDto> approvalHistories = approvalHistoryRepository
-				.findByDocumentOrderByStepOrderAsc(document).stream().map(DocumentResponseDto.DocumentApprovalDto::from)
-				.toList();
+			    .findByDocumentAndDocumentVersionOrderByStepOrderAsc(document, document.getDocumentVersion())
+			    .stream()
+			    .map(DocumentResponseDto.DocumentApprovalDto::from)
+			    .toList();
 
 		List<DocumentResponseDto.DocumentFileResponseDto> documentFileList = documentFileRepository
 				.findByDocument(document).stream().map(DocumentResponseDto.DocumentFileResponseDto::from).toList();

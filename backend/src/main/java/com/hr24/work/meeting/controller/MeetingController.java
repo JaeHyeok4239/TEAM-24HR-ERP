@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,20 +49,22 @@ public class MeetingController {
     }
 
     // 로그인한 사용자의 예약 목록 조회
-    @Operation(summary = "내 예약 목록 조회", description = "사용자 ID로 해당 사용자의 예약 목록을 반환합니다.")
+    @Operation(summary = "내 예약 목록 조회", description = "JWT 토큰에서 추출한 loginId로 해당 사용자의 예약 목록을 반환합니다.")
     @GetMapping("/reservations/my")
     public ResponseEntity<List<ReservationResponse>> getMyReservations(
-            @RequestParam("userId") Long userId) {
-        return ResponseEntity.ok(meetingService.getMyReservations(userId));
+            Authentication authentication) {
+        String loginId = authentication.getName();
+        return ResponseEntity.ok(meetingService.getMyReservations(loginId));
     }
 
     // 새 예약 생성 - 시간 중복 체크 포함
     @Operation(summary = "예약 생성", description = "회의실 예약을 생성합니다. 시간 중복 시 400 반환.")
     @PostMapping("/reservations")
     public ResponseEntity<ReservationResponse> createReservation(
-            @RequestParam("userId") Long userId,
+            Authentication authentication,
             @RequestBody ReservationRequest request) {
-        return ResponseEntity.ok(meetingService.createReservation(userId, request));
+        String loginId = authentication.getName();
+        return ResponseEntity.ok(meetingService.createReservation(loginId, request));
     }
 
     // 예약 취소 - status를 CANCELLED로 변경

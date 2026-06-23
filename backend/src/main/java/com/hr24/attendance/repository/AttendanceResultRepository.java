@@ -20,6 +20,11 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	
 	Optional<AttendanceResult> findByEmployeeAndWorkDate(User employee, LocalDateTime workDate);
 	
+
+	List<AttendanceResult> findByEmployeeEmployeeId(Long employeeId);
+	
+	//마감 배치 프로그램에서 쓰일 qeury문
+
 	// 특정 직원의 특정 날짜 근태 정보+그 직원의 상세 정보
 	@Query("select ar from AttendanceResult ar join fetch ar.employee " +
 	           "where ar.employee.employeeId = :employeeId " +
@@ -48,6 +53,7 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	);
 	
 	// 마감 배치 프로그램에서 쓰일 qeury문
+
 	@Modifying
 	@Query("UPDATE AttendanceResult a " +
 		       "SET a.isMissingCheckout = 'Y' " +
@@ -58,6 +64,8 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	// 중복 막기
 	boolean existsByWorkDate(LocalDateTime workDate);
 
+
 	@Query("SELECT ar FROM AttendanceResult ar WHERE ar.employee.employeeId = :employeeId AND ar.workDate = :workDate")
 	Optional<AttendanceResult> findByEmployeeIdAndWorkDate(@Param("employeeId") Long employeeId, @Param("workDate") LocalDateTime workDate);
 }
+
