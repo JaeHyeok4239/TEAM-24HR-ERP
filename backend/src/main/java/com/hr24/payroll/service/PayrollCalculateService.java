@@ -34,9 +34,8 @@ public class PayrollCalculateService {
 	@Transactional
 	public PayrollResponseDto calculatePayroll(PayrollCalculateRequestDto request) {
 
-	    User user = userRepository.findById(
-	            request.getEmployeeId()
-	    ).orElseThrow(() -> new RuntimeException("직원 없음"));
+	    User user = userRepository.findById(request.getEmployeeId())
+	    		.orElseThrow(() -> new RuntimeException("직원 없음"));
 
 	    Salary salary = salaryRepository
 	            .findByEmployeeEmployeeId(request.getEmployeeId())
@@ -46,8 +45,7 @@ public class PayrollCalculateService {
 
 	    // 직책수당
 
-	    BigDecimal positionAllowance =
-	            calculatePositionAllowance(
+	    BigDecimal positionAllowance = calculatePositionAllowance(
 	                    user.getPosition()
 	                        .getPositionId()
 	            );
@@ -74,15 +72,18 @@ public class PayrollCalculateService {
 
 	    // 국민연금
 
-	    BigDecimal nationalPension = totalPay.multiply(new BigDecimal("0.045"));
+	    BigDecimal nationalPension = totalPay.multiply(new BigDecimal("0.045"))
+	    		                             .setScale(0, RoundingMode.HALF_UP);
 
 	    // 건강보험
 	    
-	    BigDecimal healthInsurance = totalPay.multiply(new BigDecimal("0.03545"));
+	    BigDecimal healthInsurance = totalPay.multiply(new BigDecimal("0.03545"))
+	    		                             .setScale(0, RoundingMode.HALF_UP);
 
 	    // 고용보험
 	    
-	    BigDecimal employmentInsurance = totalPay.multiply(new BigDecimal("0.009"));
+	    BigDecimal employmentInsurance = totalPay.multiply(new BigDecimal("0.009"))
+	    		                                 .setScale(0, RoundingMode.HALF_UP);
 
 	    // 소득세
 	    
@@ -90,7 +91,8 @@ public class PayrollCalculateService {
 
 	    // 지방소득세
 	    
-	    BigDecimal localIncomeTax = incomeTax.multiply(new BigDecimal("0.1"));
+	    BigDecimal localIncomeTax = incomeTax.multiply(new BigDecimal("0.1"))
+	    		                             .setScale(0, RoundingMode.HALF_UP);
 
 	    BigDecimal totalDeduction = nationalPension
 	                    .add(healthInsurance)
@@ -163,20 +165,24 @@ public class PayrollCalculateService {
 	    BigDecimal overtimeHours = BigDecimal.valueOf(totalMinutes)
 	                    .divide(new BigDecimal("60"), 2, RoundingMode.HALF_UP);
 
-	    return overtimeHours.multiply(new BigDecimal("15000"));
+	    return overtimeHours.multiply(new BigDecimal("15000"))
+	    		            .setScale(0, RoundingMode.HALF_UP);
 	}
 	
 	
 	private BigDecimal calculateIncomeTax(BigDecimal totalPay) {
 		
 	    if(totalPay.compareTo(new BigDecimal("3000000")) <= 0) {
-	        return totalPay.multiply(new BigDecimal("0.03"));
+	        return totalPay.multiply(new BigDecimal("0.03"))
+	        		       .setScale(0, RoundingMode.HALF_UP);
 	    }
 
 	    if(totalPay.compareTo(new BigDecimal("5000000")) <= 0) {
-	        return totalPay.multiply(new BigDecimal("0.05"));
+	        return totalPay.multiply(new BigDecimal("0.05"))
+	        		       .setScale(0, RoundingMode.HALF_UP);
 	    }
 
-	    return totalPay.multiply(new BigDecimal("0.07"));
+	    return totalPay.multiply(new BigDecimal("0.07"))
+	    		       .setScale(0, RoundingMode.HALF_UP);
 	}
 }

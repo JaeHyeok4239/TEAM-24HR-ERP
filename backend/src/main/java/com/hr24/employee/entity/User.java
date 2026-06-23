@@ -65,7 +65,7 @@ public class User extends BaseTimeEntity {
 	@Column(name = "bank_name", length = 50)
 	private String bankName;
 
-	@Column(name = "account_number", length = 50)
+	@Column(name = "account_number", length = 255)
 	private String accountNumber;
 
 	@Column(name = "account_holder", length = 50)
@@ -145,5 +145,49 @@ public class User extends BaseTimeEntity {
 
 	public void changePassword(String encodedPassword) {
 		this.password = encodedPassword;
+	}
+	
+	public void updateBasicInfo(
+	        String name,
+	        String phone,
+	        String email,
+	        String zipcode,
+	        String address,
+	        String addressDetail
+	) {
+	    this.name = name;
+	    this.phone = phone;
+	    this.email = email;
+	    this.zipcode = zipcode;
+	    this.address = address;
+	    this.addressDetail = addressDetail;
+	}
+	
+	public void updateEmploymentInfo(
+			Department department,
+			Position position,
+			EmploymentType employmentType,
+			UserStatus status,
+			LocalDateTime hireDate,
+			LocalDateTime resignationDate
+	) {
+		this.department = department;
+		this.position = position;
+		this.employmentType = employmentType;
+		this.status = status;
+		this.hireDate = hireDate;
+		this.resignationDate = resignationDate;
+	}
+	
+	public void updateSensitiveInfo(
+			String bankName,
+			String encryptedAccountNumber,
+			String accountHolder,
+			String encryptedRrn
+	) {
+		this.bankName = bankName;
+		this.accountNumber = encryptedAccountNumber;
+		this.accountHolder = accountHolder;
+		this.rrn = encryptedRrn;
 	}
 }

@@ -18,6 +18,11 @@ CREATE SEQUENCE user_role_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
+-- 인사 이력 시퀀스
+CREATE SEQUENCE employee_history_seq START 
+WITH 
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;    
+
 -- 기본 샘플데이터 다 넣고 마지막에 추가 부서 시퀀스
 CREATE SEQUENCE department_seq START
 WITH

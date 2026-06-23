@@ -60,7 +60,7 @@ CREATE TABLE
         address VARCHAR2 (255),
         address_detail VARCHAR2 (255),
         bank_name VARCHAR2 (50),
-        account_number VARCHAR2 (50),
+        account_number VARCHAR2 (255),
         account_holder VARCHAR2 (50),
         rrn VARCHAR2 (255),
         department_id NUMBER,
@@ -102,6 +102,21 @@ CREATE TABLE
         CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES roles (role_id),
         CONSTRAINT uk_user_roles_user_role UNIQUE (employee_id, role_id)
     );
+
+-- 6. 인사 이력 테이블
+CREATE TABLE employee_histories (
+    employee_history_id NUMBER PRIMARY KEY,
+    employee_id NUMBER NOT NULL,
+    changed_by_employee_id NUMBER,
+    change_item VARCHAR2(50) NOT NULL,
+    before_value VARCHAR2(500),
+    after_value VARCHAR2(500),
+    change_reason VARCHAR2(500) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    CONSTRAINT fk_employee_histories_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
+    CONSTRAINT fk_employee_histories_changed_by FOREIGN KEY (changed_by_employee_id) REFERENCES users (employee_id)
+);
 
 -- 직원별 연차 잔액
 CREATE TABLE annual_leave_balances (
