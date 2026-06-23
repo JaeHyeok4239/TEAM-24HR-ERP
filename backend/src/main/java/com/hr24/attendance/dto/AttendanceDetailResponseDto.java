@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hr24.attendance.enums.AttendanceStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,7 +18,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 // 일별 근태 상세 조회 - 공통 응답 DTO
 public class AttendanceDetailResponseDto {
-	private String status; // 상태 코드
+	private AttendanceStatus status; // 상태 코드
     private LocalDateTime checkIn; 
     private LocalDateTime checkOut;
     private Long totalWorkTime; // 총 출근 시간(휴게 포함)

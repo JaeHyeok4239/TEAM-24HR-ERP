@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.hr24.attendance.entity.AttendanceCorrection;
 import com.hr24.attendance.entity.AttendanceResult;
+import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.attendance.repository.AttendanceCorrectionRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
 import com.hr24.document.service.HrService;
@@ -17,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class AttendanceApprovalProcessor { // 별도 클래스로 분리하면 관리하기 편해요
+public class AttendanceApprovalProcessor {
     
     private final AttendanceCorrectionRepository correctionRepository;
     private final AttendanceResultRepository resultRepository;
@@ -42,7 +43,7 @@ public class AttendanceApprovalProcessor { // 별도 클래스로 분리하면 �
         User employee = result.getEmployee();
         String status = calculator.calculateStatus(employee, result, correction.getCorrectionType());
         // 근태 상태 재계산(Calculator 호출)
-        result.setAttendanceStatus(status); 
+        result.setAttendanceStatus(AttendanceStatus.valueOf(status)); 
 
         // result 업데이트 처리
         correction.setIsProcessed("Y");
