@@ -86,4 +86,18 @@ public class EmployeeDetailResponseDto {
                 roles
         );
     }
+    
+    public static EmployeeDetailResponseDto from(
+    		User user, 
+    		List<String> roles, 
+    		String maskedAccountNumber, 
+    		String maskedRrn 
+    ) { 
+    	EmployeeDetailResponseDto response = from(user, roles); 
+    	
+    	response.accountNumber = maskedAccountNumber; 
+    	response.rrn = maskedRrn; 
+    	
+    	return response; 
+    }
 }

@@ -76,6 +76,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	// 이메일 중복 체크
 	boolean existsByEmailIgnoreCase(String email);
+	
+	// 이메일 중복 체크 - 본인 제외
+	boolean existsByEmailIgnoreCaseAndEmployeeIdNot(String email, Long employeeId);
 
 	// 사번 중복 체크
 	boolean existsByEmployeeNo(String employeeNo);

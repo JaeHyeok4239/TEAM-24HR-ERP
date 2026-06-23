@@ -18,7 +18,7 @@ import com.hr24.employee.enums.UserStatus;
 
 public interface AttendanceResultRepository extends JpaRepository<AttendanceResult, Long>{
 	
-	Optional<AttendanceResult> findByEmployeeAndWorkDate(User employee, LocalDateTime workDate);
+	Optional<AttendanceResult> findByEmployeeAndWorkDate(User employee, LocalDate workDate);
 	
 
 	List<AttendanceResult> findByEmployeeEmployeeId(Long employeeId);
@@ -31,7 +31,7 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	           "and ar.workDate = :workDate")
 	    Optional<AttendanceResult> findByEmployeeIdWithUser(
 	        @Param("employeeId") Long employeeId, 
-	        @Param("workDate") LocalDateTime workDate
+	        @Param("workDate") LocalDate workDate
 	    );
 	
 	// 특정 기간 직원 한 명의 근태 조회
@@ -40,19 +40,19 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	           "and ar.workDate between :start and :end")
 	    List<AttendanceResult> findByEmployeeWithUser(
 	        @Param("employee") User employee, 
-	        @Param("start") LocalDateTime start, 
-	        @Param("end") LocalDateTime end
+	        @Param("start") LocalDate start, 
+	        @Param("end") LocalDate end
 	    );
 	
 	// 특정 기간 모든 직원의 근태 조회
 	@Query("select ar from AttendanceResult ar join fetch ar.employee " +
 	       "where ar.workDate between :start and :end")
 	List<AttendanceResult> findAllWithEmployeeByWorkDateBetween(
-	    @Param("start") LocalDateTime start, 
-	    @Param("end") LocalDateTime end
+	    @Param("start") LocalDate start, 
+	    @Param("end") LocalDate end
 	);
 	
-	// 마감 배치 프로그램에서 쓰일 qeury문
+	// 마감 배치 프로그램에서 쓰일 query문
 
 	@Modifying
 	@Query("UPDATE AttendanceResult a " +
@@ -62,10 +62,10 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	int updateMissingCheckouts(@Param("attendanceStatus") List<String> attendanceStatus);
 	
 	// 중복 막기
-	boolean existsByWorkDate(LocalDateTime workDate);
+	boolean existsByWorkDate(LocalDate workDate);
 
 
 	@Query("SELECT ar FROM AttendanceResult ar WHERE ar.employee.employeeId = :employeeId AND ar.workDate = :workDate")
-	Optional<AttendanceResult> findByEmployeeIdAndWorkDate(@Param("employeeId") Long employeeId, @Param("workDate") LocalDateTime workDate);
+	Optional<AttendanceResult> findByEmployeeIdAndWorkDate(@Param("employeeId") Long employeeId, @Param("workDate") LocalDate workDate);
 }
 

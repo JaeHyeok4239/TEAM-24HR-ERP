@@ -1,5 +1,6 @@
 package com.hr24.attendance.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.hr24.document.entity.Leave;
@@ -68,7 +69,7 @@ public class AttendanceResult{
 	private Leave leave;
 	
 	@Column(name="work_date")
-	private LocalDateTime workDate;
+	private LocalDate workDate;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="workplace_id")
