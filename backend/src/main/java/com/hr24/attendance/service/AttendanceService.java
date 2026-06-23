@@ -29,13 +29,10 @@ import com.hr24.attendance.entity.AttendanceCorrection;
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceLogsDaily;
 import com.hr24.attendance.entity.AttendanceResult;
-import com.hr24.attendance.entity.AttendanceThreshold;
-import com.hr24.attendance.entity.AttendanceTimePolicy;
 import com.hr24.attendance.repository.AttendanceCorrectionRepository;
 import com.hr24.attendance.repository.AttendanceLogDailyRepository;
 import com.hr24.attendance.repository.AttendanceLogRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
-import com.hr24.attendance.repository.AttendanceThresholdRepository;
 import com.hr24.attendance.repository.AttendanceThresholdRepository;
 import com.hr24.attendance.repository.AttendanceTimePolicyRepository;
 import com.hr24.attendance.repository.WorkplaceRepository;
@@ -100,7 +97,7 @@ public class AttendanceService{
 		LocalDateTime todayTimeDate = getCurrentTime();
 	
 		// 오늘 결과가 생성되어 있는지 확인
-		boolean exists = attendanceResultRepository.existsByWorkDate(todayDate.atStartOfDay());
+		boolean exists = attendanceResultRepository.existsByWorkDate(todayDate);
 		if (exists) {
 			System.out.println(">>> 이미 오늘 데이터가 존재함: " + exists);
 		    return; // 데이터가 있으면 종료
@@ -132,7 +129,7 @@ public class AttendanceService{
 					
 					return AttendanceResult.builder()
 							.employee(user)
-							.workDate(todayDate.atStartOfDay())
+							.workDate(todayDate)
 							.attendanceStatus(status)
 							.isHolidayWork("N")
 							.isMissingCheckout("N")
@@ -155,7 +152,7 @@ public class AttendanceService{
 	    Long employeeIdToQuery = isAdmin ? targetEmployeeId : requester.getEmployeeId();
 
 	    // 근태 결과 조회
-	    AttendanceResult result = attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeIdToQuery, date.atStartOfDay())
+	    AttendanceResult result = attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeIdToQuery, date)
 	            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 근태 기록이 없습니다."));
 
 	    // 정정 이력 조회 및 DTO 변환
@@ -393,14 +390,14 @@ public class AttendanceService{
 	// [1] 출근 버튼(직원ID, 위도, 경도)
 	public void checkIn(String loginId, Double latitude, Double longitude) {
 		validateOperatingTime(); // 시간 검증
-		LocalDateTime todayDate = getCurrentTime(); // 오늘 날짜, 시간 구하기
-		LocalDateTime startOfDay = todayDate.toLocalDate().atStartOfDay(); // 00:00:00으로 만듦
+		LocalDateTime currentTime = getCurrentTime(); // 현재 시각
+		LocalDate today = currentTime.toLocalDate(); // 00:00:00으로 만듦
 		
 		User user = userRepository.findByLoginId(loginId)
 				.orElseThrow(() -> new RuntimeException("직원을 찾을 수 없습니다."));
 		
 		// 중복 체크
-		AttendanceResult result = attendanceResultRepository.findByEmployeeAndWorkDate(user, startOfDay)
+		AttendanceResult result = attendanceResultRepository.findByEmployeeAndWorkDate(user, today)
 								  .orElseThrow(() -> new RuntimeException("오늘 생성된 근태 결과가 없습니다."));
 		
 		if(!"READY".equals(result.getAttendanceStatus())) {
@@ -409,24 +406,23 @@ public class AttendanceService{
 		// 위치검증 메서드 호출
 		Workplace matchedWorkplace = validateAndGetWorkplace(latitude, longitude);
 		// 출근 시간 판정 메서드 호출
-		String resultStatus = attendanceCalculator.determineCheckInStatus(user, todayDate);
+		String resultStatus = attendanceCalculator.determineCheckInStatus(user, currentTime);
 		
 		
 		result.setAttendanceStatus(resultStatus);
-		result.setCheckInTime(todayDate);
+		result.setCheckInTime(currentTime);
 		result.setIsFixed("N");
 		
 		AttendanceLog log = AttendanceLog.builder()
 				.employee(user)
 				.logType("IN")
-				.logTime(todayDate)
+				.logTime(currentTime)
 				.latitude(latitude)
 				.longitude(longitude)
 				.isLocationValid("Y")
 				.workplace(matchedWorkplace)
-				.workDate(todayDate)
-				.createdAt(todayDate)
-				.updatedAt(todayDate)
+				.workDate(today)
+				.createdAt(currentTime)
 				.build();
 		attendanceLogRepository.save(log);
 	}
@@ -434,14 +430,14 @@ public class AttendanceService{
 	// [2] 퇴근 버튼(직원ID, 위도, 경도)
 	public void checkOut(String loginId, Double latitude, Double longitude) {
 		validateOperatingTime(); // 시간 검증
-		LocalDateTime todayDate = getCurrentTime(); // 오늘 날짜, 시간 구하기
-		LocalDateTime startOfDay = todayDate.toLocalDate().atStartOfDay(); // 00:00:00로 맞추기
+		LocalDateTime currentTime = getCurrentTime(); // 현재 시각
+		LocalDate today = currentTime.toLocalDate(); // 오늘 날짜
 
 		User user = userRepository.findByLoginId(loginId)
 				.orElseThrow(() -> new RuntimeException("직원을 찾을 수 없습니다."));
 		
 		// 오늘 작성된 근태가 있는지 확인
-	    AttendanceResult result = attendanceResultRepository.findByEmployeeAndWorkDate(user, startOfDay)
+	    AttendanceResult result = attendanceResultRepository.findByEmployeeAndWorkDate(user, today)
 	                              .orElseThrow(() -> new RuntimeException("오늘 출근 기록이 없습니다."));
 	    
 	    String status = result.getAttendanceStatus();
@@ -468,7 +464,7 @@ public class AttendanceService{
 	        Optional<Leave> leaveOpt = leaveRepository.findByRequesterAndDate(user, LocalDate.now());
 	        
 	        // 반차라면 퇴근 가능
-	        if (leaveOpt.isPresent() && leaveOpt.get().getLeaveType().getLeaveId() == 2L) {
+	        if (leaveOpt.isPresent() && leaveOpt.get().getLeaveCnt() == 0.5) {
 	        } else {
 	            // 연차는  퇴근 불가
 	            throw new RuntimeException("휴가 중에는 퇴근 처리를 할 수 없습니다.");
@@ -478,22 +474,21 @@ public class AttendanceService{
 	    // 위치검증 메서드 호출
  		Workplace matchedWorkplace = validateAndGetWorkplace(latitude, longitude);
 		// 출근 시간 판정 메서드 호출
-		String resultStatus = attendanceCalculator.determineCheckoutStatus(user, todayDate);
+		String resultStatus = attendanceCalculator.determineCheckoutStatus(user, currentTime);
  		
-		result.setCheckOutTime(todayDate);
+		result.setCheckOutTime(currentTime);
 		result.setAttendanceStatus(resultStatus);
 		
 		AttendanceLog log = AttendanceLog.builder()
 				.employee(user)
 				.logType("OUT")
-				.logTime(todayDate)
+				.logTime(currentTime)
 				.latitude(latitude)
 				.longitude(longitude)
 				.isLocationValid("N")
 				.workplace(matchedWorkplace)
-				.workDate(todayDate)
-				.createdAt(todayDate)
-				.updatedAt(todayDate)
+				.workDate(today)
+				.createdAt(currentTime)
 				.build();
 		attendanceLogRepository.save(log);
 	}
@@ -503,8 +498,8 @@ public class AttendanceService{
 		LocalDate today = getCurrentTime().toLocalDate();
 		
 		//YearMonth로 시작일 종료일 구하기
-		LocalDateTime monthStart = yearMonth.atDay(1).atStartOfDay();
-	    LocalDateTime monthEnd = yearMonth.atEndOfMonth().atTime(LocalTime.MAX);
+		LocalDate monthStart = yearMonth.atDay(1);
+	    LocalDate monthEnd = yearMonth.atEndOfMonth();
 	    
 	    User user = userRepository.findByLoginId(loginId)
 				.orElseThrow(() -> new RuntimeException("직원을 찾을 수 없습니다."));

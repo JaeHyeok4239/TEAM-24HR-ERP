@@ -44,5 +44,7 @@ public class AdminController {
 		return ResponseEntity.ok(result);
 
 	}
+	
+	//임시 저장 제외 모든 문서 조회
 
 }

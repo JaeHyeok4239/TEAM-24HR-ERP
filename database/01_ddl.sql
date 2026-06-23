@@ -250,14 +250,15 @@ CREATE TABLE
 create table attendance_correction(
 	attendance_correction_id number primary key,
 
-	correction_target number null, -- FK 근태 결과
-    document_id number NULL, -- FK document
+	correction_target number NOT NULL, -- FK 근태 결과(수정 대상)
+    document_id number NULL, -- FK Document(일용직의 경우 결재 없이 직접 수정이므로 null 허용)
 
     correction_daily_log number null, -- FK 일용직 근태 정정 로그
 
 	correction_type varchar2(3char) not null, -- (IN/OUT) 출근/퇴근 정정 종류
 	is_processed CHAR(1) DEFAULT 'N' not null, -- (Y/N) results 테이블 수정해서 근태 정정 처리 되었는지 나타냄
-	correction_reason varchar2(300char) NOT NULL, -- 정정 사유
+	processed_by NUMBER NOT NULL, -- 담당자 FK USERS
+    correction_reason varchar2(300char) NOT NULL, -- 정정 사유
     before_time TIMESTAMP NOT NULL, -- 수정 전 시간 
     after_time TIMESTAMP NOT NULL, -- 수정 후 시간
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -265,6 +266,7 @@ create table attendance_correction(
 
     CONSTRAINT correction_fk_correction_daily_log FOREIGN KEY (correction_daily_log) REFERENCES attendance_logs(attendance_log_id),
 	CONSTRAINT correction_fk_correction_target FOREIGN KEY (correction_target) REFERENCES attendance_results(attendance_result_id),
+    CONSTRAINT correction_fk_processed_by FOREIGN KEY (processed_by) REFERENCES users(employee_id),
 	CONSTRAINT correction_fk_doc_id FOREIGN KEY (document_id) REFERENCES document(document_id),
 	CONSTRAINT correction_ck_type CHECK (correction_type IN ('IN', 'OUT')),
 	CONSTRAINT correction_ck_is_processed CHECK (is_processed IN ('Y', 'N'))
