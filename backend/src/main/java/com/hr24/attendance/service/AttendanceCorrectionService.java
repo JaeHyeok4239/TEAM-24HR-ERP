@@ -10,6 +10,7 @@ import com.hr24.attendance.dto.RegularCorrectionDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceResult;
+import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.attendance.repository.AttendanceCorrectionRepository;
 import com.hr24.attendance.repository.AttendanceLogRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
@@ -117,7 +118,7 @@ public class AttendanceCorrectionService {
         // 상태 재계산
         // Calculator가 반환하는 상태값으로 업데이트
         String newStatus = attendanceCalculator.calculateStatus(employee, result, correction.getCorrectionType()); 
-        result.setAttendanceStatus(newStatus);
+        result.setAttendanceStatus(AttendanceStatus.valueOf(newStatus));
 
         // 정정 처리 완료 표시
         correction.setIsProcessed("Y");

@@ -52,8 +52,17 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	    @Param("end") LocalDate end
 	);
 	
-	// 마감 배치 프로그램에서 쓰일 query문
 
+	// 특정 날짜, 특정 근태 상태의 직원 목록 조회
+	@Query("SELECT ar FROM AttendanceResult ar JOIN FETCH ar.employee " +
+	       "WHERE ar.workDate = :workDate " +
+	       "AND ar.attendanceStatus = :status")
+	List<AttendanceResult> findByWorkDateAndAttendanceStatus(
+	    @Param("workDate") LocalDateTime workDate, 
+	    @Param("status") String status
+	);
+	
+	// 마감 배치 프로그램에서 쓰일 query문
 	@Modifying
 	@Query("UPDATE AttendanceResult a " +
 		       "SET a.isMissingCheckout = 'Y' " +
