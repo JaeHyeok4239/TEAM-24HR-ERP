@@ -20,6 +20,8 @@ import com.hr24.work.meeting.entity.RoomReservation;
 import com.hr24.work.meeting.repository.MeetingRoomRepository;
 import com.hr24.work.meeting.repository.ReservationParticipantRepository;
 import com.hr24.work.meeting.repository.RoomReservationRepository;
+import com.hr24.work.notification.dto.NotificationMessage;
+import com.hr24.work.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +33,7 @@ public class MeetingService {
     private final RoomReservationRepository reservationRepository;
     private final ReservationParticipantRepository participantRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // ACTIVE 상태인 회의실 목록만 반환
     public List<MeetingRoomResponse> getActiveRooms() {
@@ -106,6 +109,13 @@ public class MeetingService {
                         .build());
             }
         }
+
+        // 예약자에게 확인 알림 발송
+        notificationService.sendPersonalNotification(loginId, new NotificationMessage(
+            "MEETING_RESERVATION",
+            "회의실 예약 완료",
+            room.getRoomName() + " 예약이 완료되었습니다 (" + request.getStartTime() + "~" + request.getEndTime() + ")"
+        ));
 
         return ReservationResponse.from(reservation, getParticipants(reservation));
     }

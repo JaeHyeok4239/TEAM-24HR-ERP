@@ -16,6 +16,8 @@ import com.hr24.employee.repository.DepartmentRepository;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.global.exception.BusinessException;
 import com.hr24.global.exception.ErrorCode;
+import com.hr24.work.notification.dto.NotificationMessage;
+import com.hr24.work.notification.service.NotificationService;
 import com.hr24.work.schedule.dto.HolidayResponse;
 import com.hr24.work.schedule.dto.ScheduleRequest;
 import com.hr24.work.schedule.dto.ScheduleResponse;
@@ -33,6 +35,7 @@ public class ScheduleService {
     private final HolidayRepository holidayRepository;
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final NotificationService notificationService;
 
     // 기간 내 일정 조회 - 관리자는 전체, 일반 직원은 본인 관련 일정만
     public List<ScheduleResponse> getSchedules(LocalDate startDt, LocalDate endDt) {
@@ -96,7 +99,27 @@ public class ScheduleService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return ScheduleResponse.from(scheduleRepository.save(schedule));
+        ScheduleResponse response = ScheduleResponse.from(scheduleRepository.save(schedule));
+
+        // DEPT/COMPANY 일정 등록 시 알림 발송 (개인 일정은 알림 없음)
+        if ("COMPANY".equals(request.getScheduleType())) {
+            notificationService.sendCompanyNotification(new NotificationMessage(
+                "SCHEDULE_COMPANY",
+                "전사 일정 등록",
+                user.getName() + "님이 전사 일정을 등록했습니다: " + request.getTitle()
+            ));
+        } else if ("DEPT".equals(request.getScheduleType()) && department != null) {
+            notificationService.sendDeptNotification(
+                department.getDepartmentName(),
+                new NotificationMessage(
+                    "SCHEDULE_DEPT",
+                    "부서 일정 등록",
+                    user.getName() + "님이 부서 일정을 등록했습니다: " + request.getTitle()
+                )
+            );
+        }
+
+        return response;
     }
 
     // 일정 수정

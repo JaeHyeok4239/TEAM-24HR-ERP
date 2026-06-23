@@ -159,13 +159,6 @@ export default function MeetingRoom() {
   return (
     <div className="p-6 h-full flex flex-col gap-4">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-500">업무 관리 - 회의실 예약</span>
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-          <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
-          오늘 {today.getMonth() + 1}.{String(today.getDate()).padStart(2, "0")}({DAYS[today.getDay()]})
-        </div>
-      </div>
 
       {/* 탭 */}
       <div className="flex gap-0 border-b border-gray-200">
