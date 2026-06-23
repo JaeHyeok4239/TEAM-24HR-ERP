@@ -165,7 +165,8 @@ public class PayrollCalculateService {
 	    BigDecimal overtimeHours = BigDecimal.valueOf(totalMinutes)
 	                    .divide(new BigDecimal("60"), 2, RoundingMode.HALF_UP);
 
-	    return overtimeHours.multiply(new BigDecimal("15000"));
+	    return overtimeHours.multiply(new BigDecimal("15000"))
+	    		            .setScale(0, RoundingMode.HALF_UP);
 	}
 	
 	
