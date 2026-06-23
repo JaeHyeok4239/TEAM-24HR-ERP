@@ -68,7 +68,7 @@ public class AttendanceLog{
 	private Workplace workplace;
 	
 	@Column(name="work_date")
-	private LocalDateTime workDate;
+	private LocalDate workDate;
 	
 	@Column(name="created_at")
 	private LocalDateTime createdAt;

@@ -1,10 +1,7 @@
 package com.hr24.document.dto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Getter;
 import lombok.Setter;
