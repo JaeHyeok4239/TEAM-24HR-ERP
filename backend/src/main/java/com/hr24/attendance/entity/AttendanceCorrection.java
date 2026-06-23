@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import com.hr24.document.entity.Document;
+import com.hr24.employee.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -54,6 +55,10 @@ public class AttendanceCorrection{
 	@Column(name="is_processed")
 	private String isProcessed;
 	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="processed_by")
+	private User processedBy;
+	
 	@Column(length = 100, name="correction_reason")
 	private String correctionReason;
 	
@@ -71,7 +76,7 @@ public class AttendanceCorrection{
 	@Column(name="after_time")
 	private LocalDateTime afterTime;
 	
-	@Column(name="created_at")
+	@Column(name = "created_at", insertable = false, updatable = false)
 	private LocalDateTime createdAt;
 	
 	@Column(name="updated_at")
