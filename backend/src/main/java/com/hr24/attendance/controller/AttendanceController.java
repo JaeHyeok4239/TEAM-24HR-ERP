@@ -35,7 +35,7 @@ import com.hr24.employee.entity.User;
 import com.hr24.employee.enums.EmploymentType;
 import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.UserRepository;
-import com.hr24.employee.service.HrEmployeeService;
+import com.hr24.employee.service.HrEmployeeQueryService;
 import com.hr24.global.exception.BusinessException;
 import com.hr24.global.exception.ErrorCode;
 
@@ -52,7 +52,7 @@ public class AttendanceController {
 	private final AttendanceService attendanceService;
 	private final UserRepository userRepository;
 	private final AttendanceCorrectionService attendanceCorrectionService;
-	private final HrEmployeeService hrEmployeeService;
+	private final HrEmployeeQueryService hrEmployeeQueryService;
 	
 	@Operation(summary = "오후 배치 프로그램", description = "오후 11시에 실행되는 프로그램입니다.")
     @PostMapping("/batch/closing-batch")
@@ -82,7 +82,7 @@ public class AttendanceController {
 	        @Parameter(description = "근태 상태", example = "WORK")
 	        @RequestParam(required = false) AttendanceStatus status
 	) {
-	    return hrEmployeeService.findEmployees(departmentId, UserStatus.ACTIVE, type, keyword);
+	    return hrEmployeeQueryService.findEmployees(departmentId, UserStatus.ACTIVE, type, keyword);
 	}
 	
 	// 정규직 정정

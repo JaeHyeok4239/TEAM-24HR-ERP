@@ -8,7 +8,4 @@ import lombok.Getter;
 public class CheckInOutRequestDto {
     private Double latitude;
     private Double longitude;
-    
-    @Schema(description = "근무지 코드", allowableValues = {"HQ", "TEMP01", "TEMP02"})
-    private String workplaceCode;
 }
