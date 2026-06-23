@@ -13,6 +13,7 @@ import com.hr24.document.dto.HrRequestDto;
 import com.hr24.document.entity.Document;
 import com.hr24.document.entity.Leave;
 import com.hr24.document.entity.LeaveType;
+import com.hr24.document.repository.DocumentRepository;
 import com.hr24.document.repository.LeaveRepository;
 import com.hr24.document.repository.LeaveTypeRepository;
 
@@ -28,11 +29,18 @@ public class HrService {
 	private final LeaveRepository leaveRepository;
 	private final LeaveTypeRepository leaveTypeRepository;
 	private final AttendanceResultRepository attendanceResultRepository;
+	private final DocumentRepository documentRepository;
 
-	// 휴가 신청 데이터 생성 후 attendenceResult 생성
+	// 휴가 신청 데이터 생성
 	@Transactional
-	public void createLeaveFromContent(Document document) {
+	public Leave createLeaveFromContent(Long documentId) {
+		
+		Document document = documentRepository.findById(documentId)
+				.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
+		
 		HrRequestDto.LeaveDto dto;
+		
+		
 		try {
 			dto = objectMapper.convertValue(document.getDocumentContent(), HrRequestDto.LeaveDto.class);
 		} catch (IllegalArgumentException e) {
@@ -49,12 +57,16 @@ public class HrService {
 
 		leaveRepository.save(leave);
 		
+		return leave;
 		
 	}
 
-	// 근태 정정 데이터 생성 후 근태 정정 처리
+	// 근태 정정 데이터 생성
 	@Transactional
-	public void createCorrectionFromContent(Document document) {
+	public AttendanceCorrection createCorrectionFromContent(Long documentId) {
+		
+		Document document = documentRepository.findById(documentId)
+				.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
 		
 		HrRequestDto.AttendanceCorrectionDto dto;
 		
@@ -69,7 +81,7 @@ public class HrService {
 				.findByEmployeeAndWorkDate(document.getRequester(), dto.getTargetDate())
 				.orElseThrow(() -> new EntityNotFoundException("해당 날짜에 근태 기록이 없습니다"));
 		
-		//근태 정정 이력 생성
+		//근태 정정 이력 데이터 생성
 		AttendanceCorrection correction = AttendanceCorrection
 				.builder()
 				.correctionTarget(originResult)
@@ -81,21 +93,6 @@ public class HrService {
 				.processedBy(document.getProcessor())
 				.build();
 		
-		
-		//근태 이력 수정
-		originResult.setAttendanceCorrection(correction);
-		
-		//출근 시각 정정 시
-		if(correction.getCorrectionType() == "IN" && originResult.getCheckInTime().equals(correction.getBeforeTime())) {
-			originResult.setCheckInTime(correction.getAfterTime());
-		}
-		
-		//퇴근 시각 정정 시
-		if(correction.getCorrectionType() == "OUT" && originResult.getCheckOutTime().equals(correction.getBeforeTime())) {
-			originResult.setCheckOutTime(correction.getAfterTime());
-		}
-		
-		//다 완료되면 정정 상태 업데이트
-		originResult.setIsFixed("Y");
+		return correction;
 	}
 }
