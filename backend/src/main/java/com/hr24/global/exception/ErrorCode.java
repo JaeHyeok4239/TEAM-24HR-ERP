@@ -41,6 +41,28 @@ public enum ErrorCode {
             HttpStatus.NOT_FOUND,
             "권한 정보를 찾을 수 없습니다."
     ),
+    
+    NO_EMPLOYEE_INFO_CHANGED(
+    		HttpStatus.BAD_REQUEST, 
+    		"변경된 인사정보가 없습니다."
+    ),
+    
+    REGULAR_EMPLOYEE_REQUIRES_DEPARTMENT_AND_POSITION(
+    		HttpStatus.BAD_REQUEST, 
+    		"정규직은 부서와 직급이 필요합니다."
+    ),
+    
+    //권한
+    NO_EMPLOYEE_ROLE_CHANGED(
+    		HttpStatus.BAD_REQUEST, 
+    		"변경된 접근 권한이 없습니다."
+    ),
+    
+    //암복호화
+    CRYPTO_PROCESSING_FAILED(
+    		HttpStatus.INTERNAL_SERVER_ERROR, 
+    		"민감정보 암복호화 처리 중 오류가 발생했습니다."
+    ),
 	
 	//부서(조회 및 수정)
 	DEPARTMENT_NOT_FOUND(
