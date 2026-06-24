@@ -47,7 +47,7 @@ public class HrEmployeeController {
 
 	// 직원 목록 조회
 	@GetMapping
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<List<EmployeeListResponseDto>> findEmployees(
 			@RequestParam(name = "departmentId", required = false) Long departmentId,
 			@RequestParam(name = "status", required = false) UserStatus status,
@@ -66,7 +66,7 @@ public class HrEmployeeController {
 
 	// 직원 등록
 	@PostMapping
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeDetailResponseDto> createEmployee(
 			@Valid @RequestBody EmployeeCreateRequestDto request
 	) {
@@ -78,7 +78,7 @@ public class HrEmployeeController {
 
 	// 부서 트리 및 부서별 직원 수 조회
 	@GetMapping("/departments/tree")
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<DepartmentTreeResponseDto> findDepartmentTree() {
 		DepartmentTreeResponseDto departmentTree =
 				hrEmployeeQueryService.findDepartmentTree();
@@ -88,7 +88,7 @@ public class HrEmployeeController {
 
 	// 직원 등록/수정 폼 옵션 조회
 	@GetMapping("/form-options")
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeFormOptionsResponseDto> findEmployeeFormOptions() {
 		EmployeeFormOptionsResponseDto options =
 				hrEmployeeQueryService.findEmployeeFormOptions();
@@ -98,7 +98,7 @@ public class HrEmployeeController {
 
 	// 직원 상세 조회
 	@GetMapping("/{employeeId}")
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeDetailResponseDto> findEmployeeDetail(
 			@PathVariable("employeeId") Long employeeId
 	) {
@@ -110,7 +110,7 @@ public class HrEmployeeController {
 
 	// 직원 기본정보 수정
 	@PatchMapping("/{employeeId}/basic-info")
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeDetailResponseDto> updateBasicInfo(
 			@PathVariable("employeeId") Long employeeId,
 			@Valid @RequestBody EmployeeBasicInfoUpdateRequestDto request
@@ -123,7 +123,7 @@ public class HrEmployeeController {
 
 	// 직원 인사정보 수정
 	@PatchMapping("/{employeeId}/employment-info")
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeDetailResponseDto> updateEmploymentInfo(
 			@PathVariable("employeeId") Long employeeId,
 			@Valid @RequestBody EmployeeEmploymentInfoUpdateRequestDto request
@@ -136,7 +136,7 @@ public class HrEmployeeController {
 
 	// 직원 접근 권한 수정
 	@PatchMapping("/{employeeId}/roles")
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD')")
 	public ResponseEntity<EmployeeDetailResponseDto> updateRoles(
 			@PathVariable("employeeId") Long employeeId,
 			@Valid @RequestBody EmployeeRoleUpdateRequestDto request
@@ -149,7 +149,7 @@ public class HrEmployeeController {
 	
 	// 민감 정보 조회
 	@GetMapping("/{employeeId}/sensitive-info")
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD')")
 	public ResponseEntity<EmployeeSensitiveInfoResponseDto> findSensitiveInfo(
 			@PathVariable("employeeId") Long employeeId
 	) {
@@ -161,7 +161,7 @@ public class HrEmployeeController {
 
 	// 민감 정보 수정
 	@PatchMapping("/{employeeId}/sensitive-info")
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD')")
 	public ResponseEntity<EmployeeSensitiveInfoResponseDto> updateSensitiveInfo(
 			@PathVariable("employeeId") Long employeeId,
 			@Valid @RequestBody EmployeeSensitiveInfoUpdateRequestDto request
@@ -174,7 +174,7 @@ public class HrEmployeeController {
 	
 	//인사 이력 조회
 	@GetMapping("/{employeeId}/histories")
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<List<EmployeeHistoryResponseDto>> findHistories(
 			@PathVariable("employeeId") Long employeeId
 	) {

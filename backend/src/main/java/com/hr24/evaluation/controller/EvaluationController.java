@@ -36,7 +36,7 @@ public class EvaluationController {
     private final EvaluationQueryService evaluationQueryService;
 
     @GetMapping("/periods")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<List<EvaluationPeriodResponseDto>> findPeriods() {
         List<EvaluationPeriodResponseDto> periods =
                 evaluationQueryService.findPeriods();
@@ -45,7 +45,7 @@ public class EvaluationController {
     }
 
     @PostMapping("/periods")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<EvaluationPeriodResponseDto> createPeriod(
             @Valid @RequestBody EvaluationPeriodCreateRequestDto request
     ) {
@@ -56,7 +56,7 @@ public class EvaluationController {
     }
 
     @PatchMapping("/periods/{periodId}/open")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<EvaluationPeriodResponseDto> openPeriod(
             @PathVariable("periodId") Long periodId
     ) {
@@ -67,7 +67,7 @@ public class EvaluationController {
     }
 
     @PatchMapping("/periods/{periodId}/close")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<EvaluationPeriodResponseDto> closePeriod(
             @PathVariable("periodId") Long periodId
     ) {
@@ -78,7 +78,7 @@ public class EvaluationController {
     }
 
     @PostMapping("/periods/{periodId}/targets")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<List<EmployeeEvaluationTargetResponseDto>> createTargets(
             @PathVariable("periodId") Long periodId
     ) {
@@ -89,7 +89,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/periods/{periodId}/targets")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<List<EmployeeEvaluationTargetResponseDto>> findTargets(
             @PathVariable("periodId") Long periodId
     ) {
@@ -100,7 +100,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/{employeeEvaluationId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<EmployeeEvaluationDetailResponseDto> findEvaluationDetail(
             @PathVariable("employeeEvaluationId") Long employeeEvaluationId
     ) {
@@ -111,7 +111,7 @@ public class EvaluationController {
     }
 
     @PatchMapping("/{employeeEvaluationId}/save")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<EmployeeEvaluationDetailResponseDto> saveEvaluation(
             @PathVariable("employeeEvaluationId") Long employeeEvaluationId,
             @Valid @RequestBody EmployeeEvaluationSaveRequestDto request
@@ -126,7 +126,7 @@ public class EvaluationController {
     }
 
     @PatchMapping("/{employeeEvaluationId}/confirm")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<EmployeeEvaluationDetailResponseDto> confirmEvaluation(
             @PathVariable("employeeEvaluationId") Long employeeEvaluationId,
             @Valid @RequestBody EmployeeEvaluationSaveRequestDto request
@@ -141,7 +141,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/results")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<List<EvaluationResultSummaryResponseDto>> findResults() {
         List<EvaluationResultSummaryResponseDto> results =
                 evaluationQueryService.findResultSummaries();
@@ -150,7 +150,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/results/{employeeId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<List<EmployeeEvaluationHistoryResponseDto>> findEmployeeHistories(
             @PathVariable("employeeId") Long employeeId
     ) {
@@ -161,7 +161,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/promotion-candidates")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
     public ResponseEntity<List<PromotionCandidateResponseDto>> findPromotionCandidates() {
         List<PromotionCandidateResponseDto> candidates =
                 evaluationQueryService.findPromotionCandidates();

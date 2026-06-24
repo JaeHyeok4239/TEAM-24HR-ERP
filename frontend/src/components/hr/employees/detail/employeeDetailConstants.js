@@ -29,24 +29,24 @@ export const ROLE_ITEMS = [
     description: "전체 시스템 및 권한 관리",
   },
   {
-    code: "HR_OPERATOR",
-    label: "인사 실무자",
-    description: "직원 등록 및 기본 인사정보 관리",
+    code: "HR",
+    label: "인사",
+    description: "인사관리 메뉴 접근 권한",
   },
   {
-    code: "HR_MANAGER",
-    label: "인사 관리자",
-    description: "권한 부여, 퇴사 처리, 민감정보 관리",
+    code: "HR_LEAD",
+    label: "인사 책임자",
+    description: "인사/근태/급여/권한 총괄 추가 관리 권한",
   },
   {
-    code: "ATTENDANCE_MANAGER",
-    label: "근태 관리자",
-    description: "근태, 출퇴근, 휴가 정보 관리",
+    code: "ATTENDANCE",
+    label: "근태",
+    description: "근태관리 메뉴 접근 권한",
   },
   {
-    code: "PAYROLL_MANAGER",
-    label: "급여 관리자",
-    description: "급여 산정 및 급여 정보 관리",
+    code: "PAYROLL",
+    label: "급여",
+    description: "급여관리 메뉴 접근 권한",
   },
 ];
 
