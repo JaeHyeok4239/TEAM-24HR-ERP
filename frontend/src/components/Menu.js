@@ -10,6 +10,7 @@ import {
   Users,
   CheckCircle,
   ChevronDown,
+  ShieldCheck,
 } from "lucide-react";
 
 import { logoutRequest } from "@/services/authService";
@@ -20,6 +21,7 @@ import { Collapsible } from "@base-ui/react/collapsible";
 import { Menu } from "@base-ui/react/menu";
 
 import {
+  ROLES,
   HR_MANAGE_ROLES,
   HR_VIEW_ROLES,
   filterNavItemsByRole,
@@ -42,6 +44,12 @@ import {
 
 const NAV_ITEMS = [
   { href: "/", icon: Home, label: "홈" },
+  {
+    href: "/admin",
+    icon: ShieldCheck,
+    label: "관리자 대시보드",
+    allowedRoles: [ROLES.ADMIN],
+  },
   {
     href: "/attendance",
     icon: Clock,

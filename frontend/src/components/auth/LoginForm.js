@@ -4,6 +4,7 @@ import { useState } from "react";
 import { loginRequest } from "@/services/authService";
 import { getMyInfoRequest } from "@/services/userService";
 import { useAuthStore } from "@/store/authStore";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -26,15 +27,24 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
+  const router = useRouter();
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
       const tokenData = await loginRequest(loginId, password);
+
       authLogin(tokenData.accessToken, tokenData.refreshToken);
+
       const userInfo = await getMyInfoRequest();
+
       setUserInfo(userInfo);
       setMessage("");
+
+      if (userInfo.isFirstLogin === "Y") {
+        router.replace("/user/password-change");
+      }
     } catch (error) {
       authLogout();
       console.error("로그인 처리 실패:", error);

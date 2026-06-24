@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import LoginForm from "@/components/auth/LoginForm";
 import { SidebarProvider } from "../ui/sidebar";
 
@@ -33,7 +34,10 @@ function NotificationBell() {
           <div className="p-3 border-b border-gray-100 flex items-center justify-between">
             <span className="text-sm font-semibold text-gray-700">알림</span>
             <button
-              onClick={() => { setShow(false); clearNotifications(); }}
+              onClick={() => {
+                setShow(false);
+                clearNotifications();
+              }}
               className="text-gray-400 hover:text-gray-600 text-xl leading-none"
             >
               ×
@@ -41,11 +45,18 @@ function NotificationBell() {
           </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="text-center text-sm text-gray-400 py-8">새 알림이 없어요</p>
+              <p className="text-center text-sm text-gray-400 py-8">
+                새 알림이 없어요
+              </p>
             ) : (
               notifications.map((n, i) => (
-                <div key={i} className="p-3 border-b border-gray-50 hover:bg-gray-50">
-                  <p className="text-xs font-semibold text-blue-600">{n.title}</p>
+                <div
+                  key={i}
+                  className="p-3 border-b border-gray-50 hover:bg-gray-50"
+                >
+                  <p className="text-xs font-semibold text-blue-600">
+                    {n.title}
+                  </p>
                   <p className="text-xs text-gray-600 mt-0.5">{n.message}</p>
                 </div>
               ))
@@ -65,6 +76,13 @@ export default function ClientLayout({ children }) {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
   const setUserInfo = useAuthStore((state) => state.setUserInfo);
   const authLogout = useAuthStore((state) => state.logout);
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const userInfo = useAuthStore((state) => state.userInfo);
+
+  const isPasswordChangePage = pathname.startsWith("/user/password-change");
+  const needPasswordChange = userInfo?.isFirstLogin === "Y";
 
   useEffect(() => {
     // 개발 환경에서 useEffect가 중복 실행 방지
@@ -98,6 +116,22 @@ export default function ClientLayout({ children }) {
     restoreAuth();
   }, [initializeAuth, setUserInfo, authLogout]);
 
+  useEffect(() => {
+    if (isAuthLoading || !isLogin) {
+      return;
+    }
+
+    if (needPasswordChange && !isPasswordChangePage) {
+      router.replace("/user/password-change");
+    }
+  }, [
+    isAuthLoading,
+    isLogin,
+    needPasswordChange,
+    isPasswordChangePage,
+    router,
+  ]);
+
   // 로그인 상태 확인이 끝날 때까지 화면 분기 대기
   if (isAuthLoading) {
     return (
@@ -115,6 +149,21 @@ export default function ClientLayout({ children }) {
   // 로그인하지 않은 상태
   if (!isLogin) {
     return <LoginForm />;
+  }
+
+  if (needPasswordChange && !isPasswordChangePage) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <p className="text-sm text-slate-500">
+          비밀번호 변경 화면으로 이동 중입니다.
+        </p>
+      </div>
+    );
+  }
+
+  // 최초 로그인 사용자는 비밀번호 변경 화면만 표시
+  if (needPasswordChange && isPasswordChangePage) {
+    return <div className="min-h-screen bg-slate-50">{children}</div>;
   }
 
   // 로그인한 상태

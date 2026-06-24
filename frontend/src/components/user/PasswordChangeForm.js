@@ -1,78 +1,77 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { changePasswordRequest } from '@/services/userService';
-import { useAuthStore } from '@/store/authStore';
+import { changePasswordRequest } from "@/services/userService";
+import { useAuthStore } from "@/store/authStore";
 
 const createInitialForm = () => ({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: '',
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
 });
 
 const createEmptyErrors = () => ({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: '',
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
 });
 
 const createEmptyNotice = () => ({
-  type: '',
-  message: '',
+  type: "",
+  message: "",
 });
 
 const validateCurrentPassword = (password) => {
   if (!password.trim()) {
-    return '현재 비밀번호를 입력해주세요.';
+    return "현재 비밀번호를 입력해주세요.";
   }
 
-  return '';
+  return "";
 };
 
 const validateNewPassword = (password, currentPassword) => {
   if (!password) {
-    return '새 비밀번호를 입력해주세요.';
+    return "새 비밀번호를 입력해주세요.";
   }
 
   if (password.length < 8 || password.length > 20) {
-    return '새 비밀번호는 8자 이상 20자 이하로 입력해주세요.';
+    return "새 비밀번호는 8자 이상 20자 이하로 입력해주세요.";
   }
 
   const passwordPattern =
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]+$/;
 
   if (!passwordPattern.test(password)) {
-    return '영문, 숫자, 특수문자를 모두 포함해주세요.';
+    return "영문, 숫자, 특수문자를 모두 포함해주세요.";
   }
 
   if (password === currentPassword) {
-    return '새 비밀번호는 현재 비밀번호와 다르게 입력해주세요.';
+    return "새 비밀번호는 현재 비밀번호와 다르게 입력해주세요.";
   }
 
-  return '';
+  return "";
 };
 
-const validateConfirmPassword = (
-  confirmPassword,
-  newPassword
-) => {
+const validateConfirmPassword = (confirmPassword, newPassword) => {
   if (!confirmPassword) {
-    return '새 비밀번호를 다시 입력해주세요.';
+    return "새 비밀번호를 다시 입력해주세요.";
   }
 
   if (confirmPassword !== newPassword) {
-    return '새 비밀번호가 일치하지 않습니다.';
+    return "새 비밀번호가 일치하지 않습니다.";
   }
 
-  return '';
+  return "";
 };
 
 export default function PasswordChangeForm() {
   const router = useRouter();
 
   const logout = useAuthStore((state) => state.logout);
+  const userInfo = useAuthStore((state) => state.userInfo);
+  const isFirstLogin = userInfo?.isFirstLogin === "Y";
 
   const [form, setForm] = useState(createInitialForm);
   const [errors, setErrors] = useState(createEmptyErrors);
@@ -91,41 +90,38 @@ export default function PasswordChangeForm() {
     setForm(nextForm);
     setNotice(createEmptyNotice());
 
-    if (name === 'currentPassword') {
+    if (name === "currentPassword") {
       setErrors((previous) => ({
         ...previous,
-        currentPassword: '',
+        currentPassword: "",
         newPassword: nextForm.newPassword
-          ? validateNewPassword(
-              nextForm.newPassword,
-              nextForm.currentPassword
-            )
+          ? validateNewPassword(nextForm.newPassword, nextForm.currentPassword)
           : previous.newPassword,
       }));
     }
 
-    if (name === 'newPassword') {
+    if (name === "newPassword") {
       setErrors((previous) => ({
         ...previous,
         newPassword: validateNewPassword(
           nextForm.newPassword,
-          nextForm.currentPassword
+          nextForm.currentPassword,
         ),
         confirmPassword: nextForm.confirmPassword
           ? validateConfirmPassword(
               nextForm.confirmPassword,
-              nextForm.newPassword
+              nextForm.newPassword,
             )
           : previous.confirmPassword,
       }));
     }
 
-    if (name === 'confirmPassword') {
+    if (name === "confirmPassword") {
       setErrors((previous) => ({
         ...previous,
         confirmPassword: validateConfirmPassword(
           nextForm.confirmPassword,
-          nextForm.newPassword
+          nextForm.newPassword,
         ),
       }));
     }
@@ -141,30 +137,23 @@ export default function PasswordChangeForm() {
     event.preventDefault();
 
     const nextErrors = {
-      currentPassword: validateCurrentPassword(
-        form.currentPassword
-      ),
-      newPassword: validateNewPassword(
-        form.newPassword,
-        form.currentPassword
-      ),
+      currentPassword: validateCurrentPassword(form.currentPassword),
+      newPassword: validateNewPassword(form.newPassword, form.currentPassword),
       confirmPassword: validateConfirmPassword(
         form.confirmPassword,
-        form.newPassword
+        form.newPassword,
       ),
     };
 
     setErrors(nextErrors);
 
-    const hasError = Object.values(nextErrors).some(
-      (error) => Boolean(error)
-    );
+    const hasError = Object.values(nextErrors).some((error) => Boolean(error));
 
     if (hasError) {
       setNotice({
-        type: 'error',
+        type: "error",
         message:
-          '형식이 잘못 입력된 정보가 있습니다. 입력 항목을 확인해주세요.',
+          "형식이 잘못 입력된 정보가 있습니다. 입력 항목을 확인해주세요.",
       });
 
       return;
@@ -184,22 +173,21 @@ export default function PasswordChangeForm() {
       setIsCompleted(true);
 
       setNotice({
-        type: 'success',
-        message:
-          '비밀번호가 변경되었습니다. 다시 로그인해주세요.',
+        type: "success",
+        message: "비밀번호가 변경되었습니다. 다시 로그인해주세요.",
       });
 
       setTimeout(() => {
         logout();
-        router.replace('/');
+        router.replace("/");
       }, 1200);
     } catch (error) {
-      console.error('비밀번호 변경 실패:', error);
+      console.error("비밀번호 변경 실패:", error);
 
       setNotice({
-        type: 'error',
+        type: "error",
         message:
-          '비밀번호 변경에 실패했습니다. 현재 비밀번호와 입력 형식을 확인해주세요.',
+          "비밀번호 변경에 실패했습니다. 현재 비밀번호와 입력 형식을 확인해주세요.",
       });
     } finally {
       setIsSubmitting(false);
@@ -207,32 +195,42 @@ export default function PasswordChangeForm() {
   };
 
   const isFormEmpty =
-    !form.currentPassword ||
-    !form.newPassword ||
-    !form.confirmPassword;
+    !form.currentPassword || !form.newPassword || !form.confirmPassword;
 
   return (
-    <div className="p-6">
+    <div className="flex min-h-[calc(100vh-56px)] w-full items-center justify-center px-6 py-8">
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="max-w-xl rounded-md border bg-white p-6"
+        className="w-full max-w-xl rounded-md border bg-white p-6 shadow-sm"
       >
         <div className="mb-6 border-b border-slate-200 pb-4">
           <p className="mt-1 text-sm text-slate-500">
-            안전한 계정 사용을 위해 새로운 비밀번호를
-            입력해주세요.
+            안전한 계정 사용을 위해 새로운 비밀번호를 입력해주세요.
           </p>
         </div>
+
+        {isFirstLogin && (
+          <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <p className="font-semibold">
+              최초 로그인 비밀번호 변경이 필요합니다.
+            </p>
+
+            <p className="mt-1">
+              임시 비밀번호로 로그인한 상태입니다. 보안을 위해 새 비밀번호로
+              변경해야 시스템을 사용할 수 있습니다.
+            </p>
+          </div>
+        )}
 
         {notice.message && (
           <div
             role="alert"
             aria-live="polite"
             className={`mb-6 rounded-md border px-4 py-3 text-sm ${
-              notice.type === 'success'
-                ? 'border-green-200 bg-green-50 text-green-700'
-                : 'border-red-200 bg-red-50 text-red-700'
+              notice.type === "success"
+                ? "border-green-200 bg-green-50 text-green-700"
+                : "border-red-200 bg-red-50 text-red-700"
             }`}
           >
             {notice.message}
@@ -278,33 +276,31 @@ export default function PasswordChangeForm() {
             영문, 숫자, 특수문자를 포함한 8자 이상 20자 이하
           </p>
 
-          <p className="mt-1">
-            사용 가능한 특수문자: @ $ ! % * # ? &
-          </p>
+          <p className="mt-1">사용 가능한 특수문자: @ $ ! % * # ? &</p>
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={isSubmitting || isCompleted}
-            className="rounded-md bg-slate-100 px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            취소
-          </button>
+          {!isFirstLogin && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={isSubmitting || isCompleted}
+              className="rounded-md bg-slate-100 px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              취소
+            </button>
+          )}
 
           <button
             type="submit"
-            disabled={
-              isSubmitting || isCompleted || isFormEmpty
-            }
+            disabled={isSubmitting || isCompleted || isFormEmpty}
             className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting
-              ? '변경 중...'
+              ? "변경 중..."
               : isCompleted
-                ? '변경 완료'
-                : '비밀번호 변경'}
+                ? "변경 완료"
+                : "비밀번호 변경"}
           </button>
         </div>
       </form>
@@ -341,16 +337,13 @@ function PasswordField({
         aria-describedby={error ? errorId : undefined}
         className={`w-full rounded-md border px-3 py-2 text-sm outline-none ${
           error
-            ? 'border-red-500 focus:border-red-500'
-            : 'border-slate-300 focus:border-blue-500'
+            ? "border-red-500 focus:border-red-500"
+            : "border-slate-300 focus:border-blue-500"
         }`}
       />
 
       {error && (
-        <p
-          id={errorId}
-          className="mt-1 text-xs text-red-500"
-        >
+        <p id={errorId} className="mt-1 text-xs text-red-500">
           {error}
         </p>
       )}
