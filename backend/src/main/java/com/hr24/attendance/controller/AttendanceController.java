@@ -45,7 +45,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/attendance")
+@RequestMapping("/api/attendance")
 @RequiredArgsConstructor
 @Tag(name = "근태 관리 API", description = "근태 관리 관련 API")
 public class AttendanceController {
@@ -73,16 +73,17 @@ public class AttendanceController {
 	@Operation(summary = "직원 타입에 따른 직원 목록 조회", description = "정규직/일용직 직원 목록 조회")
 	@GetMapping("/employees")
 	public List<EmployeeListResponseDto> getEmployees(
-			@Parameter(description = "직원 타입(REGULAR/DAILY)", example = "REGULAR")
-	        @RequestParam(required = false) EmploymentType type,
-			@Parameter(description = "부서 고유 번호(선택)", example = "1")
-			@RequestParam(required = false) Long departmentId,
-	        @Parameter(description = "이름 또는 사번 검색어", example = "홍길동")
-	        @RequestParam(required = false) String keyword,
-	        @Parameter(description = "근태 상태", example = "WORK")
-	        @RequestParam(required = false) AttendanceStatus status
+	        @Parameter(description = "직원 타입(REGULAR/DAILY)", example = "REGULAR")
+	        @RequestParam(value = "type") EmploymentType type,
+	        @Parameter(description = "(선택) 부서 고유 번호", example = "1")
+	        @RequestParam(value = "departmentId", required = false) Long departmentId,
+	        @Parameter(description = "(선택) 이름 또는 사번 검색어", example = "홍길동")
+	        @RequestParam(value = "keyword", required = false) String keyword,
+	        @Parameter(description = "(선택) 근태 상태", example = "WORK")
+	        @RequestParam(value = "status", required = false) AttendanceStatus status,
+	        @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
 	) {
-	    return hrEmployeeQueryService.findEmployees(departmentId, UserStatus.ACTIVE, type, keyword);
+      return attendanceService.findEmployeesWithFilters(type, departmentId, keyword, status, date);
 	}
 	
 	// 정규직 정정
@@ -145,8 +146,8 @@ public class AttendanceController {
 	public ResponseEntity<String> dailyBatch(
 	        @RequestBody List<AttendanceRequest> attendanceList) { // Map > DTO 리스트로 변경
 	    
-	    attendanceService.saveDailyAttendanceLogs(attendanceList);
-	    return ResponseEntity.ok(attendanceList.size() + "명의 근태 기록이 성공적으로 저장되었습니다.");
+		String resultMessage = attendanceService.saveDailyAttendanceLogs(attendanceList);
+	    return ResponseEntity.ok(resultMessage);
 	}
 	
 	@Operation(summary = "출근", description = "출근할 수 있습니다.")
@@ -182,7 +183,7 @@ public class AttendanceController {
 	    boolean isAdmin = authentication.getAuthorities().stream()
 	            .anyMatch(a -> a.getAuthority().equals("ADMIN"));
 	    
-	    AttendanceResponse response = attendanceService.yearMonth(loginId, yearMonth, targetEmployeeId, isAdmin);
+	    AttendanceResponse response = attendanceService.getMonthlyAttendanceStats(loginId, yearMonth, targetEmployeeId, isAdmin);
 	    
 	    return ResponseEntity.ok(response);
 	}

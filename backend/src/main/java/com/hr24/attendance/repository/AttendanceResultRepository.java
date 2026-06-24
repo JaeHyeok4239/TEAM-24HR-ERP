@@ -14,17 +14,15 @@ import org.springframework.data.repository.query.Param;
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceResult;
 import com.hr24.attendance.entity.Workplace;
+import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.enums.UserStatus;
 
 public interface AttendanceResultRepository extends JpaRepository<AttendanceResult, Long>{
 	
 	Optional<AttendanceResult> findByEmployeeAndWorkDate(User employee, LocalDate workDate);
-	
 
 	List<AttendanceResult> findByEmployeeEmployeeId(Long employeeId);
-	
-	//마감 배치 프로그램에서 쓰일 qeury문
 
 	// 특정 직원의 특정 날짜 근태 정보+그 직원의 상세 정보
 	@Query("select ar from AttendanceResult ar join fetch ar.employee " +
@@ -60,17 +58,22 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	       "AND ar.attendanceStatus = :status")
 	List<AttendanceResult> findByWorkDateAndAttendanceStatus(
 	    @Param("workDate") LocalDate workDate, 
-	    @Param("status") String status
+	    @Param("status") AttendanceStatus status
 	);
 	
 	// 마감 배치 프로그램에서 쓰일 query문
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Query("UPDATE AttendanceResult a " +
-	           "SET a.isMissingCheckout = 'Y' " +
+	           "SET a.isMissingCheckout = 'Y', " +
+	           "    a.updatedAt = :now " +
 	           "WHERE a.checkOutTime IS NULL " +
 	           "AND a.workDate = :targetDate " +
 	           "AND a.attendanceStatus IN :attendanceStatus")
-	int updateMissingCheckouts(@Param("attendanceStatus") List<String> attendanceStatus);
+	int updateMissingCheckouts(
+			@Param("targetDate") LocalDate targetDate,
+			@Param("attendanceStatus") List<AttendanceStatus> attendanceStatus,
+			@Param("now") LocalDateTime now
+			);
 	
 	// 중복 막기(직원별, 날짜별 존재 여부 확인)
 	boolean existsByEmployeeAndWorkDate(User employee, LocalDate workDate);

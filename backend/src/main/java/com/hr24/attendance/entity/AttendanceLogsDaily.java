@@ -17,6 +17,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Builder                 
@@ -24,6 +25,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 
 @Entity
+@Getter
 @Table(name = "attendance_logs_daily")
 @SequenceGenerator(
 		name="attendance_logs_daily_seq",
