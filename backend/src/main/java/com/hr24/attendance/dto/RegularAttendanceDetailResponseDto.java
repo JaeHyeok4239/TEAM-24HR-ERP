@@ -17,5 +17,5 @@ import lombok.experimental.SuperBuilder;
 // 일별 근태 상세 조회 - 정규직/일반 사용자용(정정 이력 추가)
 public class RegularAttendanceDetailResponseDto extends AttendanceDetailResponseDto {
 	@Builder.Default
-    private List<CorrectionResponseDto> corrections = new ArrayList<>();
+    private List<CorrectionDto> corrections = new ArrayList<>();
 }

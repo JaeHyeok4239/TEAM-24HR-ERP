@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 // 정정 이력 조회용(추후 빌더로 값 설정)
-public class CorrectionResponseDto {
+public class CorrectionDto {
 		private String correctionType; // 정정 종류 IN/OUT
 	    private String processStatus; // 승인완료/반려/대기
 	    private LocalDateTime requestedAt; // 신청 일시

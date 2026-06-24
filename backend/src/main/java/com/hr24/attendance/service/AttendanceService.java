@@ -18,7 +18,7 @@ import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.AttendanceResultDto;
-import com.hr24.attendance.dto.CorrectionResponseDto;
+import com.hr24.attendance.dto.CorrectionDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
@@ -154,7 +154,7 @@ public class AttendanceService{
 	            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 근태 기록이 없습니다."));
 
 	    // 정정 이력 조회 및 DTO 변환
-	    List<CorrectionResponseDto> correctionDtos = attendanceCorrectionRepository.findByCorrectionTarget(result).stream()
+	    List<CorrectionDto> correctionDtos = attendanceCorrectionRepository.findByCorrectionTarget(result).stream()
 	            .map(this::convertToCorrectionDto)
 	            .collect(Collectors.toList());
 
@@ -192,11 +192,11 @@ public class AttendanceService{
 	}
 
 	// CorrectionDto 변환 로직
-	private CorrectionResponseDto convertToCorrectionDto(AttendanceCorrection c) {
+	private CorrectionDto convertToCorrectionDto(AttendanceCorrection c) {
 		Document doc = c.getDocument();
 		User processor = doc.getProcessor();
 		
-	    return CorrectionResponseDto.builder()
+	    return CorrectionDto.builder()
 	            .correctionType(c.getCorrectionType())
 	            .processStatus(convertStatusToLabel(c.getDocument().getStatus()))
 	            .requestedAt(c.getDocument().getRequestedAt())
