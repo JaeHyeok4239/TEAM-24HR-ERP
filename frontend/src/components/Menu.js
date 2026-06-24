@@ -64,6 +64,11 @@ const NAV_ITEMS = [
         allowedRoles: HR_VIEW_ROLES,
       },
       {
+        href: "/hr/evaluations",
+        label: "인사평가",
+        allowedRoles: HR_VIEW_ROLES,
+      },
+      {
         href: "/hr/reference-data",
         label: "기준정보 관리",
         allowedRoles: HR_MANAGE_ROLES,
