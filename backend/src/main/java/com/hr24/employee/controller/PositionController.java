@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/hr/reference-data/positions")
-@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD')")
 public class PositionController {
 
     private final PositionService positionService;

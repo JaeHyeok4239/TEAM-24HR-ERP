@@ -72,16 +72,16 @@ INSERT INTO roles ( role_id, role_code, role_name, description )
 VALUES ( role_seq.NEXTVAL, 'USER', '일반 사용자', '기본 사용자 권한' );
 
 INSERT INTO roles ( role_id, role_code, role_name, description )
-VALUES ( role_seq.NEXTVAL, 'HR_OPERATOR', '인사 실무자', '직원 조회, 1차 등록 및 기본 인사정보 수정 권한' );
+VALUES ( role_seq.NEXTVAL, 'HR', '인사', '인사관리 메뉴 접근 권한' );
 
 INSERT INTO roles ( role_id, role_code, role_name, description )
-VALUES ( role_seq.NEXTVAL, 'HR_MANAGER', '인사 관리자', '민감정보 수정, 권한 부여 및 퇴사 처리 권한' );
+VALUES ( role_seq.NEXTVAL, 'HR_LEAD', '인사 책임자', '인사/근태/급여/권한 총괄 추가 관리 권한' );
 
 INSERT INTO roles ( role_id, role_code, role_name, description )
-VALUES ( role_seq.NEXTVAL, 'ATTENDANCE_MANAGER', '근태 관리자', '근태 정보 관리 권한' );
+VALUES ( role_seq.NEXTVAL, 'ATTENDANCE', '근태', '근태관리 메뉴 접근 권한' );
 
 INSERT INTO roles ( role_id, role_code, role_name, description )
-VALUES ( role_seq.NEXTVAL, 'PAYROLL_MANAGER', '급여 관리자', '급여 정보 관리 권한' );
+VALUES ( role_seq.NEXTVAL, 'PAYROLL', '급여', '급여관리 메뉴 접근 권한' );
 
 
 -- 4. 사용자 테이블 샘플 데이터
@@ -90,10 +90,10 @@ INSERT INTO users ( employee_id, employee_no, login_id, password, name, departme
 VALUES ( employee_seq.NEXTVAL, 'EMP001', 'ceo', '1234', '대표이사', 1, 8, 'REGULAR', CURRENT_TIMESTAMP );
 
 INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP002', 'hr_manager', '1234', '인사팀장', 2, 6, 'REGULAR', CURRENT_TIMESTAMP );
+VALUES ( employee_seq.NEXTVAL, 'EMP002', 'hr_lead', '1234', '인사팀장', 2, 6, 'REGULAR', CURRENT_TIMESTAMP );
 
 INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP003', 'hr_operator', '1234', '인사실무자', 2, 3, 'REGULAR', CURRENT_TIMESTAMP );
+VALUES ( employee_seq.NEXTVAL, 'EMP003', 'hr', '1234', '인사실무자', 2, 3, 'REGULAR', CURRENT_TIMESTAMP );
 
 INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
 VALUES ( employee_seq.NEXTVAL, 'EMP004', 'attendance', '1234', '근태담당자', 2, 3, 'REGULAR', CURRENT_TIMESTAMP );
@@ -132,43 +132,43 @@ INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
 VALUES ( user_role_seq.NEXTVAL, 1, 2 ); -- 대표이사 USER
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 1, 3 ); -- 대표이사 HR_OPERATOR
+VALUES ( user_role_seq.NEXTVAL, 1, 3 ); -- 대표이사 
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 1, 4 ); -- 대표이사 HR_MANAGER
+VALUES ( user_role_seq.NEXTVAL, 1, 4 ); -- 대표이사
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 1, 5 ); -- 대표이사 ATTENDANCE_MANAGER
+VALUES ( user_role_seq.NEXTVAL, 1, 5 ); -- 대표이사 
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 1, 6 ); -- 대표이사 PAYROLL_MANAGER
+VALUES ( user_role_seq.NEXTVAL, 1, 6 ); -- 대표이사 
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
 VALUES ( user_role_seq.NEXTVAL, 2, 2 ); -- 인사팀장 USER
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 2, 3 ); -- 인사팀장 HR_OPERATOR
+VALUES ( user_role_seq.NEXTVAL, 2, 3 ); -- 인사팀장 
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 2, 4 ); -- 인사팀장 HR_MANAGER
+VALUES ( user_role_seq.NEXTVAL, 2, 4 ); -- 인사팀장 
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
 VALUES ( user_role_seq.NEXTVAL, 3, 2 ); -- 인사실무자 USER
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 3, 3 ); -- 인사실무자 HR_OPERATOR
+VALUES ( user_role_seq.NEXTVAL, 3, 3 ); -- 인사실무자 
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
 VALUES ( user_role_seq.NEXTVAL, 4, 2 ); -- 근태담당자 USER
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 4, 5 ); -- 근태담당자 ATTENDANCE_MANAGER
+VALUES ( user_role_seq.NEXTVAL, 4, 5 ); -- 근태담당자 
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
 VALUES ( user_role_seq.NEXTVAL, 5, 2 ); -- 급여담당자 USER
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 5, 6 ); -- 급여담당자 PAYROLL_MANAGER
+VALUES ( user_role_seq.NEXTVAL, 5, 6 ); -- 급여담당자 
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
 VALUES ( user_role_seq.NEXTVAL, 6, 2 ); -- 구매팀장 USER

@@ -3,23 +3,25 @@
 export const ROLES = Object.freeze({
   ADMIN: "ADMIN",
   USER: "USER",
-  HR_MANAGER: "HR_MANAGER",
-  HR_OPERATOR: "HR_OPERATOR",
+  HR: "HR",
+  ATTENDANCE: "ATTENDANCE",
+  PAYROLL: "PAYROLL",
+  HR_LEAD: "HR_LEAD",
 });
 
 // 인사관리 직원 목록 조회 권한
 // 직원 목록, 직원 상세 조회 가능
 export const HR_VIEW_ROLES = [
   ROLES.ADMIN,
-  ROLES.HR_MANAGER,
-  ROLES.HR_OPERATOR,
+  ROLES.HR_LEAD,
+  ROLES.HR,
 ];
 
 // 인사관리 기준정보 관리 권한
 // 부서/직급 같은 기준정보 수정 가능
 export const HR_MANAGE_ROLES = [
   ROLES.ADMIN,
-  ROLES.HR_MANAGER,
+  ROLES.HR_LEAD,
 ];
 
 // 백엔드에서 ROLE_ADMIN 형태로 내려와도 ADMIN으로 비교하기 위해 정규화한다.

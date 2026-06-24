@@ -44,10 +44,10 @@ public class UserController {
 		return ResponseEntity.noContent().build();
 	}
 	
-	@PreAuthorize("hasAnyRole('ADMIN','HR_MANAGER')")
+	@PreAuthorize("hasAnyRole('ADMIN','HR_LEAD')")
 	@GetMapping("/admin-test")
 	public String adminTest() {
-	    return "HR_MANAGER success";
+	    return "HR_LEAD success";
 	}
 	
 }
