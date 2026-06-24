@@ -2,6 +2,7 @@ package com.hr24.attendance.repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,20 +53,33 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	    @Param("end") LocalDate end
 	);
 	
-	// 마감 배치 프로그램에서 쓰일 query문
 
+	// 특정 날짜, 특정 근태 상태의 직원 목록 조회
+	@Query("SELECT ar FROM AttendanceResult ar JOIN FETCH ar.employee " +
+	       "WHERE ar.workDate = :workDate " +
+	       "AND ar.attendanceStatus = :status")
+	List<AttendanceResult> findByWorkDateAndAttendanceStatus(
+	    @Param("workDate") LocalDate workDate, 
+	    @Param("status") String status
+	);
+	
+	// 마감 배치 프로그램에서 쓰일 query문
 	@Modifying
 	@Query("UPDATE AttendanceResult a " +
-		       "SET a.isMissingCheckout = 'Y' " +
-		       "WHERE a.checkOutTime IS NULL " +
-		       "AND a.attendanceStatus IN :attendanceStatus")
+	           "SET a.isMissingCheckout = 'Y' " +
+	           "WHERE a.checkOutTime IS NULL " +
+	           "AND a.workDate = :targetDate " +
+	           "AND a.attendanceStatus IN :attendanceStatus")
 	int updateMissingCheckouts(@Param("attendanceStatus") List<String> attendanceStatus);
 	
-	// 중복 막기
-	boolean existsByWorkDate(LocalDate workDate);
+	// 중복 막기(직원별, 날짜별 존재 여부 확인)
+	boolean existsByEmployeeAndWorkDate(User employee, LocalDate workDate);
 
 
 	@Query("SELECT ar FROM AttendanceResult ar WHERE ar.employee.employeeId = :employeeId AND ar.workDate = :workDate")
 	Optional<AttendanceResult> findByEmployeeIdAndWorkDate(@Param("employeeId") Long employeeId, @Param("workDate") LocalDate workDate);
+
+
+	List<AttendanceResult> findAllByWorkDate(LocalDate todayDate);
 }
 

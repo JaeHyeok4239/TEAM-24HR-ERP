@@ -5,11 +5,15 @@ import java.time.LocalDateTime;
 
 import com.hr24.document.entity.Leave;
 import com.hr24.employee.entity.User;
+import com.hr24.employee.enums.EmploymentType;
 import com.hr24.work.schedule.entity.Holiday;
-import com.hr24.attendance.entity.Workplace; 
+import com.hr24.attendance.entity.Workplace;
+import com.hr24.attendance.enums.AttendanceStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -46,8 +50,10 @@ public class AttendanceResult{
 	@Column(name="attendance_result_id")
 	private Long attendanceResultId;
 	
+	@Enumerated(EnumType.STRING)
 	@Column(name="attendance_status")
-	private String attendanceStatus;
+	private AttendanceStatus attendanceStatus;
+	
 	
 	@Column(name="attendance_threshold_id")
 	private Long attendanceThresholdId;

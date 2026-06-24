@@ -49,13 +49,13 @@ public class AttendanceCalculator{
         AttendanceThreshold lateThreshold = attendanceThresholdRepository
                 .findByEmploymentTypeAndThresholdType(user.getEmploymentType().name(), "LATE").orElse(null);
         AttendanceThreshold absenceThreshold = attendanceThresholdRepository
-                .findByEmploymentTypeAndThresholdType(user.getEmploymentType().name(), "ABSENCE").orElse(null);
+                .findByEmploymentTypeAndThresholdType(user.getEmploymentType().name(), "ABSENT").orElse(null);
 
         long diffMinutes = ChronoUnit.MINUTES.between(policyStartTime, actualTime);
 
         // 시간에 따른 상태 코드 판정
         if (diffMinutes <= 0) return "WORK";
-        if (absenceThreshold != null && diffMinutes >= absenceThreshold.getThresholdMinutes()) return "ABSENCE";
+        if (absenceThreshold != null && diffMinutes >= absenceThreshold.getThresholdMinutes()) return "ABSENT";
         if (lateThreshold != null && diffMinutes > lateThreshold.getThresholdMinutes()) return "LATE";
 
         return "WORK"; // 외의 상황들(지각 기준을 5분으로 바꿨을 때 그 비는 시간은 어떻게 할 것인지 등)

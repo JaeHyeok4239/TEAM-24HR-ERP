@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.hr24.payroll.dto.DepartmentCostDto;
+import com.hr24.payroll.dto.MonthlyCostDto;
 import com.hr24.payroll.entity.Payroll;
 
 public interface PayrollRepository extends JpaRepository<Payroll, Long> {
@@ -53,4 +55,31 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     	    WHERE p.payrollId = :payrollId
     	""")
     	Optional<Payroll> findDetailById(@Param("payrollId") Long payrollId);
+    
+    
+    @Query("""
+    	    SELECT new com.hr24.payroll.dto.MonthlyCostDto(p.payMonth, SUM(p.totalPay))
+    	    FROM Payroll p
+    	    GROUP BY p.payMonth
+    	    ORDER BY p.payMonth
+    	""")
+    	List<MonthlyCostDto> getMonthlyCost();
+    
+    
+    @Query("""
+    	    SELECT new com.hr24.payroll.dto.DepartmentCostDto(
+    	        d.departmentId,
+    	        d.departmentName,
+    	        SUM(p.totalPay)
+    	    )
+    	    FROM Payroll p
+    	    JOIN p.user u
+    	    JOIN u.department d
+    	    GROUP BY
+    	        d.departmentId,
+    	        d.departmentName
+    	    ORDER BY
+    	        SUM(p.totalPay) DESC
+    	""")
+    	List<DepartmentCostDto> getDepartmentCost();
 }

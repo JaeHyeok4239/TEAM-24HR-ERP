@@ -20,6 +20,11 @@ public class AttendanceResultDto {
         this.attendanceResultId = result.getAttendanceResultId();
         this.checkInTime = result.getCheckInTime();
         this.checkOutTime = result.getCheckOutTime();
-        this.attendanceStatus = result.getAttendanceStatus();
+        // Enum > String 변환
+        if (result.getAttendanceStatus() != null) {
+            this.attendanceStatus = result.getAttendanceStatus().name();
+        } else {
+            this.attendanceStatus = null;
+        }
     }
 }

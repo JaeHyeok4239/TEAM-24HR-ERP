@@ -22,17 +22,25 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
+import com.hr24.attendance.dto.CheckInOutRequestDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
 import com.hr24.attendance.dto.RegularCorrectionDto;
+import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.attendance.service.AttendanceCorrectionService;
 import com.hr24.attendance.service.AttendanceService;
+import com.hr24.employee.controller.HrEmployeeController;
+import com.hr24.employee.dto.hr.EmployeeListResponseDto;
 import com.hr24.employee.entity.User;
+import com.hr24.employee.enums.EmploymentType;
+import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.UserRepository;
+import com.hr24.employee.service.HrEmployeeQueryService;
 import com.hr24.global.exception.BusinessException;
 import com.hr24.global.exception.ErrorCode;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -44,6 +52,7 @@ public class AttendanceController {
 	private final AttendanceService attendanceService;
 	private final UserRepository userRepository;
 	private final AttendanceCorrectionService attendanceCorrectionService;
+	private final HrEmployeeQueryService hrEmployeeQueryService;
 	
 	@Operation(summary = "오후 배치 프로그램", description = "오후 11시에 실행되는 프로그램입니다.")
     @PostMapping("/batch/closing-batch")
@@ -60,6 +69,21 @@ public class AttendanceController {
     	System.out.println(">>> 오전 배치 프로그램이 수동 실행되었습니다.");
     	return ResponseEntity.ok("오전 배치 프로그램이 실행되었습니다.");
     }
+	
+	@Operation(summary = "직원 타입에 따른 직원 목록 조회", description = "정규직/일용직 직원 목록 조회")
+	@GetMapping("/employees")
+	public List<EmployeeListResponseDto> getEmployees(
+			@Parameter(description = "직원 타입(REGULAR/DAILY)", example = "REGULAR")
+	        @RequestParam(required = false) EmploymentType type,
+			@Parameter(description = "부서 고유 번호(선택)", example = "1")
+			@RequestParam(required = false) Long departmentId,
+	        @Parameter(description = "이름 또는 사번 검색어", example = "홍길동")
+	        @RequestParam(required = false) String keyword,
+	        @Parameter(description = "근태 상태", example = "WORK")
+	        @RequestParam(required = false) AttendanceStatus status
+	) {
+	    return hrEmployeeQueryService.findEmployees(departmentId, UserStatus.ACTIVE, type, keyword);
+	}
 	
 	// 정규직 정정
     @PreAuthorize("hasRole('ADMIN') or @attendanceSecurity.isOwner(authentication, #employeeId)")
@@ -119,7 +143,7 @@ public class AttendanceController {
 	@Operation(summary = "일용직 근태 기록 일괄 저장", description = "관리자가 화면에서 입력한 일용직 근태 명단을 저장합니다.")
 	@PostMapping("/batch/daily-batch")
 	public ResponseEntity<String> dailyBatch(
-	        @RequestBody List<AttendanceRequest> attendanceList) { // Map -> DTO 리스트로 변경
+	        @RequestBody List<AttendanceRequest> attendanceList) { // Map > DTO 리스트로 변경
 	    
 	    attendanceService.saveDailyAttendanceLogs(attendanceList);
 	    return ResponseEntity.ok(attendanceList.size() + "명의 근태 기록이 성공적으로 저장되었습니다.");
@@ -127,7 +151,7 @@ public class AttendanceController {
 	
 	@Operation(summary = "출근", description = "출근할 수 있습니다.")
 	@PostMapping("/check-in")
-	public ResponseEntity<String> checkIn(Authentication authentication, @RequestBody AttendanceRequest request){
+	public ResponseEntity<String> checkIn(Authentication authentication, @RequestBody CheckInOutRequestDto request){
 	    // authentication에서 loginId 뽑기
 	    String loginId = authentication.getName();
 	    
@@ -138,20 +162,28 @@ public class AttendanceController {
 	
 	@Operation(summary = "퇴근", description = "퇴근할 수 있습니다.")
 	@PostMapping("/check-out")
-	public ResponseEntity<String> checkOut(Authentication authentication, @RequestBody AttendanceRequest request){
+	public ResponseEntity<String> checkOut(Authentication authentication, @RequestBody CheckInOutRequestDto request){
 		String loginId = authentication.getName();
 		attendanceService.checkOut(loginId, request.getLatitude(), request.getLongitude());
 		return ResponseEntity.ok("정상적으로 퇴근 처리되었습니다.");
 	}
 	
-	@Operation(summary = "개인 월별 근태 횟수 조회", description = "yyyy-mm 형태로 넣으면 해당 달의 근태 횟수를 조회할 수 있습니다.\n(출근/지각/조퇴/결근/휴가)")
+	@Operation(summary = "월별 근태 횟수 조회", description = "본인 또는 관리자가 사원의 월별 근태 횟수를 조회합니다. 관리자는 targetEmployeeId를 입력해 조회 가능합니다.")
 	@GetMapping("/summary")
 	public ResponseEntity<AttendanceResponse> getMonthlyAttendanceStats(
 	        Authentication authentication, 
-	        @RequestParam(name="yearMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth) {
+	        @RequestParam(name="yearMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth,
+	        @RequestParam(name="targetEmployeeId", required = false) Long targetEmployeeId) {
 		
-	    String loginId = authentication.getName(); 
-	    AttendanceResponse response = attendanceService.yearMonth(loginId, yearMonth);
+		String loginId = authentication.getName(); 
+
+		// 관리자 여부 확인
+	    // 본인 프로젝트의 권한 이름이 "ROLE_ADMIN"인지 "ADMIN"인지 확인해서 맞게 수정
+	    boolean isAdmin = authentication.getAuthorities().stream()
+	            .anyMatch(a -> a.getAuthority().equals("ADMIN"));
+	    
+	    AttendanceResponse response = attendanceService.yearMonth(loginId, yearMonth, targetEmployeeId, isAdmin);
+	    
 	    return ResponseEntity.ok(response);
 	}
 	

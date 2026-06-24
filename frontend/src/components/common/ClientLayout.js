@@ -1,12 +1,61 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import LoginForm from "@/components/auth/LoginForm";
 import { SidebarProvider } from "../ui/sidebar";
 
 import { getMyInfoRequest } from "@/services/userService";
 import { useAuthStore } from "@/store/authStore";
 import MainMenu from "@/components/Menu";
+import { Bell } from "lucide-react";
+import { useNotification } from "@/hooks/useNotification";
+
+function NotificationBell() {
+  const { notifications, clearNotifications } = useNotification();
+  const [show, setShow] = useState(false);
+
+  return (
+    <div className="fixed top-3 right-4 z-50">
+      <button
+        onClick={() => setShow((v) => !v)}
+        className="relative p-1.5 text-gray-500 hover:text-gray-700 bg-white rounded-full shadow"
+      >
+        <Bell size={20} />
+        {notifications.length > 0 && (
+          <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center text-white font-bold">
+            {notifications.length > 9 ? "9+" : notifications.length}
+          </span>
+        )}
+      </button>
+
+      {show && (
+        <div className="absolute right-0 top-10 w-72 bg-white rounded-lg shadow-xl overflow-hidden">
+          <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+            <span className="text-sm font-semibold text-gray-700">알림</span>
+            <button
+              onClick={() => { setShow(false); clearNotifications(); }}
+              className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+            >
+              ×
+            </button>
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <p className="text-center text-sm text-gray-400 py-8">새 알림이 없어요</p>
+            ) : (
+              notifications.map((n, i) => (
+                <div key={i} className="p-3 border-b border-gray-50 hover:bg-gray-50">
+                  <p className="text-xs font-semibold text-blue-600">{n.title}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{n.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ClientLayout({ children }) {
   const initializedRef = useRef(false);
@@ -75,6 +124,7 @@ export default function ClientLayout({ children }) {
         <MainMenu />
         <main className="flex-1">{children}</main>
       </SidebarProvider>
+      <NotificationBell />
     </div>
   );
 }

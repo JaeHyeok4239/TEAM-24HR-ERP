@@ -193,7 +193,6 @@ export default function ScheduleCalendar() {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          업무 관리 - 일정 관리
           {currentView === "timeGridWeek" && (
             <button
               onClick={handleBackToMonth}
