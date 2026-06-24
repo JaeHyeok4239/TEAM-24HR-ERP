@@ -27,5 +27,6 @@ public class MyInfoResponseDto {
     private String addressDetail;
      
     private List<String> roles;
+    private String isFirstLogin;
 
 }

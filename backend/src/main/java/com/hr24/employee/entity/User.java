@@ -145,6 +145,7 @@ public class User extends BaseTimeEntity {
 
 	public void changePassword(String encodedPassword) {
 		this.password = encodedPassword;
+		this.isFirstLogin = "N";
 	}
 	
 	public void updateBasicInfo(

@@ -106,9 +106,9 @@ public class UserService {
     		throw new BusinessException(ErrorCode.SAME_AS_CURRENT_PASSWORD);
     	}
     	
-    	String encodedPasswod = passwordEncoder.encode(requestDto.getNewPassword());
+    	String encodedPassword = passwordEncoder.encode(requestDto.getNewPassword());
     	
-    	user.changePassword(encodedPasswod);
+    	user.changePassword(encodedPassword);
     	
     	redisService.delete("RT:" + user.getEmployeeId());
     }
@@ -152,7 +152,9 @@ public class UserService {
                 user.getAddress(),
                 user.getAddressDetail(),
 
-                roles
+                roles,
+                
+                user.getIsFirstLogin()
         );
     } 
 }
