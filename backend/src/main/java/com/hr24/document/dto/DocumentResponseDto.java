@@ -47,26 +47,6 @@ public class DocumentResponseDto {
 		}
 	}
 	
-	//Map -> List 변환 메소드
-//	private static List<DocumentContentDto> toContentList(Map<String, Object> contentMap) {
-//	    if (contentMap == null || contentMap.isEmpty()) {
-//	        return Collections.emptyList();
-//	    }
-//	    return contentMap.entrySet().stream()
-//	            .map(entry -> DocumentContentDto.builder()
-//	                    .field(entry.getKey())
-//	                    .data(entry.getValue())
-//	                    .build())
-//	            .toList();
-//	}
-//	
-//	@Getter
-//	@Builder
-//	public static class DocumentContentDto {
-//	    private String field;
-//	    private Object data;
-//	}
-	
 	//문서 상세
 	@Getter
     @Builder

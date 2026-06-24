@@ -25,19 +25,15 @@ import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.CheckInOutRequestDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
-import com.hr24.attendance.dto.RegularCorrectionDto;
 import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.attendance.service.AttendanceCorrectionService;
+import com.hr24.attendance.service.AttendanceProcessService;
 import com.hr24.attendance.service.AttendanceService;
-import com.hr24.employee.controller.HrEmployeeController;
 import com.hr24.employee.dto.hr.EmployeeListResponseDto;
-import com.hr24.employee.entity.User;
 import com.hr24.employee.enums.EmploymentType;
 import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.employee.service.HrEmployeeQueryService;
-import com.hr24.global.exception.BusinessException;
-import com.hr24.global.exception.ErrorCode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -52,6 +48,7 @@ public class AttendanceController {
 	private final AttendanceService attendanceService;
 	private final UserRepository userRepository;
 	private final AttendanceCorrectionService attendanceCorrectionService;
+	private final AttendanceProcessService attendanceProcessService;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
 	
 	@Operation(summary = "오후 배치 프로그램", description = "오후 11시에 실행되는 프로그램입니다.")
@@ -85,29 +82,20 @@ public class AttendanceController {
 	    return hrEmployeeQueryService.findEmployees(departmentId, UserStatus.ACTIVE, type, keyword);
 	}
 	
-	// 정규직 정정
-    @PreAuthorize("hasRole('ADMIN') or @attendanceSecurity.isOwner(authentication, #employeeId)")
-    @Operation(summary = "정규직 근태 기록 정정", description = "승인된 정정 요청을 바탕으로 관리자가 정규직 근태 기록을 정정합니다.")
-    @PatchMapping("/employees/{employeeId}/regular/{resultId}")
-    public ResponseEntity<Void> correctRegularAttendance(
-            @PathVariable("employeeId") Long employeeId,
-            @PathVariable("resultId") Long resultId,
-            @RequestParam("documentId") Long documentId,
-            @RequestBody RegularCorrectionDto dto) {
-        
-        // 서비스 호출 시 documentId 전달
-    	attendanceCorrectionService.correctRegular(employeeId, resultId, dto, documentId);
-        return ResponseEntity.ok().build();
-    }
-
-    // 일용직 정정
-    @PreAuthorize("hasRole('ADMIN')")
+    // 일용직 정정(관리자만)
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
     @PatchMapping("/daily/{logId}")
     @Operation(summary = "일용직 근태 기록 수정", description = "관리자가 일용직 근태 기록을 직접 수정합니다.")
     public ResponseEntity<Void> correctDailyAttendance(
             @PathVariable Long logId, 
-            @RequestBody DailyCorrectionDto dto) {
-    	attendanceCorrectionService.correctDaily(logId, dto);
+            @RequestBody DailyCorrectionDto dto,
+            Authentication authInfo
+    		) {
+    	
+    	String currentId = authInfo.getName();
+    
+    	attendanceCorrectionService.correctDaily(logId, dto, currentId);
+    	
         return ResponseEntity.ok().build();
     }
 	

@@ -18,5 +18,5 @@ public interface AttendanceCorrectionRepository extends JpaRepository<Attendance
 
     // 문서 ID로 조회
     Optional<AttendanceCorrection> findByDocumentDocumentId(Long documentId);
-	
+    
 }

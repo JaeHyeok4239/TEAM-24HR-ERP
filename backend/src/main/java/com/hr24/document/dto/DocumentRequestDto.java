@@ -7,12 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class DocumentRequestDto {
-//	@Getter
-//	@Setter
-//	public static class DocumentContentDto {
-//		private String field;
-//		private Object data;
-//	}
 	
 	@Getter
 	@Setter

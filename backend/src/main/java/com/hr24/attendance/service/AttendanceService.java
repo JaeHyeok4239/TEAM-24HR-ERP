@@ -22,7 +22,7 @@ import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.AttendanceResultDto;
-import com.hr24.attendance.dto.CorrectionDto;
+import com.hr24.attendance.dto.CorrectionResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
@@ -39,6 +39,7 @@ import com.hr24.attendance.repository.WorkplaceRepository;
 import com.hr24.attendance.utils.TimeUtils;
 import com.hr24.document.entity.Document;
 import com.hr24.document.entity.Leave;
+import com.hr24.document.repository.LeaveDateRepository;
 import com.hr24.document.repository.LeaveRepository;
 import com.hr24.employee.dto.hr.EmployeeListResponseDto;
 import com.hr24.employee.entity.User;
@@ -64,6 +65,7 @@ public class AttendanceService{
 	private final WorkplaceRepository workplaceRepository;
 	private final UserRepository userRepository;
 	private final LeaveRepository leaveRepository;
+	private final LeaveDateRepository leaveDateRepository;
 	private final AttendanceLogDailyRepository attendanceLogDailyRepository;
 	private final AttendanceTimePolicyRepository attendanceTimePolicyRepository;
 	private final AttendanceThresholdRepository attendanceThresholdRepository;
@@ -111,34 +113,26 @@ public class AttendanceService{
 	            .filter(user -> !EmploymentType.DAILY.equals(user.getEmploymentType()))
 	            .toList();
 		
-	    // 오늘 휴가 승인된 직원 ID 리스트 미리 추출
-	    Set<Long> leaveEmployeeIds = leaveRepository.findAll().stream()
-	            .filter(leave -> "Y".equals(leave.getIsProcessed()))
-	            .filter(leave -> !todayDate.isBefore(leave.getStartDate().toLocalDate())
-	                          && !todayDate.isAfter(leave.getEndDate().toLocalDate()))
-	            .map(leave -> leave.getDocument().getRequester().getEmployeeId())
-	            .collect(Collectors.toSet());
+	    // 오늘 휴가 승인된 직원 ID 리스트 미리 추출(leave 테이블에 startDate-endDate 삭제로 인한 로직 삭제)
+//	    Set<Long> leaveEmployeeIds = leaveRepository.findAll().stream()
+//	            .filter(leave -> "Y".equals(leave.getIsProcessed()))
+//	            .filter(leave -> !todayDate.isBefore(leave.getStartDate().toLocalDate())
+//	                          && !todayDate.isAfter(leave.getEndDate().toLocalDate()))
+//	            .map(leave -> leave.getDocument().getRequester().getEmployeeId())
+//	            .collect(Collectors.toSet());
 
 	    // 이미 생성된 직원 제외 근태 기록 생성
 	    List<AttendanceResult> dailyResults = activeUsers.stream()
-	            .filter(user -> !processedEmployeeIds.contains(user.getEmployeeId())) // 이미 있으면 생성 안 함
-	            .map(user -> {
-	                AttendanceStatus status = leaveEmployeeIds.contains(user.getEmployeeId()) 
-	                        ? AttendanceStatus.LEAVE 
-	                        : AttendanceStatus.READY;
-	                
-	                String fixedStatus = (status == AttendanceStatus.LEAVE) ? "Y" : "N";
-	                
-	                return AttendanceResult.builder()
-	                        .employee(user)
-	                        .workDate(todayDate)
-	                        .attendanceStatus(status)
-	                        .isHolidayWork("N")
-	                        .isMissingCheckout("N")
-	                        .isFixed(fixedStatus)
-	                        .createdAt(todayTimeDate)
-	                        .build();
-	            })
+	            .filter(user -> !processedEmployeeIds.contains(user.getEmployeeId()))
+	            .map(user -> AttendanceResult.builder()
+	                    .employee(user)
+	                    .workDate(todayDate)
+	                    .attendanceStatus(AttendanceStatus.READY)
+	                    .isHolidayWork("N")
+	                    .isMissingCheckout("N")
+	                    .isFixed("N")
+	                    .createdAt(todayTimeDate)
+	                    .build())
 	            .collect(Collectors.toList());
 
 	    if (!dailyResults.isEmpty()) {
@@ -164,7 +158,7 @@ public class AttendanceService{
 	            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 근태 기록이 없습니다."));
 
 	    // 정정 이력 조회 및 DTO 변환
-	    List<CorrectionDto> correctionDtos = attendanceCorrectionRepository.findByCorrectionTarget(result).stream()
+	    List<CorrectionResponseDto> correctionDtos = attendanceCorrectionRepository.findByCorrectionTarget(result).stream()
 	            .map(this::convertToCorrectionDto)
 	            .collect(Collectors.toList());
 
@@ -202,11 +196,11 @@ public class AttendanceService{
 	}
 
 	// CorrectionDto 변환 로직
-	private CorrectionDto convertToCorrectionDto(AttendanceCorrection c) {
+	private CorrectionResponseDto convertToCorrectionDto(AttendanceCorrection c) {
 		Document doc = c.getDocument();
 		User processor = doc.getProcessor();
 		
-	    return CorrectionDto.builder()
+	    return CorrectionResponseDto.builder()
 	            .correctionType(c.getCorrectionType())
 	            .processStatus(convertStatusToLabel(c.getDocument().getStatus()))
 	            .requestedAt(c.getDocument().getRequestedAt())
@@ -217,6 +211,8 @@ public class AttendanceService{
 	            .managerPosition(processor != null && processor.getPosition() != null 
 	             ? processor.getPosition().getPositionName() : "미정")
 	            .correctionReason(c.getCorrectionReason())
+	            .documentId(doc.getDocumentId())
+	            .documentTitle(doc.getDocumentTitle())
 	            .build();
 	}
 	
@@ -467,10 +463,11 @@ public class AttendanceService{
 	    // 반차 확인 로직(status가 LEAVE인 경우)
 	    if (status == AttendanceStatus.LEAVE) {
 	        // LocalDate.now() 대신 위에서 정의한 today 사용
-	        Optional<Leave> leaveOpt = leaveRepository.findByRequesterAndDate(user, today);
+	    	//반차 여부 검증
+	        boolean isHalfLeave = !leaveDateRepository.findHalfLeaveByUserAndDate(user, today).isEmpty();
 	        
-	        // 반차(0.5)가 아니면 퇴근 불가
-	        if (leaveOpt.isEmpty() || leaveOpt.get().getLeaveCnt() != 0.5) {
+	        // 반차가 아니면 퇴근 불가
+	        if (isHalfLeave) {
 	            throw new RuntimeException("휴가 중에는 퇴근 처리를 할 수 없습니다.");
 	        }
 	    }

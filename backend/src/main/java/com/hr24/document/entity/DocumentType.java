@@ -34,4 +34,7 @@ public class DocumentType {
 	@Column(name = "detail_table")
 	private String detailTable;
 	
+	@Column(name = "required_processing")
+	private String requiredProcessing;
+	
 }
