@@ -218,7 +218,7 @@ CREATE TABLE
         attendance_threshold_id NUMBER NULL, -- FK 근태 판정 기준
         holiday_id NUMBER NULL, -- FK 공휴일
         employee_id NUMBER NOT NULL, -- FK 유저 테이블
-        attendance_correction_id NUMBER NULL, -- FK 정정 이력 테이블
+        attendance_correction_id NUMBER NULL, -- 정정 이력 테이블(FK는 정정 이력 쪽에서만 단방향 연결)
         leave_id NUMBER NULL, -- FK 연차/반차/조퇴 등 휴가 신청 데이터 테이블
         workplace_id NUMBER NULL, -- FK 근무지
 
@@ -239,7 +239,6 @@ CREATE TABLE
         CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE', 'OUT')),
         CONSTRAINT fk_att_workplace_id FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
         CONSTRAINT fk_att_leave_id FOREIGN KEY (leave_id) REFERENCES leave(leave_id),
-        CONSTRAINT fk_att_correction_id FOREIGN KEY (attendance_correction_id) REFERENCES attendance_correction(attendance_correction_id),
         CONSTRAINT fk_att_attendance_threshold_id FOREIGN KEY (attendance_threshold_id) REFERENCES attendance_thresholds (attendance_threshold_id),
         CONSTRAINT fk_att_employee_id FOREIGN KEY (employee_id) REFERENCES users (employee_id),
         CONSTRAINT fk_att_holiday_id FOREIGN KEY (holiday_id) REFERENCES holidays (holiday_id),
@@ -311,7 +310,10 @@ CREATE TABLE
     document_type (
         type_id NUMBER PRIMARY KEY, -- 문서유형 ID (document_type_seq)
         type_name VARCHAR2 (100 CHAR) NOT NULL, -- 문서유형명
-        detail_table VARCHAR2(50) -- 'leave', 'expenditure', 'purchase' 등
+        detail_table VARCHAR2(50), -- 'leave', 'expenditure', 'purchase' 등
+        required_processing CHAR(1) -- Y면 업무처리함으로, N이면 승인 시 자동 처리
+    
+        CONSTRAINT type_ck_req CHECK (required_processing IN ('Y', 'N'))
     );
 
 -- 휴가 유형 (연차, 반차, 조퇴 등)
@@ -342,10 +344,8 @@ CREATE TABLE
         process_id NUMBER PRIMARY KEY, -- 처리 ID (document_process_seq)
         document_type NUMBER NOT NULL, -- 문서유형 ID (FK → document_type)
         process_department NUMBER NOT NULL, -- 처리 부서 ID (FK → departments)
-        processing_role VARCHAR2 (5 CHAR), -- 처리 가능 역할 (ALL: 전체, ADMIN: 관리자)
         CONSTRAINT process_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type (type_id),
-        CONSTRAINT process_fk_department FOREIGN KEY (process_department) REFERENCES departments (department_id),
-        CONSTRAINT process_ck_role CHECK (processing_role IN ('ALL', 'ADMIN'))
+        CONSTRAINT process_fk_department FOREIGN KEY (process_department) REFERENCES departments (department_id)
     );
 
 -- 결재 문서 (기안서 본문 및 상태 관리)
@@ -430,21 +430,27 @@ CREATE TABLE
     );
 
 -- 휴가 신청 (연차/반차/조퇴 등 휴가 신청 데이터)
--- leave_cnt: 사용 휴가 일수 (0.5 단위, 예: 반차=0.5, 조퇴=0.25)
+-- leave_cnt: 사용 휴가 일수 (0.5 단위, 예: 반차=0.5)
+-- 날짜는 leave_date 조회
 CREATE TABLE
     leave (
         leave_id NUMBER PRIMARY KEY, -- 휴가신청 ID (leave_seq)
         leave_type NUMBER NOT NULL, -- 휴가유형 ID (FK → leave_type)
         document_id NUMBER NOT NULL, -- 연결 결재문서 ID (FK → document)
-        start_date DATE NOT NULL, -- 휴가 시작일
-        end_date DATE NOT NULL, -- 휴가 종료일
         leave_cnt NUMBER (3, 2) NOT NULL, -- 사용 일수
-        is_processed CHAR(1) DEFAULT 'N' NOT NULL, -- 처리 여부 (Y/N)
-        CONSTRAINT leave_ck_is_processed CHECK (is_processed IN ('Y', 'N')),
+        leave_reason VARCHAR2(300 CHAR) NOT NULL, -- 연차 사유
         CONSTRAINT leave_fk_document FOREIGN KEY (document_id) REFERENCES document (document_id),
         CONSTRAINT leave_fk_type FOREIGN KEY (leave_type) REFERENCES leave_type (type_id),
         CONSTRAINT leave_uq_document UNIQUE (document_id)
     );
+
+    -- 휴가 날짜 관리를 위한 날짜 테이블
+    CREATE TABLE leave_date (
+    leave_date_id NUMBER PRIMARY KEY,
+    leave_id NUMBER NOT NULL,
+    leave_date DATE NOT NULL,
+    CONSTRAINT leave_date_fk FOREIGN KEY (leave_id) REFERENCES leave(leave_id)
+);
 
 
 
