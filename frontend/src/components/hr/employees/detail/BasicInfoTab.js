@@ -1,8 +1,9 @@
-"use client";
+"use client"
 
 import { useState } from "react";
-import { UserRound } from "lucide-react";
+import { Search, UserRound } from "lucide-react";
 
+import KakaoPostcodeButton from "@/components/common/KakaoPostcodeButton";
 import { updateHrEmployeeBasicInfoRequest } from "@/services/hrEmployeeService";
 
 import DetailSection from "./DetailSection";
@@ -20,12 +21,12 @@ const createBasicInfoForm = (employee) => ({
 export default function BasicInfoTab({ employee, onEmployeeUpdated }) {
   const [basicEditEmployeeId, setBasicEditEmployeeId] = useState(null);
   const [isBasicSaving, setIsBasicSaving] = useState(false);
-  const [basicInfoForm, setBasicInfoForm] = useState(
-    createBasicInfoForm(null),
-  );
+  const [basicInfoForm, setBasicInfoForm] = useState(createBasicInfoForm(null));
 
   const isEditMode = basicEditEmployeeId === employee?.employeeId;
-  const visibleForm = isEditMode ? basicInfoForm : createBasicInfoForm(employee);
+  const visibleForm = isEditMode
+    ? basicInfoForm
+    : createBasicInfoForm(employee);
 
   const handleStartEdit = () => {
     if (!employee) {
@@ -42,6 +43,14 @@ export default function BasicInfoTab({ employee, onEmployeeUpdated }) {
     setBasicInfoForm((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handlePostcodeComplete = ({ zipcode, address }) => {
+    setBasicInfoForm((prev) => ({
+      ...prev,
+      zipcode,
+      address,
     }));
   };
 
@@ -103,7 +112,6 @@ export default function BasicInfoTab({ employee, onEmployeeUpdated }) {
             >
               {isBasicSaving ? "저장 중..." : "저장"}
             </button>
-
             <button
               type="button"
               onClick={handleCancel}
@@ -132,7 +140,9 @@ export default function BasicInfoTab({ employee, onEmployeeUpdated }) {
           onChange={handleChange}
           readOnly={!isEditMode}
         />
+
         <ReadOnlyField label="사번" value={employee.employeeNo} />
+
         <ReadOnlyField label="로그인 ID" value={employee.loginId} />
       </div>
 
@@ -144,6 +154,7 @@ export default function BasicInfoTab({ employee, onEmployeeUpdated }) {
           onChange={handleChange}
           readOnly={!isEditMode}
         />
+
         <EditableField
           label="이메일"
           name="email"
@@ -154,13 +165,14 @@ export default function BasicInfoTab({ employee, onEmployeeUpdated }) {
       </div>
 
       <div className="mt-4 grid grid-cols-[180px_1fr] gap-4">
-        <EditableField
-          label="우편번호"
-          name="zipcode"
+        <ZipcodeField
           value={visibleForm.zipcode}
           onChange={handleChange}
+          onPostcodeComplete={handlePostcodeComplete}
           readOnly={!isEditMode}
+          disabled={isBasicSaving}
         />
+
         <EditableField
           label="주소"
           name="address"
@@ -180,5 +192,41 @@ export default function BasicInfoTab({ employee, onEmployeeUpdated }) {
         />
       </div>
     </DetailSection>
+  );
+}
+
+function ZipcodeField({
+  value,
+  onChange,
+  onPostcodeComplete,
+  readOnly,
+  disabled,
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-sm font-medium text-slate-700">
+        우편번호
+      </span>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          name="zipcode"
+          value={value}
+          onChange={onChange}
+          readOnly={readOnly}
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 read-only:bg-slate-50"
+        />
+
+        {!readOnly && (
+          <KakaoPostcodeButton
+            onComplete={onPostcodeComplete}
+            disabled={disabled}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white p-0 text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Search size={16} />
+          </KakaoPostcodeButton>
+        )}
+      </div>
+    </label>
   );
 }
