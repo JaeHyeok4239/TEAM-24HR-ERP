@@ -1,19 +1,17 @@
 package com.hr24.attendance.service;
 
-import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +21,7 @@ import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.AttendanceResultDto;
 import com.hr24.attendance.dto.CorrectionDto;
+import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
@@ -71,6 +70,7 @@ public class AttendanceService{
 	private final AttendanceCorrectionRepository attendanceCorrectionRepository;
 	private final AttendanceCalculator attendanceCalculator;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
+	private final AttendanceLogDailyRepository attendanceLogDatilyrepository;
 	
 	private static final String FIXED_WORKPLACE_NAME = "HQ";
 	
@@ -103,33 +103,53 @@ public class AttendanceService{
 	}
 	
 	// 매일 오전 6시 배치 프로그램
-	// 모든 직원들의 results 테이블 생성 기본 READY, leave 있을 시 LEAVE
+	// 기존: 모든 직원들의 results 테이블 생성 기본 READY, leave 있을 시 LEAVE
+	// 변경: LEAVE는 아예 빼버리고, LEAVE를 제외한 ACTIVE 직원들을 READY로 생성하기
 	@Transactional
 	public void createDailyAttendanceResults() {
 		LocalDate todayDate = getCurrentTime().toLocalDate();
 		LocalDateTime todayTimeDate = getCurrentTime();
 	
-		// 오늘 날짜의 기록을 한 번에 다 가져와서 처리된 직원의 ID만 모음
 		Set<Long> processedEmployeeIds = attendanceResultRepository.findAllByWorkDate(todayDate)
 	            .stream()
 	            .map(ar -> ar.getEmployee().getEmployeeId())
 	            .collect(Collectors.toSet());
 		
-		// 대상 직원 리스트 가져오기
-	    List<User> activeUsers = userRepository.findAll().stream()
-	            .filter(user -> UserStatus.ACTIVE.equals(user.getStatus()))
-	            .filter(user -> !EmploymentType.DAILY.equals(user.getEmploymentType()))
-	            .toList();
-		
-	    // 오늘 휴가 승인된 직원 ID 리스트 미리 추출
+	    // 오늘 휴가 승인된 직원 ID 리스트 추출(필터링)
 	    Set<Long> leaveEmployeeIds = leaveRepository.findAll().stream()
 	            .filter(leave -> "Y".equals(leave.getIsProcessed()))
 	            .filter(leave -> !todayDate.isBefore(leave.getStartDate().toLocalDate())
 	                          && !todayDate.isAfter(leave.getEndDate().toLocalDate()))
 	            .map(leave -> leave.getDocument().getRequester().getEmployeeId())
 	            .collect(Collectors.toSet());
+		
+		// 대상 직원 필터링(ACTIVE+DAILY 아님+휴가 아님)
+	    List<AttendanceResult> results = userRepository.findAll().stream()
+	            .filter(user -> UserStatus.ACTIVE.equals(user.getStatus()))
+	            .filter(user -> !EmploymentType.DAILY.equals(user.getEmploymentType()))
+	            .filter(user -> !processedEmployeeIds.contains(user.getEmployeeId())) // 이미 생성된 것 제외
+	            .filter(user -> !leaveEmployeeIds.contains(user.getEmployeeId())) // 휴가자 제외
+	            .map(user -> AttendanceResult.builder()
+	            		.employee(user)
+	            		.workDate(todayDate)
+	            		.attendanceStatus(AttendanceStatus.READY)
+	            		.isHolidayWork("N")
+	            		.isMissingCheckout("N")
+	            		.isFixed("N")
+	            		.createdAt(todayTimeDate)
+	            		.build())
+	            .collect(Collectors.toList());
 
-	    // 이미 생성된 직원 제외 근태 기록 생성
+	    // 저장
+	    if (!results.isEmpty()) {
+	        attendanceResultRepository.saveAll(results);
+	        System.out.println(">>> 금일 근태 데이터 생성 완료: " + results.size() + "건");
+	    } else {
+	        System.out.println(">>> 오늘 새로 생성할 근태 데이터가 없습니다.");
+	    }
+	    
+	    /** 기존 코드
+	 	// 이미 생성된 직원 제외 근태 기록 생성
 	    List<AttendanceResult> dailyResults = activeUsers.stream()
 	            .filter(user -> !processedEmployeeIds.contains(user.getEmployeeId())) // 이미 있으면 생성 안 함
 	            .map(user -> {
@@ -142,21 +162,13 @@ public class AttendanceService{
 	                return AttendanceResult.builder()
 	                        .employee(user)
 	                        .workDate(todayDate)
-	                        .attendanceStatus(status)
+	                        .attendanceStatus(AttendanceStatus.READY)
 	                        .isHolidayWork("N")
 	                        .isMissingCheckout("N")
-	                        .isFixed(fixedStatus)
+	                        .isFixed("N")
 	                        .createdAt(todayTimeDate)
-	                        .build();
-	            })
-	            .collect(Collectors.toList());
-
-	    if (!dailyResults.isEmpty()) {
-	        attendanceResultRepository.saveAll(dailyResults);
-	        System.out.println(">>> 금일 근태 데이터 생성 완료: " + dailyResults.size() + "건");
-	    } else {
-	        System.out.println(">>> 오늘 새로 생성할 근태 데이터가 없습니다.");
-	    }
+	                        .build(); 
+        })**/
 	}
 	
 	// 필터링 API(직원 타입/부서/이름 혹은 사번/근태 상태)
@@ -190,57 +202,91 @@ public class AttendanceService{
                 .collect(Collectors.toList());
     }
 	
-	// 일별 근태 상세 조회
-	@Transactional(readOnly = true)
-	public AttendanceDetailResponseDto getAttendanceDetail(String loginId, Long targetEmployeeId, LocalDate date, boolean isAdmin) {
-	    // 요청자 확인
-	    User requester = userRepository.findByLoginId(loginId)
-	            .orElseThrow(() -> new RuntimeException("요청자를 찾을 수 없습니다."));
-	    
-	    // 조회할 대상 ID(관리자는 타인 조회 가능, 사원은 본인 ID 고정)
-	    Long employeeIdToQuery = isAdmin ? targetEmployeeId : requester.getEmployeeId();
-
-	    // 근태 결과 조회
-	    AttendanceResult result = attendanceResultRepository.findByEmployeeIdAndWorkDate(employeeIdToQuery, date)
-	            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 근태 기록이 없습니다."));
-
-	    // 정정 이력 조회 및 DTO 변환
-	    List<CorrectionDto> correctionDtos = attendanceCorrectionRepository.findByCorrectionTarget(result).stream()
-	            .map(this::convertToCorrectionDto)
-	            .collect(Collectors.toList());
-
-	    // 시간 계산
-	    long totalWorkTime = TimeUtils.calculateTotalTime(result);
-	    long basicWorkTime = TimeUtils.calculateBasicTime(totalWorkTime);
-	    long overtime = Math.max(0, (totalWorkTime - 60) - basicWorkTime);
-
-	    // 결과 반환
-	    if (isAdmin) {
-	        return AdminAttendanceDetailResponseDto.builder()
-	                .status(result.getAttendanceStatus())
-	                .checkIn(result.getCheckInTime())
-	                .checkOut(result.getCheckOutTime())
-	                .totalWorkTime(totalWorkTime)
-	                .basicWorkTime(basicWorkTime)
-	                .overtime(overtime)
-	                .corrections(correctionDtos)
-	                .userName(result.getEmployee().getName())
-	                .department(result.getEmployee().getDepartment().getDepartmentName())
-	                .userPosition(result.getEmployee().getPosition().getPositionName())
-	                .workplaceName(result.getWorkplace() != null ? result.getWorkplace().getWorkplaceName() : "미지정")
-	                .build();
-	    }
-
-	    return AttendanceDetailResponseDto.builder()
-	            .status(result.getAttendanceStatus())
-	            .checkIn(result.getCheckInTime())
-	            .checkOut(result.getCheckOutTime())
-	            .totalWorkTime(totalWorkTime)
-	            .basicWorkTime(basicWorkTime)
-	            .overtime(overtime)
-	            .build();
-	 
-	}
+	// 일별 근태 상세 조회(상세 패널)
+//	@Transactional(readOnly = true)
+//	public AttendanceDetailResponseDto getAttendanceDetail(String loginId, Long targetEmployeeId, LocalDate date, boolean isAdmin) {
+//	    // 요청자 + 조회 대상 확인
+//	    User requester = userRepository.findByLoginId(loginId)
+//	            .orElseThrow(() -> new RuntimeException("요청자를 찾을 수 없습니다."));
+//	    User targetEmployee = userRepository.findById(targetEmployeeId)
+//	    		.orElseThrow(() -> new IllegalAccessException("대상 사원을 찾을 수 없습니다."));
+//	    
+//	    // 권한 체크
+//	    if (!isAdmin && !requester.getEmployeeId().equals(targetEmployeeId)) {
+//            throw new AccessDeniedException("본인의 데이터만 조회할 수 있습니다.");
+//        }
+//	    
+//	    // 일용직 체크용
+//	    boolean isDaily = (targetEmployee.getEmploymentType() == EmploymentType.DAILY);
+//	    
+//	    // 데이터 조회(정규직/일용직)
+//	    AttendanceResult result = null;
+//	    AttendanceLogsDaily dailyLog = null;
+//	    List<CorrectionDto> correctionDtos = new ArrayList<>(); // 초기화
+//	    
+//	    if(isDaily) {
+//	    	dailyLog = attendanceLogDailyRepository.findOneByEmployeeIdAndWorkDate(targetEmployeeId, date)
+//	    			.orElseThrow(() -> new IllegalArgumentException("해당 날짜의 일용직 근태 기록이 없습니다."));
+//	    	
+//	    	// 일용직 정정 이력 조회
+//    		correctionDtos = attendanceCorrectionRepository.findByCorrectionTargetDaily(dailyLog).stream()
+//    	            .map(this::convertToCorrectionDto)
+//    	            .collect(Collectors.toList());
+//	    }else {
+//	    	result = attendanceResultRepository.findByEmployeeAndWorkDate(targetEmployee, date)
+//	    			.orElseThrow(() -> new IllegalArgumentException("해당 날짜의 정규직 근태 기록이 없습니다."));
+//	    	
+//	    	// 정규직 정정 이력 조회
+//    		correctionDtos = attendanceCorrectionRepository.findByCorrectionTarget(result).stream()
+//    	            .map(this::convertToCorrectionDto)
+//    	            .collect(Collectors.toList());
+//	    }
+//	    
+//	    // 시간 계산
+//	    long totalWorkTime = isDaily ? TimeUtils.calculateTotalTime(dailyLog) : TimeUtils.calculateTotalTime(result);
+//	    long basicWorkTime = TimeUtils.calculateBasicTime(totalWorkTime);
+//	    long overtime = Math.max(0, (totalWorkTime - 60) - basicWorkTime);
+//	  
+//	    // 근태 결과 조회(정규직/일용직 구별)
+//	    if (isAdmin) {
+//	    	if(isDaily) {
+//	    		// 일용직
+//	    		return DailyAttendanceDetailResponseDto.builder()
+////		    			.status(dailyLog.getAttendanceStatus())
+//		    			.checkIn(dailyLog.getCheckInTime())
+//		    			.checkOut(dailyLog.getCheckOutTime())
+//		    			.totalWorkTime(totalWorkTime)
+//		    			.basicWorkTime(basicWorkTime)
+//		    			.overtime(overtime)
+//		    			.workplaceName(dailyLog.getWorkplace() != null ? dailyLog.getWorkplace().getWorkplaceName() : "미지정")
+//		    			.build();
+//	    	}else {
+//	    		// 정규직 
+//		        return AdminAttendanceDetailResponseDto.builder()
+//		                .status(result.getAttendanceStatus())
+//		                .checkIn(result.getCheckInTime())
+//		                .checkOut(result.getCheckOutTime())
+//		                .totalWorkTime(totalWorkTime)
+//		                .basicWorkTime(basicWorkTime)
+//		                .overtime(overtime)
+//		                .corrections(correctionDtos)
+//		                .userName(result.getEmployee().getName())
+//		                .department(result.getEmployee().getDepartment().getDepartmentName())
+//		                .userPosition(result.getEmployee().getPosition().getPositionName())
+//		                .workplaceName(result.getWorkplace() != null ? result.getWorkplace().getWorkplaceName() : "미지정")
+//		                .build();
+//	    	}
+//    	}
+//	    // 사용자 내 근태 현황
+//	    return AttendanceDetailResponseDto.builder()
+//	            .status(result.getAttendanceStatus())
+//	            .checkIn(result.getCheckInTime())
+//	            .checkOut(result.getCheckOutTime())
+//	            .totalWorkTime(totalWorkTime)
+//	            .basicWorkTime(basicWorkTime)
+//	            .overtime(overtime)
+//	            .build();
+//	}
 
 	// CorrectionDto 변환 로직
 	private CorrectionDto convertToCorrectionDto(AttendanceCorrection c) {
@@ -331,7 +377,7 @@ public class AttendanceService{
 	        .collect(Collectors.toList());
 	    List<User> foundUsers = userRepository.findAllById(empIds);
 	    
-	    List<AttendanceLogsDaily> existingLogs = attendanceLogDailyRepository.findByEmployeeIdInAndWorkDate(empIds, todayDate);
+	    List<AttendanceLogsDaily> existingLogs = attendanceLogDailyRepository.findByEmployeeIdAndWorkDate(empIds, todayDate);
 	    
 	    Set<Long> existingEmpIds = existingLogs.stream()
 	    		.map(log -> log.getEmployee().getEmployeeId())

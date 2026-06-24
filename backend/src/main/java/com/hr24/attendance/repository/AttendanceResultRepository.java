@@ -20,8 +20,18 @@ import com.hr24.employee.enums.UserStatus;
 
 public interface AttendanceResultRepository extends JpaRepository<AttendanceResult, Long>{
 	
+	// 한 명 조회
 	Optional<AttendanceResult> findByEmployeeAndWorkDate(User employee, LocalDate workDate);
 
+	// 특정 날짜, 특정 근태 상태의 직원 목록 조회
+	@Query("SELECT ar FROM AttendanceResult ar JOIN FETCH ar.employee " +
+	       "WHERE ar.workDate = :workDate " +
+	       "AND ar.attendanceStatus = :status")
+	List<AttendanceResult> findByWorkDateAndAttendanceStatus(
+	    @Param("workDate") LocalDate workDate, 
+	    @Param("status") AttendanceStatus status
+	);
+	
 	List<AttendanceResult> findByEmployeeEmployeeId(Long employeeId);
 
 	// 특정 직원의 특정 날짜 근태 정보+그 직원의 상세 정보
@@ -49,16 +59,6 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	List<AttendanceResult> findAllWithEmployeeByWorkDateBetween(
 	    @Param("start") LocalDate start, 
 	    @Param("end") LocalDate end
-	);
-	
-
-	// 특정 날짜, 특정 근태 상태의 직원 목록 조회
-	@Query("SELECT ar FROM AttendanceResult ar JOIN FETCH ar.employee " +
-	       "WHERE ar.workDate = :workDate " +
-	       "AND ar.attendanceStatus = :status")
-	List<AttendanceResult> findByWorkDateAndAttendanceStatus(
-	    @Param("workDate") LocalDate workDate, 
-	    @Param("status") AttendanceStatus status
 	);
 	
 	// 마감 배치 프로그램에서 쓰일 query문
