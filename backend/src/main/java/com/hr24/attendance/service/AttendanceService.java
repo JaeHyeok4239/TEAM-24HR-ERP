@@ -129,7 +129,23 @@ public class AttendanceService{
 //	                          && !todayDate.isAfter(leave.getEndDate().toLocalDate()))
 //	            .map(leave -> leave.getDocument().getRequester().getEmployeeId())
 //	            .collect(Collectors.toSet());
-
+	    
+	 // 대상 직원 필터링(ACTIVE+DAILY 아님+휴가 아님)
+	    List<AttendanceResult> results = userRepository.findAll().stream()
+	            .filter(user -> UserStatus.ACTIVE.equals(user.getStatus()))
+	            .filter(user -> !EmploymentType.DAILY.equals(user.getEmploymentType()))
+	            .filter(user -> !processedEmployeeIds.contains(user.getEmployeeId())) // 이미 생성된 것 제외
+	            .map(user -> AttendanceResult.builder()
+	            		.employee(user)
+	            		.workDate(todayDate)
+	            		.attendanceStatus(AttendanceStatus.READY)
+	            		.isHolidayWork("N")
+	            		.isMissingCheckout("N")
+	            		.isFixed("N")
+	            		.createdAt(todayTimeDate)
+	            		.build())
+	            .collect(Collectors.toList());
+	    
 	    // 저장
 	    if (!results.isEmpty()) {
 	        attendanceResultRepository.saveAll(results);

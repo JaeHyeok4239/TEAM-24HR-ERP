@@ -88,7 +88,7 @@ public class AttendanceController {
     @PatchMapping("/daily/{logId}")
     @Operation(summary = "일용직 근태 기록 수정", description = "관리자가 일용직 근태 기록을 직접 수정합니다.")
     public ResponseEntity<Void> correctDailyAttendance(
-            @PathVariable Long logId, 
+            @PathVariable("logId") Long logId, 
             @RequestBody DailyCorrectionDto dto,
             Authentication authInfo
     		) {
