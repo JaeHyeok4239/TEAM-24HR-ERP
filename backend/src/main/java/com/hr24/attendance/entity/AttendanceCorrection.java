@@ -1,16 +1,12 @@
 package com.hr24.attendance.entity;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
-import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.document.entity.Document;
 import com.hr24.employee.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -75,14 +71,10 @@ public class AttendanceCorrection{
 	
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="correction_daily_log")
-	private AttendanceLog correctionDailyLog;
+	private AttendanceLogsDaily correctionDailyLog;
 
 	@Column(name="after_time")
 	private LocalDateTime afterTime;
-	
-	@Enumerated(EnumType.STRING) // 추가됐음 ddl도 수정해야함 260624 커밋은 했는데 타입 확인필요
-	@Column(name = "attendance_status")
-	private AttendanceStatus attendanceStatus;
 	
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private LocalDateTime createdAt;

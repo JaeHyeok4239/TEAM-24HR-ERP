@@ -45,6 +45,7 @@ import com.hr24.employee.enums.EmploymentType;
 import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.employee.service.HrEmployeeQueryService;
+import com.hr24.work.schedule.repository.HolidayRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -72,6 +73,7 @@ public class AttendanceService{
 	private final AttendanceCalculator attendanceCalculator;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
 	private final AttendanceLogDailyRepository attendanceLogDatilyrepository;
+	private final HolidayRepository holidayRepository;
 	
 	private static final String FIXED_WORKPLACE_NAME = "HQ";
 	
@@ -80,7 +82,7 @@ public class AttendanceService{
 	public LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분
-	        return LocalDateTime.of(2026, 6, 23, 23, 00); 
+	        return LocalDateTime.of(2026, 6, 25, 9, 0); 
 	    }
 	    return LocalDateTime.now();
 	}
@@ -149,12 +151,17 @@ public class AttendanceService{
 	    // 저장
 	    if (!results.isEmpty()) {
 	        attendanceResultRepository.saveAll(results);
+	        
+	        // 이미 생성된 목록에 추가
+	        processedEmployeeIds.addAll(results.stream()
+	                .map(r -> r.getEmployee().getEmployeeId())
+	                .collect(Collectors.toSet()));
+	        
 	        System.out.println(">>> 금일 근태 데이터 생성 완료: " + results.size() + "건");
 	    } else {
 	        System.out.println(">>> 오늘 새로 생성할 근태 데이터가 없습니다.");
 	    }
 	    
-	   
 	 	// 이미 생성된 직원 제외 근태 기록 생성
 	    List<AttendanceResult> dailyResults = activeUsers.stream()
 	            .filter(user -> !processedEmployeeIds.contains(user.getEmployeeId()))
@@ -208,91 +215,119 @@ public class AttendanceService{
                 .collect(Collectors.toList());
     }
 	
+    // 총 근무, 기본 근무, 초과 근무 시간 계산(공휴일 조건)
+	public AttendanceDetailResponseDto calculateAttendanceTimes(LocalDateTime checkIn, LocalDateTime checkOut, boolean isHoliday) {
+	    long total = TimeUtils.calculateTotalTime(checkIn, checkOut);
+	    
+	    long basic = TimeUtils.calculateBasicTime(total, isHoliday);
+	    long overtime = TimeUtils.calculateOvertime(total, isHoliday);
+
+	    return AttendanceDetailResponseDto.builder()
+	            .checkIn(checkIn)
+	            .checkOut(checkOut)
+	            .totalWorkTime(total)
+	            .basicWorkTime(basic)
+	            .overtime(overtime)
+	            .build();
+	}
+	
 	// 일별 근태 상세 조회(상세 패널)
-//	@Transactional(readOnly = true)
-//	public AttendanceDetailResponseDto getAttendanceDetail(String loginId, Long targetEmployeeId, LocalDate date, boolean isAdmin) {
-//	    // 요청자 + 조회 대상 확인
-//	    User requester = userRepository.findByLoginId(loginId)
-//	            .orElseThrow(() -> new RuntimeException("요청자를 찾을 수 없습니다."));
-//	    User targetEmployee = userRepository.findById(targetEmployeeId)
-//	    		.orElseThrow(() -> new IllegalAccessException("대상 사원을 찾을 수 없습니다."));
-//	    
-//	    // 권한 체크
-//	    if (!isAdmin && !requester.getEmployeeId().equals(targetEmployeeId)) {
-//            throw new AccessDeniedException("본인의 데이터만 조회할 수 있습니다.");
-//        }
-//	    
-//	    // 일용직 체크용
-//	    boolean isDaily = (targetEmployee.getEmploymentType() == EmploymentType.DAILY);
-//	    
-//	    // 데이터 조회(정규직/일용직)
-//	    AttendanceResult result = null;
-//	    AttendanceLogsDaily dailyLog = null;
-//	    List<CorrectionDto> correctionDtos = new ArrayList<>(); // 초기화
-//	    
-//	    if(isDaily) {
-//	    	dailyLog = attendanceLogDailyRepository.findOneByEmployeeIdAndWorkDate(targetEmployeeId, date)
-//	    			.orElseThrow(() -> new IllegalArgumentException("해당 날짜의 일용직 근태 기록이 없습니다."));
-//	    	
-//	    	// 일용직 정정 이력 조회
-//    		correctionDtos = attendanceCorrectionRepository.findByCorrectionTargetDaily(dailyLog).stream()
-//    	            .map(this::convertToCorrectionDto)
-//    	            .collect(Collectors.toList());
-//	    }else {
-//	    	result = attendanceResultRepository.findByEmployeeAndWorkDate(targetEmployee, date)
-//	    			.orElseThrow(() -> new IllegalArgumentException("해당 날짜의 정규직 근태 기록이 없습니다."));
-//	    	
-//	    	// 정규직 정정 이력 조회
-//    		correctionDtos = attendanceCorrectionRepository.findByCorrectionTarget(result).stream()
-//    	            .map(this::convertToCorrectionDto)
-//    	            .collect(Collectors.toList());
-//	    }
-//	    
-//	    // 시간 계산
-//	    long totalWorkTime = isDaily ? TimeUtils.calculateTotalTime(dailyLog) : TimeUtils.calculateTotalTime(result);
-//	    long basicWorkTime = TimeUtils.calculateBasicTime(totalWorkTime);
-//	    long overtime = Math.max(0, (totalWorkTime - 60) - basicWorkTime);
-//	  
-//	    // 근태 결과 조회(정규직/일용직 구별)
-//	    if (isAdmin) {
-//	    	if(isDaily) {
-//	    		// 일용직
-//	    		return DailyAttendanceDetailResponseDto.builder()
-////		    			.status(dailyLog.getAttendanceStatus())
-//		    			.checkIn(dailyLog.getCheckInTime())
-//		    			.checkOut(dailyLog.getCheckOutTime())
-//		    			.totalWorkTime(totalWorkTime)
-//		    			.basicWorkTime(basicWorkTime)
-//		    			.overtime(overtime)
-//		    			.workplaceName(dailyLog.getWorkplace() != null ? dailyLog.getWorkplace().getWorkplaceName() : "미지정")
-//		    			.build();
-//	    	}else {
-//	    		// 정규직 
-//		        return AdminAttendanceDetailResponseDto.builder()
-//		                .status(result.getAttendanceStatus())
-//		                .checkIn(result.getCheckInTime())
-//		                .checkOut(result.getCheckOutTime())
-//		                .totalWorkTime(totalWorkTime)
-//		                .basicWorkTime(basicWorkTime)
-//		                .overtime(overtime)
-//		                .corrections(correctionDtos)
-//		                .userName(result.getEmployee().getName())
-//		                .department(result.getEmployee().getDepartment().getDepartmentName())
-//		                .userPosition(result.getEmployee().getPosition().getPositionName())
-//		                .workplaceName(result.getWorkplace() != null ? result.getWorkplace().getWorkplaceName() : "미지정")
-//		                .build();
-//	    	}
-//    	}
-//	    // 사용자 내 근태 현황
-//	    return AttendanceDetailResponseDto.builder()
-//	            .status(result.getAttendanceStatus())
-//	            .checkIn(result.getCheckInTime())
-//	            .checkOut(result.getCheckOutTime())
-//	            .totalWorkTime(totalWorkTime)
-//	            .basicWorkTime(basicWorkTime)
-//	            .overtime(overtime)
-//	            .build();
-//	}
+	@Transactional(readOnly = true)
+	public AttendanceDetailResponseDto getAttendanceDetail(String loginId, Long targetEmployeeId, LocalDate date, boolean isAdmin) {
+	    // 요청자 + 조회 대상 확인
+	    User requester = userRepository.findByLoginId(loginId)
+	            .orElseThrow(() -> new RuntimeException("요청자를 찾을 수 없습니다."));
+	    User targetEmployee = userRepository.findById(targetEmployeeId)
+	    		.orElseThrow(() -> new IllegalArgumentException("대상 사원을 찾을 수 없습니다."));
+	    
+	    // 권한 체크
+	    if (!isAdmin && !requester.getEmployeeId().equals(targetEmployeeId)) {
+            throw new AccessDeniedException("본인의 데이터만 조회할 수 있습니다.");
+        }
+	    
+	    AttendanceLogsDaily dailyLog = null;
+	    AttendanceResult result = null;
+	    
+	    // 일용직 체크용
+	    boolean isDaily = (targetEmployee.getEmploymentType() == EmploymentType.DAILY);
+	    
+	    // 데이터 조회용
+	    LocalDateTime checkIn;
+	    LocalDateTime checkOut;
+	    AttendanceStatus status = null;
+	    List<CorrectionDto> correctionDtos;
+	    String workplaceName;
+	    boolean isHoliday = holidayRepository.findByHolidayDate(date).isPresent();
+	    
+	    if (isDaily) {
+	        dailyLog = attendanceLogDailyRepository.findOneByEmployeeIdAndWorkDate(targetEmployeeId, date)
+	                .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 일용직 근태 기록이 없습니다."));
+	        checkIn = dailyLog.getCheckInTime();
+	        checkOut = dailyLog.getCheckOutTime();
+	        workplaceName = dailyLog.getWorkplace() != null ? dailyLog.getWorkplace().getWorkplaceName() : "미지정";
+	        correctionDtos = attendanceCorrectionRepository.findByCorrectionDailyLog(dailyLog).stream()
+	                .map(this::convertToCorrectionDto).collect(Collectors.toList());
+	    } else {
+	        result = attendanceResultRepository.findByEmployeeAndWorkDate(targetEmployee, date)
+	                .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 정규직 근태 기록이 없습니다."));
+	        checkIn = result.getCheckInTime();
+	        checkOut = result.getCheckOutTime();
+	        status = result.getAttendanceStatus();
+	        workplaceName = result.getWorkplace() != null ? result.getWorkplace().getWorkplaceName() : "미지정";
+	        correctionDtos = attendanceCorrectionRepository.findByCorrectionTarget(result).stream()
+	                .map(this::convertToCorrectionDto).collect(Collectors.toList());
+	    }
+	    
+	    // 계산 메서드
+	    AttendanceDetailResponseDto timeDto = calculateAttendanceTimes(checkIn, checkOut, isHoliday);
+	    
+	    // 근태 결과 조회(정규직/일용직 구별)
+	    if (isAdmin) {
+	    	if(isDaily) {
+	    		AttendanceStatus dailyStatus = "Y".equals(dailyLog.getIsAttended()) ? AttendanceStatus.WORK : null;
+	    		// 일용직
+	    		// 수정한 담당자 부서/직급 추가
+	    		return DailyAttendanceDetailResponseDto.builder()
+	                    .status(dailyStatus)
+	                    .checkIn(checkIn)
+	                    .checkOut(checkOut)
+	                    .totalWorkTime(timeDto.getTotalWorkTime())
+	                    .basicWorkTime(timeDto.getBasicWorkTime())
+	                    .overtime(timeDto.getOvertime())
+	                    .corrections(correctionDtos)
+	                    .userName(targetEmployee.getName())
+	                    .department(targetEmployee.getDepartment().getDepartmentName()) // 추가
+	                    .userPosition(targetEmployee.getPosition().getPositionName()) // 추가
+	                    .workplaceName(workplaceName)
+	                    .build();
+	    	}else {
+	    		// 정규직 
+	    		// 수정한 담당자 부서/직급 추가
+	    		return AdminAttendanceDetailResponseDto.builder()
+	                    .status(status)
+	                    .checkIn(checkIn)
+	                    .checkOut(checkOut)
+	                    .totalWorkTime(timeDto.getTotalWorkTime())
+	                    .basicWorkTime(timeDto.getBasicWorkTime())
+	                    .overtime(timeDto.getOvertime())
+	                    .corrections(correctionDtos)
+	                    .userName(targetEmployee.getName())
+	                    .department(targetEmployee.getDepartment().getDepartmentName())
+	                    .userPosition(targetEmployee.getPosition().getPositionName())
+	                    .workplaceName(workplaceName)
+	                    .build();
+	    	}
+    	}
+	    // 사용자 내 근태 현황
+	    return AttendanceDetailResponseDto.builder()
+	            .status(status)
+	            .checkIn(checkIn)
+	            .checkOut(checkOut)
+	            .totalWorkTime(timeDto.getTotalWorkTime())
+	            .basicWorkTime(timeDto.getBasicWorkTime())
+	            .overtime(timeDto.getOvertime())
+	            .build();
+	}
 
 	// CorrectionDto 변환 로직
 	private CorrectionDto convertToCorrectionDto(AttendanceCorrection c) {
@@ -319,7 +354,7 @@ public class AttendanceService{
 	@Transactional
 	public void correctDaily(Long logId, DailyCorrectionDto dto) {
 	    // 로그 조회
-	    AttendanceLog log = attendanceLogRepository.findById(logId)
+	    AttendanceLogsDaily log = attendanceLogDailyRepository.findById(logId)
 	            .orElseThrow(() -> new EntityNotFoundException("기록 없음"));
 
 	    // 유효성 검사
@@ -328,15 +363,22 @@ public class AttendanceService{
 	    }
 
 	    // 수정 전 시간 저장
-	    LocalDateTime beforeTime = log.getLogTime();
-
-	    // 데이터 변경(서비스가 직접 값 변경)
-	    log.setLogTime(dto.getAfterTime()); 
+	    LocalDateTime beforeTime;
+	    
+	    if ("IN".equals(dto.getCorrectionType())) {
+	        beforeTime = log.getCheckInTime(); // 수정 전 IN 시간
+	        log.setCheckInTime(dto.getAfterTime()); // IN 시간 변경
+	    } else if ("OUT".equals(dto.getCorrectionType())) {
+	        beforeTime = log.getCheckOutTime(); // 수정 전 OUT 시간
+	        log.setCheckOutTime(dto.getAfterTime()); // OUT 시간 변경
+	    } else {
+	        throw new IllegalArgumentException("올바르지 않은 정정 유형입니다.");
+	    }
 
 	    // 정정 테이블에 데이터 저장
 	    AttendanceCorrection correction = AttendanceCorrection.builder()
-	            .correctionDailyLog(log)
-	            .correctionType(log.getLogType()) // IN/OUT
+	            .correctionDailyLog(log) // 이 엔티티 타입이 AttendanceLogsDaily이므로 이제 일치함
+	            .correctionType(dto.getCorrectionType()) // IN 또는 OUT
 	            .beforeTime(beforeTime)
 	            .afterTime(dto.getAfterTime())
 	            .correctionReason(dto.getCorrectionReason())
@@ -524,13 +566,23 @@ public class AttendanceService{
 	    if(result.getAttendanceStatus() != AttendanceStatus.READY) {
 	        throw new RuntimeException("이미 출근 처리되었습니다.");
 	    }
-
-	    // 출근 시간 판정 및 저장
-	    String resultStatus = attendanceCalculator.determineCheckInStatus(user, currentTime);
 	    
-	    result.setAttendanceStatus(AttendanceStatus.valueOf(resultStatus));
+	    // 공휴일 체크
+	    boolean isHoliday = holidayRepository.findByHolidayDate(today).isPresent();
+	    
+	    if(isHoliday) {
+	    	result.setAttendanceStatus(AttendanceStatus.WORK);
+	    	result.setIsHolidayWork("Y");
+	    }else {
+	    	// 출근 시간 판정 및 저장
+		    String resultStatus = attendanceCalculator.determineCheckInStatus(user, currentTime);
+		    result.setAttendanceStatus(AttendanceStatus.valueOf(resultStatus));
+	    }
+
 	    result.setCheckInTime(currentTime);
+	    result.setUpdatedAt(currentTime);
 	    result.setIsFixed("N");
+	    result.setWorkplace(matchedWorkplace);
 
 	    AttendanceLog log = AttendanceLog.builder()
 	            .employee(user)
@@ -576,12 +628,11 @@ public class AttendanceService{
 	
 	    // 반차 확인 로직(status가 LEAVE인 경우)
 	    if (status == AttendanceStatus.LEAVE) {
-	        // LocalDate.now() 대신 위에서 정의한 today 사용
 	    	//반차 여부 검증
 	        boolean isHalfLeave = !leaveDateRepository.findHalfLeaveByUserAndDate(user, today).isEmpty();
 	        
 	        // 반차가 아니면 퇴근 불가
-	        if (isHalfLeave) {
+	        if (!isHalfLeave) {
 	            throw new RuntimeException("휴가 중에는 퇴근 처리를 할 수 없습니다.");
 	        }
 	    }
@@ -589,11 +640,25 @@ public class AttendanceService{
 	    // 위치+거리 검증
 	    Workplace matchedWorkplace = validateAndGetWorkplace(latitude, longitude);
 	
-	    // 퇴근 처리
-	    String resultStatus = attendanceCalculator.determineCheckoutStatus(user, currentTime);
+	    // 공휴일 체크
+	    boolean isHoliday = holidayRepository.findByHolidayDate(today).isPresent();
 	    
-	    result.setCheckOutTime(currentTime);
-	    result.setAttendanceStatus(AttendanceStatus.valueOf(resultStatus));
+	    // 퇴근 처리
+	    if(isHoliday) {
+	    	result.setAttendanceStatus(AttendanceStatus.OUT);
+	    }else {
+	    	String resultStatus = attendanceCalculator.determineCheckoutStatus(user, currentTime);
+	    	result.setAttendanceStatus(AttendanceStatus.valueOf(resultStatus));
+		    
+	    }
+	    LocalDateTime checkIn = result.getCheckInTime();
+	    result.setCheckOutTime(currentTime);    
+	    result.setUpdatedAt(currentTime);
+	    
+	    AttendanceDetailResponseDto times = calculateAttendanceTimes(checkIn, currentTime, isHoliday);
+	    result.setTotalWorkMinutes(times.getTotalWorkTime());
+	    result.setActualWorkMinutes(times.getBasicWorkTime());
+	    result.setOvertimeMinutes(times.getOvertime());
 	    
 	    // 로그 저장
 	    AttendanceLog log = AttendanceLog.builder()

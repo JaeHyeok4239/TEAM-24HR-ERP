@@ -16,7 +16,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DailyCorrectionDto {
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
 	private LocalDateTime afterTime; // 수정할 시간
     private String correctionReason; // 수정 사유(최대 100자)
+    private String correctionType; // IN/OUT
 }

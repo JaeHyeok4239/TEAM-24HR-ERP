@@ -100,24 +100,26 @@ public class AttendanceController {
         return ResponseEntity.ok().build();
     }
 	
-	// 일별 근태 상세 조회
-	// 관리자는 모든 사용자 조회 가능
-	// 일반 사용자는 본인 것만 조회 가능
-//    @Operation(summary = "일별 근태 상세 조회", description = "관리자/본인만 조회 가능")
-//    @PreAuthorize("isAuthenticated()") // 로그인만 되어 있으면 일단 호출 가능
-//    @GetMapping("/{employeeId}")
-//    public ResponseEntity<AttendanceDetailResponseDto> getAttendanceDetail(
-//            @PathVariable("employeeId") Long employeeId,
-//            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-//            Authentication authentication
-//    ) {
-//        boolean isAdmin = authentication.getAuthorities().stream()
-//                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-//        
-//        String loginId = authentication.getName();
-//
-//        return ResponseEntity.ok(attendanceService.getAttendanceDetail(loginId, employeeId, date, isAdmin));
-//    }
+//	 일별 근태 상세 조회
+//	 관리자는 모든 사용자 조회 가능
+//	 일반 사용자는 본인 것만 조회 가능
+    @Operation(summary = "일별 근태 상세 조회", description = "관리자/본인만 조회 가능")
+    @PreAuthorize("isAuthenticated()") // 로그인만 되어 있으면 일단 호출 가능
+    @GetMapping("/{employeeId}")
+    public ResponseEntity<AttendanceDetailResponseDto> getAttendanceDetail(
+    		@Parameter(description = "조회 대상 사번")
+            @PathVariable("employeeId") Long employeeId,
+            @Parameter(description = "조회하려는 날짜(yyyy-MM-dd)")
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication authentication
+    ) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
+        String loginId = authentication.getName();
+
+        return ResponseEntity.ok(attendanceService.getAttendanceDetail(loginId, employeeId, date, isAdmin));
+    }
 	
 	// 일용직 명단 조회
 	@GetMapping("/daily-workers")

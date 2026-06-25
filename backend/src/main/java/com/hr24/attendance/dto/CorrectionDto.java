@@ -20,9 +20,9 @@ public class CorrectionDto {
 		private String correctionType; // 정정 종류 IN/OUT
 	    private String processStatus; // 승인완료/반려/대기
 	    private LocalDateTime requestedAt; // 신청 일시
-	    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+	    @JsonFormat(pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
 	    private LocalDateTime beforeTime; // 수정 전 시간
-	    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+	    @JsonFormat(pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
 	    private LocalDateTime afterTime; // 수정 후 시간
 	    private String correctionReason; // 수정 사유(최대 100자)
 	    private Long documentId;
