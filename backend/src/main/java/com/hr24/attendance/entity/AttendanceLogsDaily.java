@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Builder                 
 @NoArgsConstructor       
@@ -26,6 +27,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Setter
 @Table(name = "attendance_logs_daily")
 @SequenceGenerator(
 		name="attendance_logs_daily_seq",
