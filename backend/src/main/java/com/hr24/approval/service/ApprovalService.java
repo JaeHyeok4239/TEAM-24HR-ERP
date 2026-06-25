@@ -2,7 +2,6 @@ package com.hr24.approval.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +17,6 @@ import com.hr24.approval.repository.ApprovalLineRepository;
 import com.hr24.attendance.service.AttendanceProcessService;
 import com.hr24.document.entity.Document;
 import com.hr24.document.repository.DocumentRepository;
-import com.hr24.document.service.DocumentProcessService;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.global.exception.BusinessException;

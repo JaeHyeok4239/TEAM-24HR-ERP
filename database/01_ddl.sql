@@ -315,6 +315,7 @@ CREATE TABLE
     
         CONSTRAINT type_ck_req CHECK (required_processing IN ('Y', 'N'))
     );
+
 -- 필드 데이터 검증을 위한 스키마
 CREATE TABLE document_type_schema (
     schema_id NUMBER PRIMARY KEY,
@@ -435,10 +436,12 @@ CREATE TABLE
         delegate_id NUMBER NOT NULL, -- 대리 결재자 ID (FK → users)
         start_date DATE NOT NULL, -- 위임 시작일
         end_date DATE NOT NULL, -- 위임 종료일
-        reason VARCHAR2 (300 CHAR), -- 위임 사유
+        reason VARCHAR2 (300 CHAR) NOT NULL, -- 위임 사유
         is_active CHAR(1) DEFAULT 'Y' NOT NULL, -- 활성 여부
+        approval_line_id NUMBER NOT NULL,
         CONSTRAINT delegate_fk_approver FOREIGN KEY (approver_id) REFERENCES users (employee_id),
         CONSTRAINT delegate_fk_delegate FOREIGN KEY (delegate_id) REFERENCES users (employee_id),
+        CONSTRAINT delegate_fk_approval_line FOREIGN KEY (approval_line_id) REFERENCES approval_line (approval_line_id),
         CONSTRAINT delegate_ck_is_active CHECK (is_active IN ('Y', 'N'))
     );
 

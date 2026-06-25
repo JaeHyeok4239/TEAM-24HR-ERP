@@ -43,17 +43,17 @@ public class ApprovalHistory {
 	private Long historyId;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "document_id")
+	@JoinColumn(name = "document_id", nullable = false)
 	private Document document;
 	
-	@Column(name = "step_order")
+	@Column(name = "step_order", nullable = false)
 	private Integer stepOrder;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "approver_id")
+	@JoinColumn(name = "approver_id", nullable = false)
 	private User approver;
 	
-	@Column(name = "status")
+	@Column(name = "status", nullable = false)
 	private String status;
 	
 	@Column(name = "approver_comment")
@@ -68,7 +68,7 @@ public class ApprovalHistory {
 	@Version
 	private Long version;
 	
-	@Column(name = "document_version")
+	@Column(name = "document_version", nullable = false)
 	private Integer documentVersion;
 	
 }

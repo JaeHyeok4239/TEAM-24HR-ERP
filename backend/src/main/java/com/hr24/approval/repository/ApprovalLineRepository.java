@@ -46,4 +46,10 @@ public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long
 		        @Param("keyword") String keyword
 		);
 	
+	//중복 확인
+	boolean existsByDocumentTypeAndDepartmentAndStepOrder(
+		    DocumentType documentType,
+		    Department department,
+		    Integer stepOrder
+		);
 }

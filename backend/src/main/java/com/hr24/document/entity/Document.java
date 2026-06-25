@@ -43,25 +43,25 @@ public class Document {
 	private Long documentId;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "document_type")
+	@JoinColumn(name = "document_type", nullable = false)
 	private DocumentType documentType;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "requester_id")
+	@JoinColumn(name = "requester_id", nullable = false)
 	private User requester;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "processor_id")
 	private User processor;
 	
-	@Column(name = "document_title")
+	@Column(name = "document_title", nullable = false)
 	private String documentTitle;
 	
 	@JdbcTypeCode(SqlTypes.JSON)
-	@Column(name = "document_content")
+	@Column(name = "document_content", nullable = false)
 	private Map<String, Object> documentContent;
 	
-	@Column(name = "status")	
+	@Column(name = "status", nullable = false)	
 	private String status;
 	
 	@Column(name = "current_step", insertable = false)
@@ -85,6 +85,6 @@ public class Document {
 	@Version
 	private Long version;
 	
-	@Column(name = "document_version")
+	@Column(name = "document_version", nullable = false)
 	private Integer documentVersion;
 }
