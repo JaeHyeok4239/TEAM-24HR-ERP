@@ -135,7 +135,7 @@ export default function ScheduleCalendar() {
       const end   = calApi.view.activeEnd.toISOString().slice(0, 10);
       fetchSchedules(start, end);
     } catch {
-      alert("삭제에 실패했습니다. 다시 시도해주세요.");
+      alert("삭제 권한은 작성자 및 관리자만 가능합니다.");
     } finally {
       setDeleting(false);
     }
@@ -357,7 +357,6 @@ export default function ScheduleCalendar() {
                   <option value="PERSONAL">개인 일정</option>
                   <option value="DEPT">부서 일정</option>
                   <option value="COMPANY">회사 일정</option>
-                  <option value="PROJECT">프로젝트</option>
                 </select>
               </div>
               <div>
