@@ -6,6 +6,7 @@ const BASE_URL = "http://localhost:8080";
 export const loginRequest = async (loginId, password) => {
   const response = await fetch(`${BASE_URL}/api/auth/login`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
