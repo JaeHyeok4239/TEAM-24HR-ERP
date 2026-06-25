@@ -315,6 +315,19 @@ CREATE TABLE
     
         CONSTRAINT type_ck_req CHECK (required_processing IN ('Y', 'N'))
     );
+-- 필드 데이터 검증을 위한 스키마
+CREATE TABLE document_type_schema (
+    schema_id NUMBER PRIMARY KEY,
+    schema_json JSON NOT NULL, -- json 타입으로 저장(request dto와 맞출것)
+    document_type NUMBER NOT NULL,
+    created_at TIMESTAMP DEFAULT SYSTIMESTAMP,
+    updated_at TIMESTAMP,
+
+    CONSTRAINT doc_schema_fk_type
+        FOREIGN KEY (document_type)
+        REFERENCES document_type(type_id)
+        ON DELETE CASCADE
+);
 
 -- 휴가 유형 (연차, 반차, 조퇴 등)
 CREATE TABLE
