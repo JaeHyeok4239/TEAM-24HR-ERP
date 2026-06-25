@@ -80,6 +80,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	// 이메일 중복 체크 - 본인 제외
 	boolean existsByEmailIgnoreCaseAndEmployeeIdNot(String email, Long employeeId);
 
+	// 직급 sort_order 기준 팀장급 이상 ACTIVE 직원 조회 (팀장 회의 알림용)
+	@Query("SELECT u FROM User u WHERE u.position.sortOrder >= :minSortOrder AND u.status = :status")
+	List<User> findActiveManagersByMinSortOrder(@Param("minSortOrder") Integer minSortOrder, @Param("status") UserStatus status);
+
 	// 사번 중복 체크
 	boolean existsByEmployeeNo(String employeeNo);
 

@@ -80,9 +80,13 @@ public class ScheduleService {
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
 
         Department department = null;
-        if ("DEPT".equals(request.getScheduleType()) && request.getDeptId() != null) {
-            department = departmentRepository.findById(request.getDeptId())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 부서입니다."));
+        if ("DEPT".equals(request.getScheduleType())) {
+            if (request.getDeptId() != null) {
+                department = departmentRepository.findById(request.getDeptId())
+                        .orElseThrow(() -> new RuntimeException("존재하지 않는 부서입니다."));
+            } else if (user.getDepartment() != null) {
+                department = user.getDepartment();
+            }
         }
 
         Schedule schedule = Schedule.builder()
@@ -137,11 +141,17 @@ public class ScheduleService {
         return ScheduleResponse.from(scheduleRepository.save(schedule));
     }
 
-    // 일정 삭제
+    // 일정 삭제 - 작성자 본인 또는 ADMIN만 가능
     @Transactional
-    public void deleteSchedule(Long scheduleId) {
+    public void deleteSchedule(Long scheduleId, String loginId, boolean isAdmin) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 일정입니다."));
+
+        boolean isOwner = schedule.getUser().getLoginId().equals(loginId);
+
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("본인이 등록한 일정만 삭제할 수 있습니다.");
+        }
 
         scheduleRepository.delete(schedule);
     }

@@ -10,6 +10,18 @@ export function useNotification() {
   const clientRef = useRef(null);
   const { userInfo, accessToken } = useAuthStore();
 
+  // 로그인 시 저장된 미확인 알림 불러오기
+  useEffect(() => {
+    if (!userInfo || !accessToken) return;
+
+    fetch("http://localhost:8080/api/notifications", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setNotifications(data))
+      .catch(() => {});
+  }, [userInfo?.loginId]);
+
   useEffect(() => {
     if (!userInfo || !accessToken) return;
 
@@ -48,7 +60,15 @@ export function useNotification() {
     };
   }, [userInfo, accessToken]);
 
-  const clearNotifications = () => setNotifications([]);
+  const clearNotifications = () => {
+    setNotifications([]);
+    if (accessToken) {
+      fetch("http://localhost:8080/api/notifications/read", {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }).catch(() => {});
+    }
+  };
 
   return { notifications, clearNotifications };
 }
