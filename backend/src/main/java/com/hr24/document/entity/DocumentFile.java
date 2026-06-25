@@ -35,11 +35,11 @@ public class DocumentFile {
 	private Long docMappingId;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "document_id")
+	@JoinColumn(name = "document_id", nullable = false)
 	private Document document;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "attachment_id")
+	@JoinColumn(name = "attachment_id", nullable = false)
 	private Attachment attachment;
 
 }

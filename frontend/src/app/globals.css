@@ -135,6 +135,11 @@ a {
 }
 
 
+/* FullCalendar 이벤트 커서 */
+.fc-event {
+  cursor: pointer !important;
+}
+
 /* FullCalendar 날짜 색상 */
 .fc-daygrid-day-number,
 .fc-col-header-cell-cushion {

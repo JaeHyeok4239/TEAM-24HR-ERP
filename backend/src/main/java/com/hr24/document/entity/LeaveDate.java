@@ -35,9 +35,9 @@ public class LeaveDate {
     private Long leaveDateId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "leave_id")
+    @JoinColumn(name = "leave_id", nullable = false)
     private Leave leave;
 
-    @Column(name = "leave_date")
+    @Column(name = "leave_date", nullable = false)
     private LocalDate leaveDate;
 }

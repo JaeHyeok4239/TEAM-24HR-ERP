@@ -36,10 +36,10 @@ public class ApprovalLine {
 	private Long approvalLineId;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "document_type")
+	@JoinColumn(name = "document_type", nullable = false)
 	private DocumentType documentType;
 	
-	@Column(name = "step_order")
+	@Column(name = "step_order", nullable = false)
 	private Integer stepOrder;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -47,6 +47,6 @@ public class ApprovalLine {
 	private Department department;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "default_approver")
+	@JoinColumn(name = "default_approver", nullable = false)
 	private User approver;
 }

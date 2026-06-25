@@ -83,6 +83,11 @@ CREATE SEQUENCE document_type_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
+-- 문서 스키마 정의 PK
+CREATE SEQUENCE document_type_schema_seq START
+WITH
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
 -- 문서처리 PK
 CREATE SEQUENCE document_process_seq START
 WITH
@@ -205,5 +210,10 @@ WITH
 
 -- 부양가족 / 원천징수 테이블 시퀀스
 CREATE SEQUENCE employee_tax_info_seq START
+WITH
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+-- 알림 시퀀스
+CREATE SEQUENCE work_notification_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;

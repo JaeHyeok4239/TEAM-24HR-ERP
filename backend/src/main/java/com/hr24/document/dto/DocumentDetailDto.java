@@ -11,13 +11,13 @@ import com.hr24.document.entity.Document;
 import lombok.Getter;
 import lombok.Setter;
 
-public class DocumentDetailRequestDto {
-		
+public class DocumentDetailDto {
+		//실제로 사용자에게 받아야하는 데이터
 	
 		//휴가 신청
 		@Getter
 		@Setter
-		public static class LeaveDto {
+		public static class LeaveRequestDto {
 		    private Long leaveType;
 		    private List<LocalDate> leaveDates;
 		    private BigDecimal leaveCnt;
@@ -27,7 +27,7 @@ public class DocumentDetailRequestDto {
 		//근태 정정 신청
 	    @Getter
 	    @Setter
-	    public static class AttendanceCorrectionDto {
+	    public static class AttendanceCorrectionRequestDto {
 	        private Long correctionTarget;
 	        private String correctionType;
 	        private String correctionReason;
