@@ -26,3 +26,16 @@ export async function getPayrolls({
 
   return response.json();
 }
+
+
+export async function getPayrollDetail(payrollId) {
+  const response = await fetch(
+    `http://localhost:8080/api/payrolls/${payrollId}`
+  );
+
+  if (!response.ok) {
+    throw new Error("급여 상세 조회 실패");
+  }
+
+  return response.json();
+}
