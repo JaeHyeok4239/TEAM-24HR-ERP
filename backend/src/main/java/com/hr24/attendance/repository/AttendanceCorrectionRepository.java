@@ -15,12 +15,12 @@ public interface AttendanceCorrectionRepository extends JpaRepository<Attendance
     List<AttendanceCorrection> findByCorrectionTarget(AttendanceResult result);
     
     // 일용직
-    List<AttendanceCorrection> findByCorrectionTargetDaily(AttendanceLogsDaily target);
+    List<AttendanceCorrection> findByCorrectionDailyLog(AttendanceLogsDaily target);
 
     // 문서로 정정 이력 조회
     Optional<AttendanceCorrection> findByDocument(Document document);
 
     // 문서 ID로 조회
     Optional<AttendanceCorrection> findByDocumentDocumentId(Long documentId);
-	
+    
 }

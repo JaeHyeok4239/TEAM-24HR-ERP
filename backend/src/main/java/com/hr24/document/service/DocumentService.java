@@ -1,10 +1,7 @@
 package com.hr24.document.service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +16,6 @@ import com.hr24.approval.repository.ApprovalLineRepository;
 import com.hr24.approval.repository.ApprovalHistoryRepository;
 import com.hr24.document.dto.DocumentRequestDto;
 import com.hr24.document.dto.DocumentResponseDto;
-import com.hr24.document.dto.HrRequestDto;
 import com.hr24.document.entity.Document;
 import com.hr24.document.entity.DocumentFile;
 import com.hr24.document.entity.DocumentType;
@@ -47,7 +43,6 @@ public class DocumentService {
 	private final ApprovalLineRepository approvalLineRepository;
 	private final UserRepository userRepository;
 	private final AttachmentService attachmentService;
-	private final HrService hrService;
 	private final ObjectMapper objectMapper;
 
 	// 파일 매핑
@@ -72,16 +67,6 @@ public class DocumentService {
 		}
 	}
 
-	// documentContent를 Map으로 변환
-//	private Map<String, Object> toDocumentContentMap(List<DocumentRequestDto.DocumentContentDto> contentList) {
-//		if (contentList == null || contentList.isEmpty()) {
-//			return new HashMap<>();
-//		}
-//
-//		return contentList.stream().collect(Collectors.toMap(DocumentRequestDto.DocumentContentDto::getField,
-//				DocumentRequestDto.DocumentContentDto::getData));
-//	}
-
 	// 결재 연동
 	private void createApprovalHistory(Document document) {
 		List<ApprovalLine> lines = approvalLineRepository
@@ -101,17 +86,6 @@ public class DocumentService {
 						.build()).toList();
 
 		approvalHistoryRepository.saveAll(histories);
-	}
-
-	private void processDetailTable(Document document, DocumentRequestDto.DocumentDto documentDto, boolean isSubmit) {
-		String detailTable = document.getDocumentType().getDetailTable();
-
-		if ("leave".equals(detailTable)) {
-
-			// 연차/반차 사용 시 잔여 연차 검증 및 형식 검증
-
-		
-		}
 	}
 
 	// 문서 작성
@@ -164,9 +138,6 @@ public class DocumentService {
 				&& (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
 			throw new IllegalArgumentException("문서 내용을 입력해주세요.");
 		}
-
-		// detailTable에 따른 분기별 처리
-		//processDetailTable(document, documentDto, "REQ".equals(saved.getStatus()));
 
 		return saved.getDocumentId();
 
@@ -238,9 +209,6 @@ public class DocumentService {
 				createDocumentFiles(document, attachments);
 			}
 		}
-
-		// detailTable에 따른 분기별 처리
-		processDetailTable(document, documentDto, "REQ".equals(document.getStatus()));
 
 	}
 

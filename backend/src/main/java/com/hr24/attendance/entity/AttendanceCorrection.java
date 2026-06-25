@@ -53,11 +53,6 @@ public class AttendanceCorrection{
 	@JoinColumn(name="correction_target")
 	private AttendanceResult correctionTarget;
 	
-	// 일용직
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name="correction_daily_log")
-	private AttendanceResult correctionTargetDaily;
-	
 	@Column(name="correction_type")
 	private String correctionType;
 	

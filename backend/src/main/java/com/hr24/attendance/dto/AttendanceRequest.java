@@ -37,5 +37,6 @@ public class AttendanceRequest {
     public LocalDateTime getCheckOutDateTime() {
         return LocalDateTime.of(LocalDate.now(), LocalTime.parse(this.checkOut));
     }
+    
 }
 
