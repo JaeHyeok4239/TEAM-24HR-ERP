@@ -36,16 +36,16 @@ public class Leave {
     private Long leaveId;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_id")
+    @JoinColumn(name = "document_id", nullable = false)
     private Document document;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "leave_type")
+    @JoinColumn(name = "leave_type", nullable = false)
     private LeaveType leaveType;
 
-    @Column(name = "leave_cnt")
+    @Column(name = "leave_cnt", nullable = false)
     private BigDecimal leaveCnt;
     
-    @Column(name = "leave_reason")
+    @Column(name = "leave_reason", nullable = false)
     private String leaveReason;
 }

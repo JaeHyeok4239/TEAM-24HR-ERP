@@ -45,7 +45,10 @@ public class ApprovalController {
 
 		return ResponseEntity.ok(approvalService.listOrSearchApprovalLines(departmentId, documentType, keyword));
 	}
-
+	
+	//대리 결재 조회
+//	@GetMapping("/delegate")
+//	
 	// 결재 이력 보관함
 	@GetMapping("/history")
 	public ResponseEntity<Page<ApprovalResponseDto.ApprovalHistoryDto>> approvalList(

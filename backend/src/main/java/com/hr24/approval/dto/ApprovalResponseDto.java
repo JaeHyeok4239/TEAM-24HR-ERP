@@ -1,8 +1,10 @@
 package com.hr24.approval.dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.hr24.approval.entity.ApprovalDelegate;
 import com.hr24.approval.entity.ApprovalHistory;
 import com.hr24.approval.entity.ApprovalLine;
 import com.hr24.document.entity.Document;
@@ -78,5 +80,36 @@ public class ApprovalResponseDto {
 					.departmentName(approvalLine.getDepartment() != null ? approvalLine.getDepartment().getDepartmentName() : null)
 					.build();
 		}
+	}
+	
+	@Getter
+	@Builder
+	public static class ApprovalDelegateDto {
+		private Long approvalDelegateId;
+		private Long approverId;
+		private String approverName;
+		private Long delegateId;
+		private String delegateName;
+		private LocalDate startDate;
+		private LocalDate endDate;
+		private String reason;
+		private Long approvalLineId;
+		private String isActive;
+		
+		public static ApprovalDelegateDto from(ApprovalDelegate approvalDelegate) {
+			return ApprovalDelegateDto.builder()
+					.approvalDelegateId(approvalDelegate.getApprovalDelegateId())
+					.approverId(approvalDelegate.getApprover().getEmployeeId())
+					.approverName(approvalDelegate.getApprover().getName())
+					.delegateId(approvalDelegate.getDelegate().getEmployeeId())
+					.delegateName(approvalDelegate.getDelegate().getName())
+					.startDate(approvalDelegate.getStartDate())
+					.endDate(approvalDelegate.getEndDate())
+					.reason(approvalDelegate.getReason())
+					.approvalLineId(approvalDelegate.getApprovalLine().getApprovalLineId())
+					.isActive(approvalDelegate.getIsActive())
+					.build();
+		}
+		
 	}
 }

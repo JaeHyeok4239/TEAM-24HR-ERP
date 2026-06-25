@@ -29,9 +29,9 @@ public class LeaveType {
 	@SequenceGenerator(name = "leave_seq", sequenceName = "leave_seq", allocationSize = 1)
 	private Long leaveId;
 	
-	@Column(name = "type_name")
+	@Column(name = "type_name", nullable = false)
 	private String typeName;
 	
-	@Column(name = "is_paid")
+	@Column(name = "is_paid", nullable = false)
 	private String isPaid;
 }

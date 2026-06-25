@@ -36,11 +36,11 @@ public class DocumentProcess {
 	private Long processId;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn
+	@JoinColumn(name = "document_type", nullable = false)
 	private DocumentType documentType;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn
+	@JoinColumn(name = "process_department", nullable = false)
 	private Department department;
 	
 }
