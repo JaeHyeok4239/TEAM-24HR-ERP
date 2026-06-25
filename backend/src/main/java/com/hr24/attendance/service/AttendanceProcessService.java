@@ -18,7 +18,7 @@ import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.attendance.repository.AnnualLeaveBalancesRepository;
 import com.hr24.attendance.repository.AttendanceCorrectionRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
-import com.hr24.document.dto.HrRequestDto;
+import com.hr24.document.dto.DocumentDetailRequestDto;
 import com.hr24.document.entity.Document;
 import com.hr24.document.entity.Leave;
 import com.hr24.document.entity.LeaveDate;
@@ -55,7 +55,7 @@ public class AttendanceProcessService {
 	@Transactional
 	public void createLeave(Long documentId, User requester) {
 
-	    HrRequestDto.LeaveDto data = documentProcessService.executeLeave(documentId);
+	    DocumentDetailRequestDto.LeaveDto data = documentProcessService.executeLeave(documentId);
 
 	    Document document = documentRepository.findById(documentId)
 	            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
@@ -121,7 +121,7 @@ public class AttendanceProcessService {
 	public void createCorrection(Long documentId, User currentUser) {
 
 		// 문서에 담겨있는 데이터 가져오기(사용자가 보낸 dto)
-		HrRequestDto.AttendanceCorrectionDto data = documentProcessService.executeCorrection(documentId);
+		DocumentDetailRequestDto.AttendanceCorrectionDto data = documentProcessService.executeCorrection(documentId);
 		
 		//문서 찾기
 		Document document = documentRepository.findById(documentId)

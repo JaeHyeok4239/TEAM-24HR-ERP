@@ -11,7 +11,7 @@ import com.hr24.document.entity.Document;
 import lombok.Getter;
 import lombok.Setter;
 
-public class HrRequestDto {
+public class DocumentDetailRequestDto {
 		
 	
 		//휴가 신청

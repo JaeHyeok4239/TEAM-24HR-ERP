@@ -18,7 +18,7 @@ import com.hr24.attendance.entity.AttendanceResult;
 import com.hr24.attendance.repository.AttendanceResultRepository;
 import com.hr24.attendance.service.AttendanceCorrectionService;
 import com.hr24.document.dto.DocumentResponseDto;
-import com.hr24.document.dto.HrRequestDto;
+import com.hr24.document.dto.DocumentDetailRequestDto;
 import com.hr24.document.entity.Document;
 import com.hr24.document.entity.DocumentProcess;
 import com.hr24.document.entity.DocumentType;
@@ -70,15 +70,15 @@ public class DocumentProcessService {
 
 	// 휴가 신청 데이터 생성
 	@Transactional(readOnly = true)
-	public HrRequestDto.LeaveDto executeLeave(Long documentId) {
+	public DocumentDetailRequestDto.LeaveDto executeLeave(Long documentId) {
 
 	    Document document = documentRepository.findById(documentId)
 	            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
 
-	    HrRequestDto.LeaveDto dto;
+	    DocumentDetailRequestDto.LeaveDto dto;
 
 	    try {
-	        dto = objectMapper.convertValue(document.getDocumentContent(), HrRequestDto.LeaveDto.class);
+	        dto = objectMapper.convertValue(document.getDocumentContent(), DocumentDetailRequestDto.LeaveDto.class);
 	    } catch (IllegalArgumentException e) {
 	        throw new IllegalArgumentException("연차 정보 형식이 올바르지 않습니다.");
 	    }
@@ -103,15 +103,15 @@ public class DocumentProcessService {
 
 	// 근태 정정 데이터 생성
 	@Transactional
-	public HrRequestDto.AttendanceCorrectionDto executeCorrection(Long documentId) {
+	public DocumentDetailRequestDto.AttendanceCorrectionDto executeCorrection(Long documentId) {
 
 		Document document = documentRepository.findById(documentId)
 				.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
 
-		HrRequestDto.AttendanceCorrectionDto dto;
+		DocumentDetailRequestDto.AttendanceCorrectionDto dto;
 
 		try {
-			dto = objectMapper.convertValue(document.getDocumentContent(), HrRequestDto.AttendanceCorrectionDto.class);
+			dto = objectMapper.convertValue(document.getDocumentContent(), DocumentDetailRequestDto.AttendanceCorrectionDto.class);
 
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("데이터 형식이 올바르지 않습니다.");
