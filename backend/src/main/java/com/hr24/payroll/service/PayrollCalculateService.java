@@ -15,7 +15,9 @@ import com.hr24.employee.repository.UserRepository;
 import com.hr24.payroll.dto.PayrollCalculateRequestDto;
 import com.hr24.payroll.dto.PayrollResponseDto;
 import com.hr24.payroll.entity.Payroll;
+import com.hr24.payroll.entity.PayrollDetail;
 import com.hr24.payroll.entity.Salary;
+import com.hr24.payroll.repository.PayrollDetailRepository;
 import com.hr24.payroll.repository.PayrollRepository;
 import com.hr24.payroll.repository.SalaryRepository;
 
@@ -27,9 +29,11 @@ import lombok.RequiredArgsConstructor;
 public class PayrollCalculateService {
 	
 	private final PayrollRepository payrollRepository;
+	private final PayrollDetailRepository payrollDetailRepository;
 	private final UserRepository userRepository;
 	private final SalaryRepository salaryRepository;
 	private final AttendanceResultRepository attendanceResultRepository;
+	
 	
 	@Transactional
 	public PayrollResponseDto calculatePayroll(PayrollCalculateRequestDto request) {
@@ -114,7 +118,106 @@ public class PayrollCalculateService {
 	                    .build();
 
 	    payrollRepository.save(payroll);
-
+	      
+	    payrollDetailRepository.save(
+	            PayrollDetail.builder()
+	                    .payroll(payroll)
+	                    .itemType("ALLOWANCE")
+	                    .itemId(1L)
+	                    .itemName("직책수당")
+	                    .amount(positionAllowance)
+	                    .createdAt(LocalDateTime.now())
+	                    .build()
+	    );
+	    
+	    payrollDetailRepository.save(
+	            PayrollDetail.builder()
+	                    .payroll(payroll)
+	                    .itemType("ALLOWANCE")
+	                    .itemId(2L)
+	                    .itemName("식대")
+	                    .amount(mealAllowance)
+	                    .createdAt(LocalDateTime.now())
+	                    .build()
+	    );
+	    
+	    payrollDetailRepository.save(
+	            PayrollDetail.builder()
+	                    .payroll(payroll)
+	                    .itemType("ALLOWANCE")
+	                    .itemId(3L)
+	                    .itemName("교통비")
+	                    .amount(transportAllowance)
+	                    .createdAt(LocalDateTime.now())
+	                    .build()
+	    );
+	    
+	    payrollDetailRepository.save(
+	            PayrollDetail.builder()
+	                    .payroll(payroll)
+	                    .itemType("ALLOWANCE")
+	                    .itemId(4L)
+	                    .itemName("초과근무수당")
+	                    .amount(overtimePay)
+	                    .createdAt(LocalDateTime.now())
+	                    .build()
+	    );
+	    
+	    payrollDetailRepository.save(
+	            PayrollDetail.builder()
+	                    .payroll(payroll)
+	                    .itemType("DEDUCTION")
+	                    .itemId(1L)
+	                    .itemName("국민연금")
+	                    .amount(nationalPension)
+	                    .createdAt(LocalDateTime.now())
+	                    .build()
+	    );
+	    
+	    payrollDetailRepository.save(
+	            PayrollDetail.builder()
+	                    .payroll(payroll)
+	                    .itemType("DEDUCTION")
+	                    .itemId(2L)
+	                    .itemName("건강보험")
+	                    .amount(healthInsurance)
+	                    .createdAt(LocalDateTime.now())
+	                    .build()
+	    );
+	    
+	    payrollDetailRepository.save(
+	            PayrollDetail.builder()
+	                    .payroll(payroll)
+	                    .itemType("DEDUCTION")
+	                    .itemId(3L)
+	                    .itemName("고용보험")
+	                    .amount(employmentInsurance)
+	                    .createdAt(LocalDateTime.now())
+	                    .build()
+	    );
+	    
+	    payrollDetailRepository.save(
+	            PayrollDetail.builder()
+	                    .payroll(payroll)
+	                    .itemType("DEDUCTION")
+	                    .itemId(4L)
+	                    .itemName("소득세")
+	                    .amount(incomeTax)
+	                    .createdAt(LocalDateTime.now())
+	                    .build()
+	    );
+	    
+	    payrollDetailRepository.save(
+	            PayrollDetail.builder()
+	                    .payroll(payroll)
+	                    .itemType("DEDUCTION")
+	                    .itemId(5L)
+	                    .itemName("지방소득세")
+	                    .amount(localIncomeTax)
+	                    .createdAt(LocalDateTime.now())
+	                    .build()
+	    );
+	    
 	    return toDto(payroll);
 	}
 	

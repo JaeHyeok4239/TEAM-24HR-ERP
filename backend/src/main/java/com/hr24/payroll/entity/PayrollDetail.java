@@ -1,14 +1,20 @@
 package com.hr24.payroll.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,6 +24,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PayrollDetail {
 	
 	@Id
@@ -33,8 +41,9 @@ public class PayrollDetail {
 	@Column(name = "payroll_details_id")
 	private Long payrollDetailsId;
 	
-	@Column(name = "payroll_id")
-	private Long payrollId;
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payroll_id")
+    private Payroll payroll;
 	
 	@Column(name = "item_type")
 	private String itemType;
@@ -46,7 +55,7 @@ public class PayrollDetail {
 	private String itemName;
 	
 	@Column(name = "amount")
-	private Long amount;
+	private BigDecimal amount;
 	
 	@Column(name = "created_at")
     private LocalDateTime createdAt;
