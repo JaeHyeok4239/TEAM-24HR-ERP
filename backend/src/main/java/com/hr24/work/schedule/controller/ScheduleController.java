@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -76,11 +77,16 @@ public class ScheduleController {
         return ResponseEntity.ok(scheduleService.updateSchedule(scheduleId, request));
     }
 
-    // 일정 삭제
-    @Operation(summary = "일정 삭제", description = "일정을 삭제합니다.")
+    // 일정 삭제 - 작성자 본인 또는 ADMIN만 가능
+    @Operation(summary = "일정 삭제", description = "작성자 본인 또는 ADMIN만 삭제할 수 있습니다.")
     @DeleteMapping("/{scheduleId}")
-    public ResponseEntity<Void> deleteSchedule(@PathVariable Long scheduleId) {
-        scheduleService.deleteSchedule(scheduleId);
+    public ResponseEntity<Void> deleteSchedule(
+            @PathVariable Long scheduleId,
+            Authentication authentication) {
+        String loginId = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        scheduleService.deleteSchedule(scheduleId, loginId, isAdmin);
         return ResponseEntity.noContent().build();
     }
 }
