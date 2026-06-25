@@ -12,7 +12,7 @@ import { Bell } from "lucide-react";
 import { useNotification } from "@/hooks/useNotification";
 
 function NotificationBell() {
-  const { notifications, clearNotifications } = useNotification();
+  const { notifications, removeNotification, clearNotifications } = useNotification();
   const [show, setShow] = useState(false);
 
   return (
@@ -52,12 +52,18 @@ function NotificationBell() {
               notifications.map((n, i) => (
                 <div
                   key={i}
-                  className="p-3 border-b border-gray-50 hover:bg-gray-50"
+                  className="p-3 border-b border-gray-50 hover:bg-gray-50 flex items-start gap-2"
                 >
-                  <p className="text-xs font-semibold text-blue-600">
-                    {n.title}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-0.5">{n.message}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-blue-600">{n.title}</p>
+                    <p className="text-xs text-gray-600 mt-0.5">{n.message}</p>
+                  </div>
+                  <button
+                    onClick={() => removeNotification(i)}
+                    className="flex-shrink-0 text-gray-300 hover:text-gray-500 text-base leading-none mt-0.5"
+                  >
+                    ×
+                  </button>
                 </div>
               ))
             )}

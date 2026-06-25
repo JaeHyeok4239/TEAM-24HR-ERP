@@ -68,14 +68,15 @@ public class NotificationService {
     }
 
     // 사용자의 미확인 알림 조회 (로그인 후 불러오기용)
-    public List<NotificationMessage> getNotificationsForUser(String loginId) {
+    // since: 부서/전사 알림 기준 시각 (null이면 7일 이내)
+    public List<NotificationMessage> getNotificationsForUser(String loginId, LocalDateTime since) {
         String departmentName = userRepository.findByLoginId(loginId)
             .map(u -> u.getDepartment() != null ? u.getDepartment().getDepartmentName() : null)
             .orElse(null);
 
-        LocalDateTime since = LocalDateTime.now().minusDays(7);
+        LocalDateTime sinceTime = (since != null) ? since : LocalDateTime.now().minusDays(7);
 
-        return notificationRepository.findNotificationsForUser(loginId, departmentName, since)
+        return notificationRepository.findNotificationsForUser(loginId, departmentName, sinceTime)
             .stream()
             .map(n -> new NotificationMessage(n.getType(), n.getTitle(), n.getMessage()))
             .collect(Collectors.toList());
