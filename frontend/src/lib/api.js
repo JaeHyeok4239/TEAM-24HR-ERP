@@ -2,26 +2,37 @@ import { useAuthStore } from "@/store/authStore";
 
 const BASE_URL = "http://localhost:8080";
 
-const clearAuthAndRedirect = () => {
-  useAuthStore.getState().logout();
-  window.location.replace("/");
+const clearAuthAndRedirect = async () => {
+  try {
+    const accessToken =
+      useAuthStore.getState().accessToken ||
+      localStorage.getItem("accessToken");
+
+    await fetch(`${BASE_URL}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken && {
+          Authorization: `Bearer ${accessToken}`,
+        }),
+      },
+    });
+  } catch {
+    // 로그아웃 API가 실패해도 프론트 인증 상태는 초기화한다.
+  } finally {
+    useAuthStore.getState().logout();
+    window.location.replace("/");
+  }
 };
 
 const refreshAccessToken = async () => {
-  const refreshToken = localStorage.getItem("refreshToken");
-
-  if (!refreshToken) {
-    throw new Error("Refresh Token이 없습니다.");
-  }
-
   const response = await fetch(`${BASE_URL}/api/auth/refresh`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      refreshToken,
-    }),
   });
 
   if (!response.ok) {
@@ -51,6 +62,7 @@ export const apiRequest = async (url, options = {}) => {
   const request = (token) => {
     return fetch(`${BASE_URL}${url}`, {
       ...options,
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...options.headers,
@@ -63,7 +75,11 @@ export const apiRequest = async (url, options = {}) => {
 
   let response = await request(accessToken);
 
-  if (response.status === 401 && url !== "/api/auth/login") {
+  if (
+    response.status === 401 &&
+    url !== "/api/auth/login" &&
+    url !== "/api/auth/refresh"
+  ) {
     try {
       const newAccessToken = await refreshAccessToken();
 
@@ -73,6 +89,23 @@ export const apiRequest = async (url, options = {}) => {
 
       throw error;
     }
+  }
+
+  if (response.status === 403) {
+    let errorData = null;
+
+    try {
+      errorData = await response.json();
+    } catch {
+      // JSON 형식의 오류 응답이 아니면 기본 메시지를 사용한다.
+    }
+
+    const error = new Error(errorData?.message || "접근 권한이 없습니다.");
+
+    error.status = 403;
+    error.code = errorData?.code ?? errorData?.errorCode ?? null;
+
+    throw error;
   }
 
   if (!response.ok) {
@@ -100,10 +133,10 @@ export const apiRequest = async (url, options = {}) => {
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "http://localhost:8080",
-    headers: {
-        "Content-Type": "application/json"
-    }
+  baseURL: "http://localhost:8080",
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 export default api;
