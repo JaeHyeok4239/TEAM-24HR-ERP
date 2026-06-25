@@ -1,5 +1,6 @@
 package com.hr24.document.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -10,9 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hr24.approval.entity.ApprovalDelegate;
 import com.hr24.approval.entity.ApprovalHistory;
 import com.hr24.approval.entity.ApprovalLine;
 import com.hr24.approval.repository.ApprovalLineRepository;
+import com.hr24.approval.repository.ApprovalDelegateRepository;
 import com.hr24.approval.repository.ApprovalHistoryRepository;
 import com.hr24.document.dto.DocumentRequestDto;
 import com.hr24.document.dto.DocumentResponseDto;
@@ -22,6 +25,7 @@ import com.hr24.document.entity.DocumentType;
 import com.hr24.document.repository.DocumentFileRepository;
 import com.hr24.document.repository.DocumentRepository;
 import com.hr24.document.repository.DocumentTypeRepository;
+import com.hr24.employee.entity.Department;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.global.attachment.Attachment;
@@ -44,7 +48,9 @@ public class DocumentService {
 	private final UserRepository userRepository;
 	private final AttachmentService attachmentService;
 	private final ObjectMapper objectMapper;
-
+	private final ApprovalDelegateRepository approvalDelegateRepository;
+	private final DocumentContentValidationService documentContentValidationService;
+	
 	// 파일 매핑
 	private void createFileMapping(Document document, Attachment attachment) {
 		DocumentFile documentFile = DocumentFile.builder().document(document).attachment(attachment).build();
@@ -69,23 +75,47 @@ public class DocumentService {
 
 	// 결재 연동
 	private void createApprovalHistory(Document document) {
-		List<ApprovalLine> lines = approvalLineRepository
-				.findByDocumentTypeOrderByStepOrderAsc(document.getDocumentType());
+	    Department department = document.getRequester().getDepartment();
+	    
+	    // 부서별 결재선 우선 조회
+	    List<ApprovalLine> lines = approvalLineRepository
+	            .findByDocumentTypeAndDepartmentOrderByStepOrderAsc(
+	                    document.getDocumentType(), department);
 
-		if (lines.isEmpty()) {
-			throw new IllegalStateException("해당 문서 종류의 결재선이 없습니다.");
-		}
+	    // 없으면 공통 결재선 fallback
+	    if (lines.isEmpty()) {
+	        lines = approvalLineRepository
+	                .findByDocumentTypeAndDepartmentIsNullOrderByStepOrderAsc(
+	                        document.getDocumentType());
+	    }
 
-		List<ApprovalHistory> histories = lines.stream()
-				.map(line -> ApprovalHistory.builder()
-						.document(document)
-						.stepOrder(line.getStepOrder())
-						.approver(line.getApprover())
-						.status("PND")
-						.documentVersion(document.getDocumentVersion())
-						.build()).toList();
+	    if (lines.isEmpty()) {
+	        throw new IllegalStateException("해당 문서 종류의 결재선이 없습니다.");
+	    }
 
-		approvalHistoryRepository.saveAll(histories);
+	    LocalDate today = LocalDate.now();
+
+	    List<ApprovalHistory> histories = lines.stream()
+	            .map(line -> {
+	                // 대리결재 활성화 여부 체크
+	                User approver = approvalDelegateRepository
+	                        .findActiveDelegate(
+	                                line.getApprover().getEmployeeId(),
+	                                line.getApprovalLineId(),
+	                                today)
+	                        .map(ApprovalDelegate::getDelegate)
+	                        .orElse(line.getApprover());
+
+	                return ApprovalHistory.builder()
+	                        .document(document)
+	                        .stepOrder(line.getStepOrder())
+	                        .approver(approver)
+	                        .status("PND")
+	                        .documentVersion(document.getDocumentVersion())
+	                        .build();
+	            }).toList();
+
+	    approvalHistoryRepository.saveAll(histories);
 	}
 
 	// 문서 작성
@@ -104,7 +134,16 @@ public class DocumentService {
 		if (status == null || status.isBlank()) {
 			status = "TMP";
 		}
-
+		
+		if ("REQ".equals(documentDto.getStatus())
+				&& (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
+			throw new IllegalArgumentException("문서 내용을 입력해주세요.");
+		}
+		
+		if ("REQ".equals(status)) {
+		    documentContentValidationService.validate(documentType, documentDto.getDocumentContent());
+		}
+		
 		Document document = Document.builder()
 				.documentType(documentType).requester(user)
 				.documentTitle(documentDto.getDocumentTitle())
@@ -132,11 +171,6 @@ public class DocumentService {
 		if ("REQ".equals(saved.getStatus())) {
 			// 결재 로직 추가
 			createApprovalHistory(document);
-		}
-
-		if ("REQ".equals(document.getStatus())
-				&& (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
-			throw new IllegalArgumentException("문서 내용을 입력해주세요.");
 		}
 
 		return saved.getDocumentId();
@@ -171,7 +205,7 @@ public class DocumentService {
 				&& (documentDto.getDocumentContent() == null || documentDto.getDocumentContent().isEmpty())) {
 			throw new IllegalArgumentException("문서 내용을 입력해주세요.");
 		}
-
+		
 		boolean isResubmit = "REJ".equals(document.getStatus()) && "REQ".equals(newStatus);
 
 		// 반려 재기안 시 처리
@@ -183,8 +217,9 @@ public class DocumentService {
 		}
 		
 		if ("REQ".equals(newStatus)) {
-			createApprovalHistory(document);
-			document.setRequestedAt(LocalDateTime.now());
+		    documentContentValidationService.validate(document.getDocumentType(), documentDto.getDocumentContent());
+		    createApprovalHistory(document);
+		    document.setRequestedAt(LocalDateTime.now());
 		}
 		
 		document.setDocumentTitle(documentDto.getDocumentTitle());
@@ -273,10 +308,11 @@ public class DocumentService {
 		User user = userRepository.findByLoginId(loginId)
 				.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
 
-		Long userId = user.getEmployeeId();
-
+		
+		Long requester = document.getRequester().getEmployeeId();
+		
 		// 기안자 체크
-		boolean isRequester = isOwner(loginId, userId);
+		boolean isRequester = isOwner(loginId, requester);
 
 		// 결재자 체크 (approval_history에 있는지) 문서 상세 열람은 결재자 권한 있으면 가능
 		boolean isApprover = approvalHistoryRepository.existsByDocumentAndApprover(document, user);

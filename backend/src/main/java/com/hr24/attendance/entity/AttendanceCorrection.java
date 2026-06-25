@@ -80,10 +80,6 @@ public class AttendanceCorrection{
 	@Column(name="after_time")
 	private LocalDateTime afterTime;
 	
-	@Enumerated(EnumType.STRING) // 추가됐음 ddl도 수정해야함 260624 커밋은 했는데 타입 확인필요
-	@Column(name = "attendance_status")
-	private AttendanceStatus attendanceStatus;
-	
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private LocalDateTime createdAt;
 	
