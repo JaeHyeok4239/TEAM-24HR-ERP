@@ -3,6 +3,7 @@ package com.hr24.attendance.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hr24.attendance.entity.AttendanceResult;
 
 import lombok.Getter;
@@ -11,7 +12,9 @@ import lombok.Setter;
 @Getter
 public class AttendanceResultDto {
     private Long attendanceResultId;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
     private LocalDateTime checkInTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
     private LocalDateTime checkOutTime;
     private String attendanceStatus;
 

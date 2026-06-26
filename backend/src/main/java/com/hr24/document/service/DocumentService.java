@@ -25,6 +25,7 @@ import com.hr24.document.entity.DocumentType;
 import com.hr24.document.repository.DocumentFileRepository;
 import com.hr24.document.repository.DocumentRepository;
 import com.hr24.document.repository.DocumentTypeRepository;
+import com.hr24.document.repository.LeaveTypeRepository;
 import com.hr24.employee.entity.Department;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.repository.UserRepository;
@@ -47,9 +48,9 @@ public class DocumentService {
 	private final ApprovalLineRepository approvalLineRepository;
 	private final UserRepository userRepository;
 	private final AttachmentService attachmentService;
-	private final ObjectMapper objectMapper;
 	private final ApprovalDelegateRepository approvalDelegateRepository;
 	private final DocumentContentValidationService documentContentValidationService;
+	private final LeaveTypeRepository leaveTypeRepository;
 	
 	// 파일 매핑
 	private void createFileMapping(Document document, Attachment attachment) {
@@ -264,7 +265,12 @@ public class DocumentService {
 		if (!"TMP".equals(document.getStatus())) {
 			throw new IllegalStateException("임시저장 상태의 문서만 삭제할 수 있습니다");
 		}
-
+		
+		//이미 결재처리가 된 문서의 경우 삭제 방지(반려 문서 삭제 방지)
+		if(!document.getDocumentVersion().equals(1)) {
+			throw new IllegalStateException("결재 이력이 존재하는 문서는 삭제할 수 없습니다");
+		}
+		
 		// 매핑된 파일 조회 후 삭제
 		List<DocumentFile> documentFiles = documentFileRepository.findByDocument(document);
 		for (DocumentFile documentFile : documentFiles) {
@@ -275,8 +281,6 @@ public class DocumentService {
 
 		documentRepository.delete(document);
 	}
-
-	// 업로드된 파일 종류 목록
 
 	// 내 문서함 조회(기본)
 	public Page<DocumentResponseDto.DocumentListDto> myDocList(String loginId, Pageable pageable) {
@@ -329,7 +333,7 @@ public class DocumentService {
 
 		List<DocumentResponseDto.DocumentFileResponseDto> documentFileList = documentFileRepository
 				.findByDocument(document).stream().map(DocumentResponseDto.DocumentFileResponseDto::from).toList();
-
+		
 		return DocumentResponseDto.DocumentDto.of(document, approvalHistories, documentFileList);
 	}
 

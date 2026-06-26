@@ -501,6 +501,7 @@ CREATE TABLE room_reservation (
     end_time        VARCHAR2(5)     NOT NULL,
     status          VARCHAR2(20)    DEFAULT 'CONFIRMED' NOT NULL,
     purpose         VARCHAR2(500)   NULL,
+    meeting_type    VARCHAR2(20)    NULL,
     create_at       TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
     CONSTRAINT pk_room_reservation PRIMARY KEY (reservation_id),
     CONSTRAINT fk_rsvn_room FOREIGN KEY (room_id) REFERENCES meeting_room (room_id),
@@ -788,3 +789,47 @@ CREATE TABLE employee_tax_info (
 	CONSTRAINT fk_employee_tax_info FOREIGN KEY(employee_id)
 	REFERENCES users(employee_id)
 );
+
+
+-- 알림 테이블
+CREATE TABLE work_notifications (
+    notification_id NUMBER          NOT NULL,
+    login_id        VARCHAR2(50)    NULL,
+    department_name VARCHAR2(100)   NULL,
+    scope           VARCHAR2(20)    NOT NULL,
+    type            VARCHAR2(50)    NOT NULL,
+    title           VARCHAR2(200)   NOT NULL,
+    message         VARCHAR2(1000)  NOT NULL,
+    is_read         CHAR(1)         DEFAULT 'N' NOT NULL,
+    created_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT pk_work_notifications PRIMARY KEY (notification_id),
+    CONSTRAINT chk_notif_scope CHECK (scope IN ('PERSONAL', 'DEPT', 'COMPANY')),
+    CONSTRAINT chk_notif_read  CHECK (is_read IN ('Y', 'N'))
+);
+
+COMMENT ON TABLE  work_notifications                 IS '알림 저장 테이블';
+COMMENT ON COLUMN work_notifications.notification_id IS '알림 PK';
+COMMENT ON COLUMN work_notifications.login_id        IS 'PERSONAL 알림 수신자 loginId';
+COMMENT ON COLUMN work_notifications.department_name IS 'DEPT 알림 대상 부서명';
+COMMENT ON COLUMN work_notifications.scope           IS 'PERSONAL/DEPT/COMPANY';
+COMMENT ON COLUMN work_notifications.type            IS '알림 유형 코드';
+COMMENT ON COLUMN work_notifications.title           IS '알림 제목';
+COMMENT ON COLUMN work_notifications.message         IS '알림 내용';
+
+COMMENT ON COLUMN work_notifications.is_read         IS 'Y=읽음, N=미읽음 (PERSONAL만 사용)';
+COMMENT ON COLUMN work_notifications.created_at      IS '발송일시';
+
+-- 인사평가 등급 컬럼 추가
+ALTER TABLE employee_evaluations ADD grade VARCHAR2(5);
+
+-- 기존 확정 평가 데이터 등급 백필
+UPDATE employee_evaluations
+SET grade = CASE
+    WHEN total_score >= 43 THEN 'S'
+    WHEN total_score >= 38 THEN 'A'
+    WHEN total_score >= 33 THEN 'B'
+    WHEN total_score >= 28 THEN 'C'
+    ELSE 'D'
+END
+WHERE status = 'CONFIRMED' AND total_score IS NOT NULL;
+COMMIT;

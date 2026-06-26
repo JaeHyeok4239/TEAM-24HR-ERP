@@ -24,8 +24,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.hr24.document.dto.DocumentRequestDto;
 import com.hr24.document.dto.DocumentResponseDto;
+import com.hr24.document.dto.DocumentTypeDto;
 import com.hr24.document.entity.Document;
 import com.hr24.document.service.DocumentService;
+import com.hr24.document.service.DocumentTypeService;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.global.exception.BusinessException;
@@ -146,6 +148,5 @@ public class DocumentController {
 	    return ResponseEntity.ok(documentService.viewDocument(documentId, authInfo.getName()));
 	}
 	
-	//업무 처리함
 	
 }

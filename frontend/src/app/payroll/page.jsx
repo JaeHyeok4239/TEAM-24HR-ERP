@@ -1,56 +1,149 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import PayrollTable from "@/components/payroll/PayrollTable";
 import { getPayrolls } from "@/services/payrollService";
 
 export default function PayrollPage() {
+  const router = useRouter();
 
-    const [payrolls, setPayrolls] = useState([]);
+  const [payrolls, setPayrolls] = useState([]);
 
-    useEffect(() => {
+  const [month, setMonth] = useState("");
+  const [employeeNo, setEmployeeNo] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
 
-        const loadData = async () => {
+  const [page, setPage] = useState(0);
 
-            const data = await getPayrolls();
+  const [totalPages, setTotalPages] = useState(0);
 
-            setPayrolls(data);
-        };
+  const [totalElements, setTotalElements] = useState(0);
 
-        loadData();
+  const loadPayrolls = async () => {
+    try {
+      const data = await getPayrolls({
+        month,
+        employeeNo,
+        departmentId,
+        page,
+        size: 10,
+      });
 
-    }, []);
+      setPayrolls(data.content);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
+    } catch (error) {
+      console.error(error);
+      alert("급여 목록 조회 실패");
+    }
+  };
 
-    return (
-        <div>
-            <h1>급여대장</h1>
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await loadPayrolls();
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
-            <table>
+    fetchData();
+  }, [page]);
 
-                <thead>
-                    <tr>
-                        <th>사번</th>
-                        <th>이름</th>
-                        <th>부서</th>
-                        <th>실수령액</th>
-                    </tr>
-                </thead>
+  const handleSearch = () => {
+    setPage(0);
 
-                <tbody>
+    if (page === 0) {
+      loadPayrolls();
+    }
+  };
 
-                    {payrolls.map(payroll => (
+  return (
+    <div className="p-6">
 
-                        <tr key={payroll.payrollId}>
-                            <td>{payroll.employeeNo}</td>
-                            <td>{payroll.employeeName}</td>
-                            <td>{payroll.departmentName}</td>
-                            <td>{payroll.netSalary}</td>
-                        </tr>
+      <h1 className="text-2xl font-bold mb-6">
+        급여대장
+      </h1>
 
-                    ))}
+      <div className="flex gap-3 mb-5">
 
-                </tbody>
+        <input
+          type="month"
+          value={month}
+          onChange={(e) =>
+            setMonth(e.target.value)
+          }
+          className="border p-2 rounded"
+        />
 
-            </table>
-        </div>
-    );
+        <input
+          type="text"
+          placeholder="사번"
+          value={employeeNo}
+          onChange={(e) =>
+            setEmployeeNo(e.target.value)
+          }
+          className="border p-2 rounded"
+        />
+
+        <input
+          type="number"
+          placeholder="부서ID"
+          value={departmentId}
+          onChange={(e) =>
+            setDepartmentId(e.target.value)
+          }
+          className="border p-2 rounded"
+        />
+
+        <button
+          onClick={handleSearch}
+          className="bg-blue-600 text-white px-4 rounded"
+        >
+          조회
+        </button>
+
+      </div>
+
+      {/* 테이블 */}
+
+      <PayrollTable
+        payrolls={payrolls}
+        onRowClick={(payrollId) =>
+          router.push(
+            `/payroll/${payrollId}`
+          )
+        }
+      />
+
+      {/* 페이징 */}
+
+      <div className="flex justify-center gap-3 mt-5">
+
+        <button
+          disabled={page === 0}
+          onClick={() => setPage(prev => prev - 1)}
+          className="border px-3 py-1 disabled:opacity-50"
+        >
+          이전
+        </button>
+
+        <span>
+          {page + 1}
+        </span>
+
+        <button
+          disabled={page + 1 >= totalPages}
+          onClick={() => setPage(prev => prev + 1)}
+          className="border px-3 py-1 disabled:opacity-50"
+        >
+          다음
+        </button>
+
+      </div>
+
+    </div>
+  );
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hr24.document.entity.Document;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,4 +37,5 @@ public class DocumentDetailDto {
 	        @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
 		    private LocalDateTime afterTime;
 	    }
+	    
 }

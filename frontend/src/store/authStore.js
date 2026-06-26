@@ -5,18 +5,15 @@ export const useAuthStore = create((set) => ({
   isAuthLoading: true,
 
   accessToken: null,
-  refreshToken: null,
 
   userInfo: null,
 
-  // 로그인 API 성공 후 토큰 저장
-  login: (accessToken, refreshToken) => {
+  // 로그인 API 성공 후 Access Token 저장
+  login: (accessToken) => {
     localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
 
     set({
       accessToken,
-      refreshToken,
       isAuthLoading: true,
     });
   },
@@ -40,28 +37,24 @@ export const useAuthStore = create((set) => ({
   // 로그아웃 및 인증 정보 초기화
   logout: () => {
     localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
 
     set({
       isLogin: false,
       isAuthLoading: false,
       accessToken: null,
-      refreshToken: null,
       userInfo: null,
     });
   },
 
-  // 새로고침 시 localStorage 토큰 복구
+  // 새로고침 시 accessToken 복구
   initializeAuth: () => {
     const accessToken = localStorage.getItem("accessToken");
-    const refreshToken = localStorage.getItem("refreshToken");
 
     if (!accessToken) {
       set({
         isLogin: false,
         isAuthLoading: false,
         accessToken: null,
-        refreshToken: null,
         userInfo: null,
       });
 
@@ -72,7 +65,6 @@ export const useAuthStore = create((set) => ({
       isLogin: false,
       isAuthLoading: true,
       accessToken,
-      refreshToken,
       userInfo: null,
     });
 

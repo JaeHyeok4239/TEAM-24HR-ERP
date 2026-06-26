@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+// 일용직 일괄 저장
 public class AttendanceRequest {
 
     private String employeeId;

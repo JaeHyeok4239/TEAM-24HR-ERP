@@ -1,4 +1,4 @@
-import Header from '@/components/Header';
+import Header from '@/components/common/Header';
 import PasswordChangeForm from '@/components/user/PasswordChangeForm';
 
 export default function PasswordChangePage() {
