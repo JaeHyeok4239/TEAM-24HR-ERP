@@ -145,6 +145,10 @@ public enum ErrorCode {
 	ACCESS_DENIED(
 			HttpStatus.FORBIDDEN,
 			"접근 권한이 없습니다."),
+
+	SCHEDULE_ACCESS_DENIED(
+			HttpStatus.FORBIDDEN,
+			"등록 권한이 없습니다. 다시 선택해주세요."),
 	
 	INVALID_TOKEN(
 			HttpStatus.UNAUTHORIZED,

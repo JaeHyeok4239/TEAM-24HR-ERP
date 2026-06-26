@@ -181,8 +181,8 @@ export default function ScheduleCalendar() {
       const start = calApi.view.activeStart.toISOString().slice(0, 10);
       const end   = calApi.view.activeEnd.toISOString().slice(0, 10);
       fetchSchedules(start, end);
-    } catch {
-      setError("저장에 실패했습니다. 다시 시도해주세요.");
+    } catch (err) {
+      setError(err?.response?.data?.message ?? "일정등록 권한이 없습니다. 다시 선택해주세요.");
     } finally {
       setSaving(false);
     }

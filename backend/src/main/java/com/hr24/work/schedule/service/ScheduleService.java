@@ -82,7 +82,7 @@ public class ScheduleService {
 
         // COMPANY 일정은 ADMIN만 등록 가능
         if ("COMPANY".equals(request.getScheduleType()) && !isAdmin) {
-            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+            throw new BusinessException(ErrorCode.SCHEDULE_ACCESS_DENIED);
         }
 
         User user = userRepository.findById(userId)
@@ -96,7 +96,7 @@ public class ScheduleService {
                 // DEPT 일정은 본인 부서만 등록 가능 (ADMIN 제외)
                 if (!isAdmin && (user.getDepartment() == null ||
                         !user.getDepartment().getDepartmentId().equals(department.getDepartmentId()))) {
-                    throw new BusinessException(ErrorCode.ACCESS_DENIED);
+                    throw new BusinessException(ErrorCode.SCHEDULE_ACCESS_DENIED);
                 }
             } else if (user.getDepartment() != null) {
                 department = user.getDepartment();
