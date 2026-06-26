@@ -13,6 +13,10 @@ import com.hr24.auth.cookie.RefreshTokenCookieProvider;
 import com.hr24.auth.dto.LoginRequestDto;
 import com.hr24.auth.dto.LoginResponseDto;
 import com.hr24.auth.dto.LoginTokenDto;
+import com.hr24.auth.dto.PasswordResetCodeSendRequestDto;
+import com.hr24.auth.dto.PasswordResetCodeVerifyRequestDto;
+import com.hr24.auth.dto.PasswordResetCodeVerifyResponseDto;
+import com.hr24.auth.dto.PasswordResetRequestDto;
 import com.hr24.auth.dto.RefreshTokenResponseDto;
 import com.hr24.auth.service.AuthService;
 
@@ -21,6 +25,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "인증 관리", description = "로그인, 로그아웃, 토큰 재발급 API")
@@ -102,6 +107,37 @@ public class AuthController {
                 .ok()
                 .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
                 .build();
+    }
+    
+    @Operation(summary = "비밀번호 재설정 인증코드 발송", description = "로그인 ID와 이메일이 일치하면 인증코드를 이메일로 발송합니다.")
+    @PostMapping("/password-reset/code")
+    public ResponseEntity<Void> sendPasswordResetCode(
+            @Valid @RequestBody PasswordResetCodeSendRequestDto requestDto
+    ) {
+        authService.sendPasswordResetCode(requestDto);
+
+        return ResponseEntity.noContent().build();
+    }
+    
+    @Operation(summary = "비밀번호 재설정 인증코드 확인", description = "이메일 인증코드를 확인하고 비밀번호 재설정 토큰을 발급합니다.")
+    @PostMapping("/password-reset/code/verify")
+    public ResponseEntity<PasswordResetCodeVerifyResponseDto> verifyPasswordResetCode(
+            @Valid @RequestBody PasswordResetCodeVerifyRequestDto requestDto
+    ) {
+        PasswordResetCodeVerifyResponseDto responseDto =
+                authService.verifyPasswordResetCode(requestDto);
+
+        return ResponseEntity.ok(responseDto);
+    }
+    
+    @Operation(summary = "비밀번호 재설정", description = "비밀번호 재설정 토큰으로 새 비밀번호를 설정합니다.")
+    @PostMapping("/password-reset")
+    public ResponseEntity<Void> resetPassword(
+            @Valid @RequestBody PasswordResetRequestDto requestDto
+    ) {
+        authService.resetPassword(requestDto);
+
+        return ResponseEntity.noContent().build();
     }
 
     private String resolveAccessToken(HttpServletRequest request) {

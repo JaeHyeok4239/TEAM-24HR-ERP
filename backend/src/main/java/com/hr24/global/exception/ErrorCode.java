@@ -150,6 +150,26 @@ public enum ErrorCode {
 			HttpStatus.UNAUTHORIZED,
 			"유효하지 않은 토큰입니다."),
 	
+	INVALID_PASSWORD_RESET_INFO(
+	        HttpStatus.BAD_REQUEST,
+	        "아이디 또는 이메일이 일치하지 않습니다."
+	),
+	
+	INVALID_PASSWORD_RESET_CODE(
+	        HttpStatus.BAD_REQUEST,
+	        "인증코드가 올바르지 않거나 만료되었습니다."
+	),
+
+	INVALID_PASSWORD_RESET_TOKEN(
+	        HttpStatus.BAD_REQUEST,
+	        "비밀번호 재설정 요청이 만료되었습니다. 다시 시도해주세요."
+	),
+	
+	SAME_AS_OLD_PASSWORD(
+			HttpStatus.BAD_REQUEST,
+	        "기존 비밀번호와 동일합니다."
+	),
+	
 	//결재 관련
 	ALREADY_PROCESSED(
 			HttpStatus.CONFLICT,

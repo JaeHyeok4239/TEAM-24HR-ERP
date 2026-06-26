@@ -75,11 +75,13 @@ export const apiRequest = async (url, options = {}) => {
 
   let response = await request(accessToken);
 
-  if (
-    response.status === 401 &&
-    url !== "/api/auth/login" &&
-    url !== "/api/auth/refresh"
-  ) {
+  const isRefreshExcludedUrl =
+    url === "/api/auth/login" ||
+    url === "/api/auth/refresh" ||
+    url === "/api/auth/logout" ||
+    url.startsWith("/api/auth/password-reset");
+
+  if (response.status === 401 && !isRefreshExcludedUrl) {
     try {
       const newAccessToken = await refreshAccessToken();
 

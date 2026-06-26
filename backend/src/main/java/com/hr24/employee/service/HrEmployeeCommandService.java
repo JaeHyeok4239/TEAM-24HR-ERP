@@ -26,9 +26,12 @@ import com.hr24.employee.repository.PositionRepository;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.global.exception.BusinessException;
 import com.hr24.global.exception.ErrorCode;
+import com.hr24.global.mail.AccountMailService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -44,6 +47,7 @@ public class HrEmployeeCommandService {
 	private final EmployeeHistoryService employeeHistoryService;
 	private final EmployeeRoleService employeeRoleService;
 	private final EmployeeSensitiveInfoService employeeSensitiveInfoService;
+	private final AccountMailService accountMailService;
 
 	public EmployeeDetailResponseDto createEmployee(EmployeeCreateRequestDto request) {
 		validateDuplicateLoginId(request.getLoginId());
@@ -63,6 +67,7 @@ public class HrEmployeeCommandService {
 		}
 
 		String employeeNo = generateEmployeeNo();
+		String rawPassword = request.getPassword().trim();
 		String encodedPassword = passwordEncoder.encode(request.getPassword());
 
 		User user = User.createEmployee(
@@ -79,6 +84,8 @@ public class HrEmployeeCommandService {
 		User savedUser = userRepository.save(user);
 
 		employeeRoleService.assignDefaultUserRole(savedUser);
+		
+		sendAccountCreatedMailSafely(savedUser, rawPassword);
 
 		List<String> roles = employeeRoleService.findRoleCodes(savedUser.getEmployeeId());
 
@@ -297,5 +304,23 @@ public class HrEmployeeCommandService {
 		}
 
 		return value.trim();
+	}
+	
+	private void sendAccountCreatedMailSafely(User user, String rawPassword) {
+		try {
+			accountMailService.sendAccountCreatedMail(
+					user.getEmail(),
+					user.getName(),
+					user.getLoginId(),
+					rawPassword
+			);
+		} catch (Exception e) {
+			log.warn(
+					"직원 등록은 완료되었지만 계정 안내 메일 발송에 실패했습니다. employeeId={}, email={}",
+					user.getEmployeeId(),
+					user.getEmail(),
+					e
+			);
+		}
 	}
 }
