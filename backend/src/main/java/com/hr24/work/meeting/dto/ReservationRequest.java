@@ -17,6 +17,4 @@ public class ReservationRequest {
     private String endTime;
     private String purpose;
     private List<Long> participantIds;
-    private String meetingType;        // COMPANY, MANAGER, DEPT
-    private List<Long> invitedDeptIds; // DEPT 타입일 때 초대 부서 ID 목록
 }

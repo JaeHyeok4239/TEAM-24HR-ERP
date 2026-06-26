@@ -49,9 +49,6 @@ public class RoomReservation {
     @Column(name = "purpose")
     private String purpose;
 
-    @Column(name = "meeting_type", length = 20)
-    private String meetingType;
-
     @Column(name = "create_at")
     private LocalDateTime createAt;
 }

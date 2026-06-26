@@ -14,19 +14,7 @@ for (let h = 7; h <= 19; h++) {
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MONTHS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 
-const INIT_FORM = { roomId: "", title: "", startTime: "", endTime: "", purpose: "", meetingType: "DEPT", invitedDeptIds: [] };
-
-const MEETING_TYPE_OPTIONS = [
-  { value: "DEPT",    label: "부서 간 회의", desc: "선택한 부서에게 알림" },
-  { value: "MANAGER", label: "팀장 회의",   desc: "부장 이상 전원에게 알림" },
-  { value: "COMPANY", label: "전사 회의",   desc: "전체 직원에게 알림" },
-];
-
-const MEETING_TYPE_COLORS = {
-  COMPANY: { cell: "#fee2e2", bar: "#ef4444" },  // 빨간색 (전사 회의)
-  MANAGER: { cell: "#f3e8ff", bar: "#a855f7" },  // 보라색 (팀장 회의)
-  DEPT:    { cell: "#dbeafe", bar: "#3b82f6" },  // 파란색 (부서 간 회의)
-};
+const INIT_FORM = { roomId: "", title: "", startTime: "", endTime: "", purpose: "" };
 
 function toDateStr(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -47,21 +35,12 @@ export default function MeetingRoom() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [detailReservation, setDetailReservation] = useState(null);
-  const [departments, setDepartments] = useState([]);
 
   // 회의실 목록
   useEffect(() => {
     apiRequest("/api/meeting/rooms")
       .then((r) => r.json())
       .then(setRooms)
-      .catch(() => {});
-  }, []);
-
-  // 부서 목록
-  useEffect(() => {
-    apiRequest("/api/meeting/departments")
-      .then((r) => r.json())
-      .then(setDepartments)
       .catch(() => {});
   }, []);
 
@@ -131,8 +110,6 @@ export default function MeetingRoom() {
           endTime: form.endTime,
           purpose: form.purpose,
           participantIds: [],
-          meetingType: form.meetingType,
-          invitedDeptIds: form.meetingType === "DEPT" ? form.invitedDeptIds : [],
         }),
       });
       setShowModal(false);
@@ -154,7 +131,7 @@ export default function MeetingRoom() {
       fetchReservations(selectedDate);
       fetchMyReservations();
     } catch {
-      alert("삭제 권한은 작성자 및 관리자만 가능합니다.");
+      alert("취소에 실패했습니다.");
     }
   };
 
@@ -272,18 +249,12 @@ export default function MeetingRoom() {
           <div className="bg-white rounded-lg shadow p-3">
             <p className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">범례</p>
             <div className="flex flex-col gap-1.5 text-[11px]">
-              {[
-                { type: "DEPT",    label: "부서 간 회의" },
-                { type: "MANAGER", label: "팀장 회의" },
-                { type: "COMPANY", label: "전사 회의" },
-              ].map(({ type, label }) => (
-                <div key={type} className="flex items-center gap-2">
-                  <div className="w-8 h-4 rounded-sm flex items-center px-0.5" style={{ backgroundColor: MEETING_TYPE_COLORS[type].cell }}>
-                    <div className="w-full h-2.5 rounded-sm" style={{ backgroundColor: MEETING_TYPE_COLORS[type].bar }} />
-                  </div>
-                  <span className="text-gray-600">{label}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-4 bg-blue-100 rounded-sm flex items-center px-0.5">
+                  <div className="w-full h-2.5 bg-blue-500 rounded-sm" />
                 </div>
-              ))}
+                <span className="text-gray-600">예약됨</span>
+              </div>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-4 bg-white border border-gray-200 rounded-sm" />
                 <span className="text-gray-600">예약 가능</span>
@@ -348,14 +319,14 @@ export default function MeetingRoom() {
                                 : inactive ? "사용 불가"
                                 : "클릭하여 예약"
                               }
-                              className={`border-r border-gray-100 h-10 transition-colors ${inactive ? "bg-gray-100 cursor-not-allowed" : slot ? "cursor-pointer" : "hover:bg-green-50 cursor-pointer"}`}
-                              style={slot && !inactive ? { backgroundColor: (MEETING_TYPE_COLORS[slot.meetingType] || MEETING_TYPE_COLORS.DEPT).cell } : {}}
+                              className={`border-r border-gray-100 h-10 transition-colors ${
+                                inactive ? "bg-gray-100 cursor-not-allowed"
+                                : slot ? "bg-blue-100 cursor-pointer hover:bg-blue-200"
+                                : "hover:bg-green-50 cursor-pointer"
+                              }`}
                             >
                               {slot && (
-                                <div
-                                  className="px-1 text-white rounded text-[10px] mx-0.5 py-0.5 truncate"
-                                  style={{ backgroundColor: (MEETING_TYPE_COLORS[slot.meetingType] || MEETING_TYPE_COLORS.DEPT).bar }}
-                                >
+                                <div className="px-1 bg-blue-500 text-white rounded text-[10px] mx-0.5 py-0.5 truncate">
                                   {slot.title}
                                 </div>
                               )}
@@ -551,58 +522,11 @@ export default function MeetingRoom() {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-600">회의 유형</label>
-                <div className="flex flex-col gap-1.5 mt-1">
-                  {MEETING_TYPE_OPTIONS.map((opt) => (
-                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="meetingType"
-                        value={opt.value}
-                        checked={form.meetingType === opt.value}
-                        onChange={() => setForm((f) => ({ ...f, meetingType: opt.value, invitedDeptIds: [] }))}
-                        className="accent-blue-600"
-                      />
-                      <span className="text-sm text-gray-700">{opt.label}</span>
-                      <span className="text-xs text-gray-400">{opt.desc}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {form.meetingType === "DEPT" && (
-                <div>
-                  <label className="text-sm text-gray-600">초대 부서 선택</label>
-                  <div className="mt-1 border rounded p-2 max-h-32 overflow-y-auto flex flex-col gap-1">
-                    {departments.map((dept) => (
-                      <label key={dept.departmentId} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={form.invitedDeptIds.includes(dept.departmentId)}
-                          onChange={(e) => {
-                            const id = dept.departmentId;
-                            setForm((f) => ({
-                              ...f,
-                              invitedDeptIds: e.target.checked
-                                ? [...f.invitedDeptIds, id]
-                                : f.invitedDeptIds.filter((d) => d !== id),
-                            }));
-                          }}
-                          className="accent-blue-600"
-                        />
-                        <span className="text-sm text-gray-700">{dept.departmentName}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div>
                 <label className="text-sm text-gray-600">회의 목적</label>
                 <textarea
                   value={form.purpose}
                   onChange={(e) => setForm((f) => ({ ...f, purpose: e.target.value }))}
-                  rows={2}
+                  rows={3}
                   className="w-full border rounded px-3 py-2 mt-1 text-sm resize-none"
                   placeholder="회의 목적을 입력해주세요"
                 />

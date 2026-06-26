@@ -24,7 +24,6 @@ public class ReservationResponse {
     private String endTime;
     private String status;
     private String purpose;
-    private String meetingType;
     private LocalDateTime createAt;
     private List<ParticipantResponse> participants;
 
@@ -41,7 +40,6 @@ public class ReservationResponse {
                 .endTime(reservation.getEndTime())
                 .status(reservation.getStatus())
                 .purpose(reservation.getPurpose())
-                .meetingType(reservation.getMeetingType())
                 .createAt(reservation.getCreateAt())
                 .participants(participants)
                 .build();

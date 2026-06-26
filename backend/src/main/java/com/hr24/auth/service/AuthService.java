@@ -7,7 +7,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.hr24.auth.dto.LoginRequestDto;
-import com.hr24.auth.dto.LoginTokenDto;
+import com.hr24.auth.dto.LoginResponseDto;
+import com.hr24.auth.dto.RefreshTokenRequestDto;
 import com.hr24.auth.dto.RefreshTokenResponseDto;
 import com.hr24.auth.jwt.JwtProvider;
 import com.hr24.employee.entity.User;
@@ -29,7 +30,7 @@ public class AuthService {
 	private final JwtProvider jwtProvider;
 	private final RedisService redisService;
 	
-	public LoginTokenDto login(LoginRequestDto requestDto) {
+	public LoginResponseDto login(LoginRequestDto requestDto) {
 		
 		User user = userRepository.findByLoginId(requestDto.getLoginId())
 				.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -63,16 +64,14 @@ public class AuthService {
 		        TimeUnit.DAYS
 		);
 		
-		return new LoginTokenDto(
+		return new LoginResponseDto(
 				accessToken,
 				refreshToken);
 	}
 	
-	public RefreshTokenResponseDto refresh(String refreshToken) {
+	public RefreshTokenResponseDto refresh(RefreshTokenRequestDto requestDto) {
 		
-		if (refreshToken == null || refreshToken.isBlank()) {
-			throw new BusinessException(ErrorCode.INVALID_TOKEN);
-		}
+		String refreshToken = requestDto.getRefreshToken();
 		
 		if (!jwtProvider.validateToken(refreshToken)) {
 			throw new BusinessException(ErrorCode.INVALID_TOKEN);
@@ -112,69 +111,43 @@ public class AuthService {
 		return new RefreshTokenResponseDto(newAccessToken);
 	}
 	
-	public void logout(String accessToken, String refreshToken) {
+	public void logout(String accessToken) {
 
-        Long employeeId = resolveEmployeeIdFromRefreshToken(refreshToken);
+	    if (!jwtProvider.validateToken(accessToken)) {
+	        throw new BusinessException(
+	                ErrorCode.INVALID_TOKEN
+	        );
+	    }
 
-        if (employeeId == null) {
-            employeeId = resolveEmployeeIdFromAccessToken(accessToken);
-        }
+	    if (!"ACCESS".equals(
+	            jwtProvider.getTokenType(accessToken)
+	    )) {
+	        throw new BusinessException(
+	                ErrorCode.INVALID_TOKEN
+	        );
+	    }
 
-        if (employeeId == null) {
-            return;
-        }
+	    Long employeeId =
+	            jwtProvider.getEmployeeId(accessToken);
 
-        redisService.delete(
-                getRefreshTokenKey(employeeId)
-        );
-    }
+	    redisService.delete(
+	    		getRefreshTokenKey(employeeId)
+	    );
+	}
+	
+	private List<String> getRoleCodes(Long employeeId) {
 
-    private Long resolveEmployeeIdFromRefreshToken(String refreshToken) {
+	    return userRoleRepository
+	            .findAllWithRoleByEmployeeId(employeeId)
+	            .stream()
+	            .map(userRole ->
+	                    userRole.getRole().getRoleCode()
+	            )
+	            .toList();
+	}
 
-        if (refreshToken == null || refreshToken.isBlank()) {
-            return null;
-        }
-
-        if (!jwtProvider.validateToken(refreshToken)) {
-            return null;
-        }
-
-        if (!"REFRESH".equals(jwtProvider.getTokenType(refreshToken))) {
-            return null;
-        }
-
-        return jwtProvider.getEmployeeId(refreshToken);
-    }
-
-    private Long resolveEmployeeIdFromAccessToken(String accessToken) {
-
-        if (accessToken == null || accessToken.isBlank()) {
-            return null;
-        }
-
-        if (!jwtProvider.validateToken(accessToken)) {
-            return null;
-        }
-
-        if (!"ACCESS".equals(jwtProvider.getTokenType(accessToken))) {
-            return null;
-        }
-
-        return jwtProvider.getEmployeeId(accessToken);
-    }
-
-    private List<String> getRoleCodes(Long employeeId) {
-
-        return userRoleRepository
-                .findAllWithRoleByEmployeeId(employeeId)
-                .stream()
-                .map(userRole ->
-                        userRole.getRole().getRoleCode()
-                )
-                .toList();
-    }
-
-    private String getRefreshTokenKey(Long employeeId) {
-        return "RT:" + employeeId;
-    }
+	private String getRefreshTokenKey(Long employeeId) {
+	    return "RT:" + employeeId;
+	}
+	
 }

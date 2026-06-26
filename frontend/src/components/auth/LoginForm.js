@@ -35,7 +35,7 @@ export default function LoginForm() {
     try {
       const tokenData = await loginRequest(loginId, password);
 
-      authLogin(tokenData.accessToken);
+      authLogin(tokenData.accessToken, tokenData.refreshToken);
 
       const userInfo = await getMyInfoRequest();
 

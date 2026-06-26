@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hr24.work.meeting.dto.DepartmentSimpleResponse;
 import com.hr24.work.meeting.dto.MeetingRoomResponse;
 import com.hr24.work.meeting.dto.ReservationRequest;
 import com.hr24.work.meeting.dto.ReservationResponse;
@@ -33,13 +32,6 @@ import lombok.RequiredArgsConstructor;
 public class MeetingController {
 
     private final MeetingService meetingService;
-
-    // 부서 목록 조회 (회의 초대 대상 선택용)
-    @Operation(summary = "부서 목록 조회", description = "회의 초대 시 부서 선택을 위한 전체 부서 목록을 반환합니다.")
-    @GetMapping("/departments")
-    public ResponseEntity<List<DepartmentSimpleResponse>> getDepartments() {
-        return ResponseEntity.ok(meetingService.getAllDepartments());
-    }
 
     // 사용 가능한 회의실 목록 조회
     @Operation(summary = "회의실 목록 조회", description = "ACTIVE 상태인 회의실 목록을 반환합니다.")
@@ -75,16 +67,11 @@ public class MeetingController {
         return ResponseEntity.ok(meetingService.createReservation(loginId, request));
     }
 
-    // 예약 취소 - 예약자 본인 또는 ADMIN만 가능
-    @Operation(summary = "예약 취소", description = "예약자 본인 또는 ADMIN만 취소할 수 있습니다.")
+    // 예약 취소 - status를 CANCELLED로 변경
+    @Operation(summary = "예약 취소", description = "예약 ID로 해당 예약을 취소 처리합니다.")
     @PatchMapping("/reservations/{reservationId}/cancel")
-    public ResponseEntity<Void> cancelReservation(
-            @PathVariable Long reservationId,
-            Authentication authentication) {
-        String loginId = authentication.getName();
-        boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-        meetingService.cancelReservation(reservationId, loginId, isAdmin);
+    public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId) {
+        meetingService.cancelReservation(reservationId);
         return ResponseEntity.noContent().build();
     }
 }

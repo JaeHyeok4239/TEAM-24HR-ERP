@@ -9,10 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hr24.employee.entity.User;
-import com.hr24.employee.enums.UserStatus;
-import com.hr24.employee.repository.DepartmentRepository;
 import com.hr24.employee.repository.UserRepository;
-import com.hr24.work.meeting.dto.DepartmentSimpleResponse;
 import com.hr24.work.meeting.dto.MeetingRoomResponse;
 import com.hr24.work.meeting.dto.ParticipantResponse;
 import com.hr24.work.meeting.dto.ReservationRequest;
@@ -36,15 +33,7 @@ public class MeetingService {
     private final RoomReservationRepository reservationRepository;
     private final ReservationParticipantRepository participantRepository;
     private final UserRepository userRepository;
-    private final DepartmentRepository departmentRepository;
     private final NotificationService notificationService;
-
-    // 부서 전체 목록 반환 (회의 초대 대상 선택용)
-    public List<DepartmentSimpleResponse> getAllDepartments() {
-        return departmentRepository.findAll().stream()
-                .map(DepartmentSimpleResponse::from)
-                .collect(Collectors.toList());
-    }
 
     // ACTIVE 상태인 회의실 목록만 반환
     public List<MeetingRoomResponse> getActiveRooms() {
@@ -102,7 +91,6 @@ public class MeetingService {
                 .endTime(request.getEndTime())
                 .status("CONFIRMED")
                 .purpose(request.getPurpose())
-                .meetingType(request.getMeetingType())
                 .createAt(LocalDateTime.now())
                 .build();
 
@@ -122,64 +110,21 @@ public class MeetingService {
             }
         }
 
-        // 회의 유형별 알림 발송 (실패해도 예약은 유지)
-        try {
-            String meetingType = request.getMeetingType();
-            String timeInfo = request.getRsvDate() + " " + request.getStartTime() + "~" + request.getEndTime();
-
-            if ("COMPANY".equals(meetingType)) {
-                notificationService.sendCompanyNotification(new NotificationMessage(
-                    "MEETING_COMPANY",
-                    "전사 회의 예약",
-                    user.getName() + "님이 전사 회의를 예약했습니다: " + request.getTitle() + " (" + timeInfo + ")"
-                ));
-            } else if ("MANAGER".equals(meetingType)) {
-                userRepository.findActiveManagersByMinSortOrder(6, UserStatus.ACTIVE)
-                    .forEach(manager -> notificationService.sendPersonalNotification(
-                        manager.getLoginId(),
-                        new NotificationMessage(
-                            "MEETING_MANAGER",
-                            "팀장 회의 예약",
-                            user.getName() + "님이 팀장 회의를 예약했습니다: " + request.getTitle() + " (" + timeInfo + ")"
-                        )
-                    ));
-            } else if ("DEPT".equals(meetingType) && request.getInvitedDeptIds() != null) {
-                request.getInvitedDeptIds().forEach(deptId ->
-                    departmentRepository.findById(deptId).ifPresent(dept ->
-                        notificationService.sendDeptNotification(dept.getDepartmentName(),
-                            new NotificationMessage(
-                                "MEETING_DEPT",
-                                "부서 간 회의 요청",
-                                user.getName() + "님이 회의를 요청했습니다: " + request.getTitle() + " (" + timeInfo + ")"
-                            ))
-                    )
-                );
-            }
-
-            // 예약자 본인 확인 알림
-            notificationService.sendPersonalNotification(loginId, new NotificationMessage(
-                "MEETING_RESERVATION",
-                "회의실 예약 완료",
-                room.getRoomName() + " 예약이 완료되었습니다 (" + request.getStartTime() + "~" + request.getEndTime() + ")"
-            ));
-        } catch (Exception e) {
-            // 알림 실패는 예약에 영향 없음
-        }
+        // 예약자에게 확인 알림 발송
+        notificationService.sendPersonalNotification(loginId, new NotificationMessage(
+            "MEETING_RESERVATION",
+            "회의실 예약 완료",
+            room.getRoomName() + " 예약이 완료되었습니다 (" + request.getStartTime() + "~" + request.getEndTime() + ")"
+        ));
 
         return ReservationResponse.from(reservation, getParticipants(reservation));
     }
 
-    // 예약 취소 - 예약자 본인 또는 ADMIN만 가능
+    // 예약 상태를 CANCELLED로 변경하여 취소 처리
     @Transactional
-    public void cancelReservation(Long reservationId, String loginId, boolean isAdmin) {
+    public void cancelReservation(Long reservationId) {
         RoomReservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 예약입니다."));
-
-        boolean isOwner = reservation.getUser().getLoginId().equals(loginId);
-
-        if (!isOwner && !isAdmin) {
-            throw new RuntimeException("본인이 예약한 회의실만 취소할 수 있습니다.");
-        }
 
         reservation.setStatus("CANCELLED");
         reservationRepository.save(reservation);
