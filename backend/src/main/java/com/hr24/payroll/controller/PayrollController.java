@@ -58,9 +58,9 @@ public class PayrollController {
     }
     
     
-    @GetMapping("/{id}")
+    @GetMapping("/{payrollId}")
     public ResponseEntity<PayrollDetailResponseDto>
-    getPayrollDetail(@PathVariable("id") Long payrollId) {
+    getPayrollDetail(@PathVariable("payrollId") Long payrollId) {
 
         return ResponseEntity.ok(payrollService.getPayrollDetail(payrollId));
     }

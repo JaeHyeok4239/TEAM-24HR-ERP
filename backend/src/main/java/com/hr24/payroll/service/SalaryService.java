@@ -20,10 +20,8 @@ import lombok.RequiredArgsConstructor;
 public class SalaryService {
 
     private final SalaryRepository salaryRepository;
-
     private final UserRepository userRepository;
-
-    @Transactional
+    
     public Long createSalary(SalaryCreateRequestDto request) {
 
         User user = userRepository.findById(request.getEmployeeId())
@@ -47,7 +45,7 @@ public class SalaryService {
     }
     
     
-    @Transactional
+    
     public void updateSalary(Long employeeId, SalaryUpdateRequestDto request) {
 
         Salary salary = salaryRepository
