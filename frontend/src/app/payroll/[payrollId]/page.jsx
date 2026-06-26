@@ -11,6 +11,14 @@ export default function PayrollDetailPage() {
 
   const [detail, setDetail] = useState(null);
 
+  const getAmount = (itemName) => {
+    const item = detail.details?.find(
+      (d) => d.itemName === itemName
+    );
+
+    return item ? item.amount : 0;
+  };
+
   useEffect(() => {
 
     const loadDetail = async () => {
@@ -60,10 +68,10 @@ export default function PayrollDetailPage() {
         </h2>
 
         <p>기본급 : {detail.baseSalary?.toLocaleString()}원</p>
-        <p>직책수당 : {detail.positionAllowance?.toLocaleString()}원</p>
-        <p>식대 : {detail.mealAllowance?.toLocaleString()}원</p>
-        <p>교통비 : {detail.transportAllowance?.toLocaleString()}원</p>
-        <p>초과근무수당 : {detail.overtimeAllowance?.toLocaleString()}원</p>
+        <p>직책수당 : {getAmount("직책수당").toLocaleString()}원</p>
+        <p>식대 : {getAmount("식대").toLocaleString()}원</p>
+        <p>교통비 : {getAmount("교통비").toLocaleString()}원</p>
+        <p>초과근무수당 : {getAmount("초과근무수당").toLocaleString()}원</p>
 
         <hr className="my-5" />
 
@@ -71,11 +79,11 @@ export default function PayrollDetailPage() {
           공제 항목
         </h2>
 
-        <p>국민연금 : {detail.nationalPension?.toLocaleString()}원</p>
-        <p>건강보험 : {detail.healthInsurance?.toLocaleString()}원</p>
-        <p>고용보험 : {detail.employmentInsurance?.toLocaleString()}원</p>
-        <p>소득세 : {detail.incomeTax?.toLocaleString()}원</p>
-        <p>지방소득세 : {detail.localIncomeTax?.toLocaleString()}원</p>
+        <p>국민연금 : {getAmount("국민연금").toLocaleString()}원</p>
+        <p>건강보험 : {getAmount("건강보험").toLocaleString()}원</p>
+        <p>고용보험 : {getAmount("고용보험").toLocaleString()}원</p>
+        <p>소득세 : {getAmount("소득세").toLocaleString()}원</p>
+        <p>지방소득세 : {getAmount("지방소득세").toLocaleString()}원</p>
 
         <hr className="my-5" />
 
