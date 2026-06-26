@@ -42,7 +42,7 @@ public class ApprovalService {
 
 		List<ApprovalLine> lines;
 
-		if (departmentId == null && documentType == null && keyword == "") {
+		if (departmentId == null && documentType == null && keyword.isBlank()) {
 
 			lines = approvalLineRepository.findAll();
 			System.out.println(lines.size());

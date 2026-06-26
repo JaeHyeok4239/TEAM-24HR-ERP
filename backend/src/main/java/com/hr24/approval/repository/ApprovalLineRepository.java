@@ -12,11 +12,13 @@ import com.hr24.employee.entity.Department;
 
 public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long>{
 	
-	//문서 유형별 결재선
-	List<ApprovalLine> findByDocumentTypeOrderByStepOrderAsc(DocumentType documentType);
-	
-	//부서별 결재선
-	List<ApprovalLine> findByDepartmentOrderByStepOrderAsc(Department department);
+	// 문서타입 + 부서별 결재선
+	List<ApprovalLine> findByDocumentTypeAndDepartmentOrderByStepOrderAsc(
+	    DocumentType documentType, Department department);
+
+	// 문서타입 + 공통 결재선 (부서 null)
+	List<ApprovalLine> findByDocumentTypeAndDepartmentIsNullOrderByStepOrderAsc(
+	    DocumentType documentType);
 	
 	//문서 종류 + 부서
 	List<ApprovalLine> findByDepartmentAndDocumentTypeOrderByStepOrderAsc(

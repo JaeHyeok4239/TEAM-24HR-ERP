@@ -146,10 +146,6 @@ public class AttendanceProcessService {
 		else {
 			result.setCheckOutTime(correction.getAfterTime());
 		}
-		
-		result.setIsFixed("Y");
-		result.setAttendanceCorrection(correction.getAttendanceCorrectionId());
-		result.setUpdatedAt(LocalDateTime.now()); //수정 시각 : 현재
 
 		User employee = result.getEmployee();
 		
@@ -163,6 +159,11 @@ public class AttendanceProcessService {
 		correction.setUpdatedAt(LocalDateTime.now());
 		
 		attendanceCorrectionRepository.save(correction);
+		
+		result.setIsFixed("Y");
+		result.setAttendanceCorrection(correction.getAttendanceCorrectionId());
+		result.setUpdatedAt(LocalDateTime.now()); //수정 시각 : 현재
+
 	}
 
 }
