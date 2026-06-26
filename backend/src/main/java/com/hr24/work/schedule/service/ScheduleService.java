@@ -76,6 +76,15 @@ public class ScheduleService {
     // 일정 등록 - DEPT 타입일 때만 부서 연결
     @Transactional
     public ScheduleResponse createSchedule(Long userId, ScheduleRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        // COMPANY 일정은 ADMIN만 등록 가능
+        if ("COMPANY".equals(request.getScheduleType()) && !isAdmin) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
 
@@ -84,6 +93,11 @@ public class ScheduleService {
             if (request.getDeptId() != null) {
                 department = departmentRepository.findById(request.getDeptId())
                         .orElseThrow(() -> new RuntimeException("존재하지 않는 부서입니다."));
+                // DEPT 일정은 본인 부서만 등록 가능 (ADMIN 제외)
+                if (!isAdmin && (user.getDepartment() == null ||
+                        !user.getDepartment().getDepartmentId().equals(department.getDepartmentId()))) {
+                    throw new BusinessException(ErrorCode.ACCESS_DENIED);
+                }
             } else if (user.getDepartment() != null) {
                 department = user.getDepartment();
             }
