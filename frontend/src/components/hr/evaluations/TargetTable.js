@@ -1,4 +1,4 @@
-import { EmptyBox, EvaluationStatusBadge } from "./EvaluationCommon";
+import { EmptyBox, EvaluationStatusBadge, GradeBadge } from "./EvaluationCommon";
 
 export default function TargetTable({
   targets,
@@ -28,6 +28,7 @@ export default function TargetTable({
             <th className="px-4 py-3 text-left">직급</th>
             <th className="px-4 py-3 text-left">평가상태</th>
             <th className="px-4 py-3 text-right">총점</th>
+            <th className="px-4 py-3 text-center">등급</th>
             <th className="px-4 py-3 text-left">평가자</th>
           </tr>
         </thead>
@@ -69,6 +70,10 @@ export default function TargetTable({
 
               <td className="px-4 py-3 text-right font-semibold text-slate-900">
                 {target.totalScore ?? "-"}
+              </td>
+
+              <td className="px-4 py-3 text-center">
+                <GradeBadge grade={target.grade} />
               </td>
 
               <td className="px-4 py-3 text-slate-600">

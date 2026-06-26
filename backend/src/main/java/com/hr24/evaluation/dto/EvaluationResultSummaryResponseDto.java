@@ -1,6 +1,7 @@
 package com.hr24.evaluation.dto;
 
 import com.hr24.employee.entity.User;
+import com.hr24.evaluation.enums.EvaluationGrade;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,23 +23,22 @@ public class EvaluationResultSummaryResponseDto {
     private Integer evaluationCount;
     private Integer totalScore;
     private Integer latestScore;
+    private String latestGrade;
 
+    private Long yearsOfService;
     private Boolean promotionCandidate;
-    private Long targetPositionId;
-    private String targetPositionName;
-    private Integer requiredScore;
-    private Integer minEvaluationCount;
+    private String promotionType;  // EARLY(조기) or REGULAR(일반)
+    private Integer sGradeCount;
 
     public static EvaluationResultSummaryResponseDto of(
             User employee,
             Integer evaluationCount,
             Integer totalScore,
             Integer latestScore,
-            Boolean promotionCandidate,
-            Long targetPositionId,
-            String targetPositionName,
-            Integer requiredScore,
-            Integer minEvaluationCount
+            EvaluationGrade latestGrade,
+            Long yearsOfService,
+            String promotionType,
+            Integer sGradeCount
     ) {
         EvaluationResultSummaryResponseDto response =
                 new EvaluationResultSummaryResponseDto();
@@ -60,11 +60,11 @@ public class EvaluationResultSummaryResponseDto {
         response.evaluationCount = evaluationCount;
         response.totalScore = totalScore;
         response.latestScore = latestScore;
-        response.promotionCandidate = promotionCandidate;
-        response.targetPositionId = targetPositionId;
-        response.targetPositionName = targetPositionName;
-        response.requiredScore = requiredScore;
-        response.minEvaluationCount = minEvaluationCount;
+        response.latestGrade = latestGrade != null ? latestGrade.name() : null;
+        response.yearsOfService = yearsOfService;
+        response.promotionType = promotionType;
+        response.promotionCandidate = promotionType != null;
+        response.sGradeCount = sGradeCount;
 
         return response;
     }
