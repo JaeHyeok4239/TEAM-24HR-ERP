@@ -11,14 +11,13 @@ public class PromotionCandidateResponseDto {
     private String employeeNo;
     private String employeeName;
     private String departmentName;
-    private Long currentPositionId;
     private String currentPositionName;
-    private Long targetPositionId;
-    private String targetPositionName;
-    private Integer totalScore;
-    private Integer requiredScore;
     private Integer evaluationCount;
-    private Integer minEvaluationCount;
+    private Integer totalScore;
+    private String latestGrade;
+    private Long yearsOfService;
+    private String promotionType;  // EARLY(조기) or REGULAR(일반)
+    private Integer sGradeCount;
 
     public static PromotionCandidateResponseDto from(
             EvaluationResultSummaryResponseDto summary
@@ -30,14 +29,13 @@ public class PromotionCandidateResponseDto {
         response.employeeNo = summary.getEmployeeNo();
         response.employeeName = summary.getEmployeeName();
         response.departmentName = summary.getDepartmentName();
-        response.currentPositionId = summary.getPositionId();
         response.currentPositionName = summary.getPositionName();
-        response.targetPositionId = summary.getTargetPositionId();
-        response.targetPositionName = summary.getTargetPositionName();
-        response.totalScore = summary.getTotalScore();
-        response.requiredScore = summary.getRequiredScore();
         response.evaluationCount = summary.getEvaluationCount();
-        response.minEvaluationCount = summary.getMinEvaluationCount();
+        response.totalScore = summary.getTotalScore();
+        response.latestGrade = summary.getLatestGrade();
+        response.yearsOfService = summary.getYearsOfService();
+        response.promotionType = summary.getPromotionType();
+        response.sGradeCount = summary.getSGradeCount();
 
         return response;
     }

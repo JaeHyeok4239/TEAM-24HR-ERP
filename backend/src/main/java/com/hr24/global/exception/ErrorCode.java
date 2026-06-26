@@ -14,7 +14,7 @@ public enum ErrorCode {
 	
 	INVALID_REQUEST(
 			HttpStatus.BAD_REQUEST,
-			"잘못된 요청입니다."),
+			"입력기간 중복입니다. 기간을 재설정 하세요."),
 	
     // 직원 관리
     DUPLICATE_LOGIN_ID(
@@ -145,6 +145,10 @@ public enum ErrorCode {
 	ACCESS_DENIED(
 			HttpStatus.FORBIDDEN,
 			"접근 권한이 없습니다."),
+
+	SCHEDULE_ACCESS_DENIED(
+			HttpStatus.FORBIDDEN,
+			"등록 권한이 없습니다. 다시 선택해주세요."),
 	
 	INVALID_TOKEN(
 			HttpStatus.UNAUTHORIZED,

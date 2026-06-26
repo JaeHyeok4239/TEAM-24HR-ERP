@@ -6,6 +6,7 @@ import com.hr24.employee.entity.Department;
 import com.hr24.employee.entity.Position;
 import com.hr24.employee.entity.User;
 import com.hr24.evaluation.enums.EmployeeEvaluationStatus;
+import com.hr24.evaluation.enums.EvaluationGrade;
 import com.hr24.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -75,6 +76,10 @@ public class EmployeeEvaluation extends BaseTimeEntity {
     private Integer totalScore;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "grade", length = 5)
+    private EvaluationGrade grade;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private EmployeeEvaluationStatus status = EmployeeEvaluationStatus.PENDING;
 
@@ -121,6 +126,7 @@ public class EmployeeEvaluation extends BaseTimeEntity {
     ) {
         this.evaluator = evaluator;
         this.totalScore = totalScore;
+        this.grade = totalScore != null ? EvaluationGrade.from(totalScore) : null;
         this.comment = comment;
         this.status = EmployeeEvaluationStatus.CONFIRMED;
         this.evaluatedAt = LocalDateTime.now();

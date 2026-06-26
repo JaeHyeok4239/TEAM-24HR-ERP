@@ -132,6 +132,23 @@ export function EvaluationStatusBadge({ status }) {
   );
 }
 
+const GRADE_STYLE = {
+  S: "bg-purple-50 text-purple-700",
+  A: "bg-blue-50 text-blue-700",
+  B: "bg-green-50 text-green-700",
+  C: "bg-amber-50 text-amber-700",
+  D: "bg-red-50 text-red-700",
+};
+
+export function GradeBadge({ grade }) {
+  if (!grade) return <span className="text-slate-400">-</span>;
+  return (
+    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${GRADE_STYLE[grade] ?? "bg-slate-100 text-slate-500"}`}>
+      {grade}
+    </span>
+  );
+}
+
 export function formatDate(value) {
   if (!value) {
     return "-";

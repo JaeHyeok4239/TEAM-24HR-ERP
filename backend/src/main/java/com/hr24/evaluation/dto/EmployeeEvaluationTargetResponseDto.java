@@ -28,6 +28,7 @@ public class EmployeeEvaluationTargetResponseDto {
     private String evaluatorName;
 
     private Integer totalScore;
+    private String grade;
     private String status;
     private LocalDateTime evaluatedAt;
     private LocalDateTime confirmedAt;
@@ -67,6 +68,9 @@ public class EmployeeEvaluationTargetResponseDto {
         }
 
         response.totalScore = evaluation.getTotalScore();
+        response.grade = evaluation.getGrade() != null
+                ? evaluation.getGrade().name()
+                : null;
         response.status = evaluation.getStatus() != null
                 ? evaluation.getStatus().name()
                 : null;

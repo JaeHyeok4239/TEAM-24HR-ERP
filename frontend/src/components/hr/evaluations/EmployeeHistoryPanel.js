@@ -1,5 +1,5 @@
 import { HALF_TYPE_LABELS } from "./evaluationConstants";
-import { EmptyBox, formatDateTime } from "./EvaluationCommon";
+import { EmptyBox, GradeBadge, formatDateTime } from "./EvaluationCommon";
 
 export default function EmployeeHistoryPanel({
   selectedEmployee,
@@ -18,13 +18,16 @@ export default function EmployeeHistoryPanel({
 
         <p className="mt-1 text-sm text-slate-500">
           누적 {selectedEmployee.totalScore}점 · 평가{" "}
-          {selectedEmployee.evaluationCount}회
+          {selectedEmployee.evaluationCount}회 · {selectedEmployee.yearsOfService ?? 0}년차
         </p>
 
-        {selectedEmployee.targetPositionName && (
-          <p className="mt-1 text-sm text-slate-500">
-            진급 대상: {selectedEmployee.positionName} →{" "}
-            {selectedEmployee.targetPositionName}
+        {selectedEmployee.promotionType && (
+          <p className="mt-1 text-sm font-semibold">
+            {selectedEmployee.promotionType === "EARLY" ? (
+              <span className="text-purple-600">조기진급 대상자</span>
+            ) : (
+              <span className="text-blue-600">진급 대상자</span>
+            )}
           </p>
         )}
       </div>
@@ -51,9 +54,12 @@ export default function EmployeeHistoryPanel({
                 </div>
 
                 <div className="text-right">
-                  <p className="text-lg font-bold text-slate-900">
-                    {history.totalScore}점
-                  </p>
+                  <div className="flex items-center justify-end gap-2">
+                    <GradeBadge grade={history.grade} />
+                    <p className="text-lg font-bold text-slate-900">
+                      {history.totalScore}점
+                    </p>
+                  </div>
 
                   <p className="text-xs text-slate-400">
                     {formatDateTime(history.confirmedAt)}

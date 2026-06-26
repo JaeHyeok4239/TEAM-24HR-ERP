@@ -1,4 +1,4 @@
-import { EmptyBox } from "./EvaluationCommon";
+import { EmptyBox, GradeBadge } from "./EvaluationCommon";
 
 export default function ResultTable({
   results,
@@ -25,6 +25,8 @@ export default function ResultTable({
             <th className="px-4 py-3 text-right">평가횟수</th>
             <th className="px-4 py-3 text-right">누적점수</th>
             <th className="px-4 py-3 text-right">최근점수</th>
+            <th className="px-4 py-3 text-center">최근등급</th>
+            <th className="px-4 py-3 text-right">연차</th>
             <th className="px-4 py-3 text-left">진급심사</th>
           </tr>
         </thead>
@@ -77,10 +79,22 @@ export default function ResultTable({
                   {result.latestScore ?? "-"}
                 </td>
 
+                <td className="px-4 py-3 text-center">
+                  <GradeBadge grade={result.latestGrade} />
+                </td>
+
+                <td className="px-4 py-3 text-right text-slate-600">
+                  {result.yearsOfService ?? 0}년
+                </td>
+
                 <td className="px-4 py-3">
-                  {result.promotionCandidate ? (
+                  {result.promotionType === "EARLY" ? (
+                    <span className="rounded-full bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-700">
+                      조기진급
+                    </span>
+                  ) : result.promotionType === "REGULAR" ? (
                     <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
-                      대상
+                      진급대상
                     </span>
                   ) : (
                     <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-500">
