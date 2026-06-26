@@ -1,5 +1,7 @@
 package com.hr24.evaluation.service;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -18,13 +20,12 @@ import com.hr24.evaluation.dto.PromotionCandidateResponseDto;
 import com.hr24.evaluation.entity.EmployeeEvaluation;
 import com.hr24.evaluation.entity.EmployeeEvaluationAnswer;
 import com.hr24.evaluation.entity.EvaluationQuestion;
-import com.hr24.evaluation.entity.PromotionRule;
 import com.hr24.evaluation.enums.EmployeeEvaluationStatus;
+import com.hr24.evaluation.enums.EvaluationGrade;
 import com.hr24.evaluation.repository.EmployeeEvaluationAnswerRepository;
 import com.hr24.evaluation.repository.EmployeeEvaluationRepository;
 import com.hr24.evaluation.repository.EvaluationPeriodRepository;
 import com.hr24.evaluation.repository.EvaluationQuestionRepository;
-import com.hr24.evaluation.repository.PromotionRuleRepository;
 import com.hr24.global.exception.BusinessException;
 import com.hr24.global.exception.ErrorCode;
 
@@ -39,7 +40,6 @@ public class EvaluationQueryService {
     private final EvaluationQuestionRepository evaluationQuestionRepository;
     private final EmployeeEvaluationRepository employeeEvaluationRepository;
     private final EmployeeEvaluationAnswerRepository employeeEvaluationAnswerRepository;
-    private final PromotionRuleRepository promotionRuleRepository;
     private final UserRepository userRepository;
 
     public List<EvaluationPeriodResponseDto> findPeriods() {
@@ -75,11 +75,7 @@ public class EvaluationQueryService {
                                 employeeEvaluationId
                         );
 
-        return EmployeeEvaluationDetailResponseDto.from(
-                evaluation,
-                questions,
-                answers
-        );
+        return EmployeeEvaluationDetailResponseDto.from(evaluation, questions, answers);
     }
 
     public List<EvaluationResultSummaryResponseDto> findResultSummaries() {
@@ -126,46 +122,44 @@ public class EvaluationQueryService {
         int evaluationCount = confirmedEvaluations.size();
 
         int totalScore = confirmedEvaluations.stream()
-                .map(EmployeeEvaluation::getTotalScore)
-                .filter(score -> score != null)
-                .mapToInt(Integer::intValue)
+                .mapToInt(e -> e.getTotalScore() != null ? e.getTotalScore() : 0)
                 .sum();
 
         Integer latestScore = confirmedEvaluations.isEmpty()
                 ? null
                 : confirmedEvaluations.get(0).getTotalScore();
 
-        PromotionRule promotionRule = null;
+        EvaluationGrade latestGrade = confirmedEvaluations.isEmpty()
+                ? null
+                : confirmedEvaluations.get(0).getGrade();
 
-        if (employee.getPosition() != null) {
-            promotionRule = promotionRuleRepository
-                    .findByFromPosition_PositionIdAndIsActive(
-                            employee.getPosition().getPositionId(),
-                            "Y"
-                    )
-                    .orElse(null);
+        // 연차 계산 (입사일 기준)
+        long yearsOfService = 0;
+        if (employee.getHireDate() != null) {
+            yearsOfService = ChronoUnit.YEARS.between(
+                    employee.getHireDate().toLocalDate(),
+                    LocalDate.now()
+            );
         }
 
-        boolean promotionCandidate = false;
-        Long targetPositionId = null;
-        String targetPositionName = null;
-        Integer requiredScore = null;
-        Integer minEvaluationCount = null;
+        // 진급 대상자 판단
+        // 3년 이상: 일반 진급 대상자
+        // 2년 이상 + 최근 4번 중 S 3번 이상: 조기 진급 대상자
+        String promotionType = null;
+        int sGradeCount = 0;
 
-        if (promotionRule != null) {
-            requiredScore = promotionRule.getRequiredScore();
-            minEvaluationCount = promotionRule.getMinEvaluationCount();
-
-            if (promotionRule.getToPosition() != null) {
-                targetPositionId =
-                        promotionRule.getToPosition().getPositionId();
-                targetPositionName =
-                        promotionRule.getToPosition().getPositionName();
+        if (yearsOfService >= 3) {
+            promotionType = "REGULAR";
+        } else if (yearsOfService >= 2) {
+            List<EmployeeEvaluation> recent4 = confirmedEvaluations.stream()
+                    .limit(4)
+                    .toList();
+            sGradeCount = (int) recent4.stream()
+                    .filter(e -> e.getGrade() == EvaluationGrade.S)
+                    .count();
+            if (sGradeCount >= 3) {
+                promotionType = "EARLY";
             }
-
-            promotionCandidate =
-                    totalScore >= promotionRule.getRequiredScore()
-                            && evaluationCount >= promotionRule.getMinEvaluationCount();
         }
 
         return EvaluationResultSummaryResponseDto.of(
@@ -173,11 +167,10 @@ public class EvaluationQueryService {
                 evaluationCount,
                 totalScore,
                 latestScore,
-                promotionCandidate,
-                targetPositionId,
-                targetPositionName,
-                requiredScore,
-                minEvaluationCount
+                latestGrade,
+                yearsOfService,
+                promotionType,
+                sGradeCount
         );
     }
 }

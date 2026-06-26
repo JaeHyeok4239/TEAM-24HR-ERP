@@ -17,6 +17,7 @@ public class EmployeeEvaluationHistoryResponseDto {
     private Integer evaluationYear;
     private String halfType;
     private Integer totalScore;
+    private String grade;
     private String status;
     private String evaluatorName;
     private String comment;
@@ -42,6 +43,9 @@ public class EmployeeEvaluationHistoryResponseDto {
         }
 
         response.totalScore = evaluation.getTotalScore();
+        response.grade = evaluation.getGrade() != null
+                ? evaluation.getGrade().name()
+                : null;
         response.status = evaluation.getStatus() != null
                 ? evaluation.getStatus().name()
                 : null;

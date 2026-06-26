@@ -812,5 +812,9 @@ COMMENT ON COLUMN work_notifications.scope           IS 'PERSONAL/DEPT/COMPANY';
 COMMENT ON COLUMN work_notifications.type            IS '알림 유형 코드';
 COMMENT ON COLUMN work_notifications.title           IS '알림 제목';
 COMMENT ON COLUMN work_notifications.message         IS '알림 내용';
+
 COMMENT ON COLUMN work_notifications.is_read         IS 'Y=읽음, N=미읽음 (PERSONAL만 사용)';
 COMMENT ON COLUMN work_notifications.created_at      IS '발송일시';
+
+-- 인사평가 등급 컬럼 추가
+ALTER TABLE employee_evaluations ADD grade VARCHAR2(5);

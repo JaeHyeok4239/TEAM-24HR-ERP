@@ -14,7 +14,7 @@ public enum ErrorCode {
 	
 	INVALID_REQUEST(
 			HttpStatus.BAD_REQUEST,
-			"잘못된 요청입니다."),
+			"입력기간 중복입니다. 기간을 재설정 하세요."),
 	
     // 직원 관리
     DUPLICATE_LOGIN_ID(
