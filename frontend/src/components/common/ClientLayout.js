@@ -88,6 +88,7 @@ export default function ClientLayout({ children }) {
   const userInfo = useAuthStore((state) => state.userInfo);
 
   const isPasswordChangePage = pathname.startsWith("/user/password-change");
+  const isPasswordFindPage = pathname.startsWith("/user/password-find");
   const needPasswordChange = userInfo?.isFirstLogin === "Y";
 
   useEffect(() => {
@@ -154,6 +155,10 @@ export default function ClientLayout({ children }) {
 
   // 로그인하지 않은 상태
   if (!isLogin) {
+    if (isPasswordFindPage) {
+      return <div className="min-h-screen">{children}</div>;
+    }
+    
     return <LoginForm />;
   }
 

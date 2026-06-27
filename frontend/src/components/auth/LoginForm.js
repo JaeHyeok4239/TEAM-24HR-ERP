@@ -17,6 +17,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 export default function LoginForm() {
   const authLogin = useAuthStore((state) => state.login);
@@ -109,6 +110,13 @@ export default function LoginForm() {
                 >
                   로그인
                 </Button>
+
+                <Link
+                  href="/user/password-find"
+                  className="mt-4 text-sm text-cyan-100/70 hover:text-cyan-100 underline underline-offset-4 transition-colors"
+                >
+                  비밀번호를 잊으셨나요?
+                </Link>
               </CardFooter>
             </form>
           </div>

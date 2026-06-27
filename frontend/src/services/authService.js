@@ -29,3 +29,39 @@ export const logoutRequest = async () => {
     method: "POST",
   });
 };
+
+export const sendPasswordResetCodeRequest = async (loginId, email) => {
+  return await apiRequest("/api/auth/password-reset/code", {
+    method: "POST",
+    body: JSON.stringify({
+      loginId,
+      email,
+    }),
+  });
+};
+
+export const verifyPasswordResetCodeRequest = async (loginId, email, code) => {
+  return await apiRequest("/api/auth/password-reset/code/verify", {
+    method: "POST",
+    body: JSON.stringify({
+      loginId,
+      email,
+      code,
+    }),
+  });
+};
+
+export const resetPasswordRequest = async (
+  resetToken,
+  newPassword,
+  newPasswordConfirm
+) => {
+  return await apiRequest("/api/auth/password-reset", {
+    method: "POST",
+    body: JSON.stringify({
+      resetToken,
+      newPassword,
+      newPasswordConfirm,
+    }),
+  });
+};

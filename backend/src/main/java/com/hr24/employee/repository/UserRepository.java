@@ -14,6 +14,8 @@ import com.hr24.employee.enums.UserStatus;
 public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findByLoginId(String loginId);
+	
+	Optional<User> findByLoginIdIgnoreCaseAndEmailIgnoreCase(String loginId, String email);
 
 	boolean existsByDepartment_DepartmentIdAndStatusIn(Long departmentId, List<UserStatus> statuses);
 
