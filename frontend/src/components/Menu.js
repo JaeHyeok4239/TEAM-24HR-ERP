@@ -60,7 +60,15 @@ const NAV_ITEMS = [
       { href: "/attendance/daily", label: "일용직 근태 관리" },
     ],
   },
-  { href: "/payroll", icon: DollarSign, label: "급여 관리" },
+  { 
+    href: "/payroll",
+    icon: DollarSign,
+    label: "급여 관리",
+    children: [
+      { href: "/payroll", label: "급여 대장" },
+      { href: "/payroll/calculate", label: "급여 계산" },
+    ],
+  },
   {
     href: "/hr",
     icon: Users,

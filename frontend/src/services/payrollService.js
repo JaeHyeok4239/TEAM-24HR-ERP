@@ -39,3 +39,24 @@ export async function getPayrollDetail(payrollId) {
 
   return response.json();
 }
+
+
+export async function calculatePayroll(request) {
+
+  const response = await fetch(
+    "http://localhost:8080/api/payrolls/calculate",
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(request),
+    }
+  );
+
+  if (!response.ok) {throw new Error("급여 계산 실패");}
+
+  return response.json();
+}
