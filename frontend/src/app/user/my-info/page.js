@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+import Header from "@/components/common/Header";
 import MyInfoForm from "@/components/user/my-info/MyInfoForm";
 
 export default function MyInfoPage() {

@@ -7,7 +7,7 @@ import { SidebarProvider } from "../ui/sidebar";
 
 import { getMyInfoRequest } from "@/services/userService";
 import { useAuthStore } from "@/store/authStore";
-import MainMenu from "@/components/Menu";
+import MainMenu from "@/components/common/Menu";
 import { Bell } from "lucide-react";
 import { useNotification } from "@/hooks/useNotification";
 
@@ -179,10 +179,10 @@ export default function ClientLayout({ children }) {
 
   // 로그인한 상태
   return (
-    <div className="flex h-screen bg-slate-100">
+    <div className="flex min-h-screen bg-slate-100">
       <SidebarProvider>
         <MainMenu />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </SidebarProvider>
       <NotificationBell />
     </div>

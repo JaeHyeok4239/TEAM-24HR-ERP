@@ -111,6 +111,8 @@ public class ApprovalService {
 		currentHistory.setApproverComment(comment);
 		currentHistory.setActedAt(LocalDateTime.now());
 
+		document.setUpdatedAt(currentHistory.getActedAt());
+
 		Integer maxStep = approvalHistoryRepository.findMaxStepOrder(documentId);
 
 		if (maxStep == null) {
@@ -119,19 +121,21 @@ public class ApprovalService {
 
 		if (document.getCurrentStep().equals(maxStep)) {
 			document.setStatus("APR"); // 결재 완료 -> PRC는 요청 진행 중, COM은 처리 완료
-
 			// 자동 반영
 			if (document.getDocumentType().getRequiredProcessing().equals("N")) {
 				String detailTable = document.getDocumentType().getDetailTable();
 
-				switch (detailTable) {
-				case "leave" -> attendanceProcessService.createLeave(documentId, document.getRequester());
-				case "attendance_correction" -> attendanceProcessService.createCorrection(documentId, approver);
-				//detailTable이 없는 문서는 처리가 따로 필요 없으므로 바로 완료 처리
+				if (detailTable != null) {
+					switch (detailTable) {
+					case "leave" -> attendanceProcessService.createLeave(documentId, document.getRequester());
+					case "attendance_correction" -> attendanceProcessService.createCorrection(documentId, approver);
+					// detailTable이 없는 문서는 처리가 따로 필요 없으므로 바로 완료 처리
+					}
 				}
 				document.setProcessor(approver);
-				document.setStatus("COM");//자동 반영 완료
-				
+				document.setProcessedAt(LocalDateTime.now());
+				document.setStatus("COM");// 자동 반영 완료
+
 			}
 
 		} else {
