@@ -57,10 +57,7 @@ public class AttendanceResult {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "employee_id")
 	private User employee;
-
-	@Column(name = "attendance_correction_id")
-	private Long attendanceCorrection;
-
+	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "leave_id")
 	private Leave leave;

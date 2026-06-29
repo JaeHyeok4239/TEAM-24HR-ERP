@@ -161,7 +161,6 @@ public class AttendanceProcessService {
 		attendanceCorrectionRepository.save(correction);
 		
 		result.setIsFixed("Y");
-		result.setAttendanceCorrection(correction.getAttendanceCorrectionId());
 		result.setUpdatedAt(LocalDateTime.now()); //수정 시각 : 현재
 
 	}
