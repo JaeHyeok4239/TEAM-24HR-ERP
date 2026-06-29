@@ -35,20 +35,30 @@ import lombok.RequiredArgsConstructor;
 public class ApprovalController {
 
 	private final ApprovalService approvalService;
-
-	// 결재선 조회(추후 페이지 적용)
-	@GetMapping("/line")
-	public ResponseEntity<List<ApprovalResponseDto.ApprovalLineDto>> lineList(
-			@RequestParam(required = false, value = "department_id") Long departmentId,
-			@RequestParam(required = false, value = "document_type") Long documentType,
-			@RequestParam(required = false, value = "keyword") String keyword) {
-
-		return ResponseEntity.ok(approvalService.listOrSearchApprovalLines(departmentId, documentType, keyword));
+	
+	
+	//결재자 검증
+	@GetMapping("/{documentId}/can-approve")
+	public ResponseEntity<Boolean> canApprove(
+	    @PathVariable("documentId") Long documentId,
+	    Authentication authInfo) {
+	    
+	    String loginId = authInfo.getName();
+	    return ResponseEntity.ok(approvalService.canApprove(loginId, documentId));
 	}
 	
-	//대리 결재 조회
-//	@GetMapping("/delegate")
-//	
+	// 결재선 조회(추후 페이지 적용)
+	@GetMapping("/line")
+	public ResponseEntity<Page<ApprovalResponseDto.ApprovalLineDto>> lineList(
+	        @RequestParam(required = false, value = "department_id") Long departmentId,
+	        @RequestParam(required = false, value = "document_type") Long documentType,
+	        @RequestParam(required = false, value = "keyword") String keyword,
+	        @PageableDefault(size = 10, sort = "approvalLineId", direction = Sort.Direction.DESC) Pageable pageable) {
+
+	    return ResponseEntity.ok(approvalService.listOrSearchApprovalLines(departmentId, documentType, keyword, pageable));
+	}
+	
+
 	// 결재 이력 보관함
 	@GetMapping("/history")
 	public ResponseEntity<Page<ApprovalResponseDto.ApprovalHistoryDto>> approvalList(
@@ -67,7 +77,7 @@ public class ApprovalController {
 		return ResponseEntity.ok(approvalService.listOrSearchApprovalList(loginId, documentType, status, keyword, pageable));
 				
 	}
-
+	
 	// 결재 대기함
 	@GetMapping("/")
 	public ResponseEntity<Page<ApprovalResponseDto.ApprovalHistoryDto>> pendingList(

@@ -12,25 +12,14 @@ import {
 } from "../ui/table";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "../ui/pagination";
 
 import { usePagination } from "@/hooks/usePagination";
 
 import {
   CommonPagination,
-  CustomPagination,
 } from "@/components/common/CommonPagination";
 import { Button } from "../ui/button";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Badge } from "../ui/badge";
 import DocumentDetail from "./DocumentDetail";
 import { Card, CardContent, CardHeader } from "../ui/card";
 
@@ -110,6 +99,7 @@ export default function MyDocument() {
       </div>
     );
   }
+  
   return (
     <>
       <div className="flex flex-col xl:flex-row gap-4 p-5">

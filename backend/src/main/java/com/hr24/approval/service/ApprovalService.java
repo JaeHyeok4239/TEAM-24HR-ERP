@@ -36,25 +36,27 @@ public class ApprovalService {
 	private final DocumentRepository documentRepository;
 	private final AttendanceProcessService attendanceProcessService;
 
+	// 결재자 검증
+	public boolean canApprove(String loginId, Long documentId) {
+		User approver = userRepository.findByLoginId(loginId)
+				.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
+
+		return approvalHistoryRepository.existsByDocumentAndApproverAndStatusAndCurrentStep(documentId, approver, "PND");
+	}
+
 	// 결재선 조회
-	public List<ApprovalResponseDto.ApprovalLineDto> listOrSearchApprovalLines(Long departmentId, Long documentType,
-			String keyword) {
+	public Page<ApprovalResponseDto.ApprovalLineDto> listOrSearchApprovalLines(
+	        Long departmentId, Long documentType, String keyword, Pageable pageable) {
 
-		List<ApprovalLine> lines;
+	    Page<ApprovalLine> lines;
 
-		if (departmentId == null && documentType == null && keyword.isBlank()) {
+	    if (departmentId == null && documentType == null && (keyword == null || keyword.isBlank())) {
+	        lines = approvalLineRepository.findAll(pageable);
+	    } else {
+	        lines = approvalLineRepository.search(departmentId, documentType, keyword, pageable);
+	    }
 
-			lines = approvalLineRepository.findAll();
-			System.out.println(lines.size());
-		}
-
-		else {
-
-			lines = approvalLineRepository.search(departmentId, documentType, keyword);
-
-		}
-
-		return lines.stream().map(ApprovalResponseDto.ApprovalLineDto::from).toList();
+	    return lines.map(ApprovalResponseDto.ApprovalLineDto::from);
 	}
 
 	public List<ApprovalResponseDto.ApprovalLineDto> ApprovalLineList() {

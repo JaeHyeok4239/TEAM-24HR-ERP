@@ -3,10 +3,11 @@ import { apiRequest } from "@/lib/api";
 
 // 프론트 라벨 매핑
 const LABEL_MAP = {
-  leaveType: "휴가 종류",
+  leaveTypeName: "휴가 종류",
   leaveDates: "휴가 날짜",
   leaveReason: "신청 사유",
-  correctionTarget: "변경할 근태 이력",
+  targetDate: "정정 대상 날짜",
+  correctionReason: "정정 이유",
   correctionType: "정정 유형(IN/OUT)",
   beforeTime: "변경 전 시간",
   afterTime: "변경 후 시간",
@@ -17,6 +18,7 @@ const INPUT_TYPE_MAP = {
   string: "text",
   number: "number",
   date: "date",
+  datetime: "datetime-local",
   date_list: "date_list", // 커스텀 처리
 };
 
@@ -40,10 +42,14 @@ export function useDocumentSchema(typeId) {
           label: LABEL_MAP[f.name] ?? f.name,
           type: INPUT_TYPE_MAP[f.type] ?? "text",
           required: f.required,
+          options: Array.isArray(f.options)
+            ? f.options
+            : f.options
+              ? [f.options]
+              : [],
         }));
         setFields(mapped);
-
-      } catch(e) {
+      } catch (e) {
         console.error("fail", e);
         setFields([]);
       } finally {

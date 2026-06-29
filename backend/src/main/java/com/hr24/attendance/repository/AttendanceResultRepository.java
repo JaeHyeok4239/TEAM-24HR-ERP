@@ -22,7 +22,7 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	
 	// 한 명 조회
 	Optional<AttendanceResult> findByEmployeeAndWorkDate(User employee, LocalDate workDate);
-
+	
 	// 특정 날짜, 특정 근태 상태의 직원 목록 조회
 	@Query("SELECT ar FROM AttendanceResult ar JOIN FETCH ar.employee " +
 	       "WHERE ar.workDate = :workDate " +
