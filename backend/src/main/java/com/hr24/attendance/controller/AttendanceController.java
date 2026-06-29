@@ -89,9 +89,8 @@ public class AttendanceController {
     @PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
     @PatchMapping("/daily/{logId}")
     @Operation(summary = "일용직 근태 기록 수정", description = "관리자가 일용직 근태 기록을 직접 수정합니다. 출퇴근 한번에 수정 가능")
-    @PostMapping("/daily/{logId}/correction")
     public ResponseEntity<Void> applyDailyCorrection(
-            @PathVariable Long logId,
+    		@PathVariable("logId") Long logId,
             @RequestBody List<DailyCorrectionDto> dtoList,
             @AuthenticationPrincipal String loginId) {
         

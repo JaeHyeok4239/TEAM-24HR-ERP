@@ -72,6 +72,12 @@ public class AttendanceCorrectionService {
 
         LocalDateTime beforeTime = log.getLogTime();
         log.setLogTime(dto.getAfterTime());
+        
+        if ("IN".equals(log.getLogType())) {
+            result.setCheckInTime(dto.getAfterTime());
+        } else if ("OUT".equals(log.getLogType())) {
+            result.setCheckOutTime(dto.getAfterTime());
+        }
 
         // 이력 저장
         saveCorrectionRecord(result, null, log.getLogType(), beforeTime, dto.getAfterTime(), dto.getCorrectionReason(), processor);
