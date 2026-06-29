@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hr24.attendance.dto.AttendanceCorrectionRequestDto;
 import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
@@ -51,7 +53,7 @@ public class AttendanceController {
 	private final AttendanceProcessService attendanceProcessService;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
 	
-	@Operation(summary = "오후 배치 프로그램", description = "오후 11시에 실행되는 프로그램입니다.")
+	@Operation(summary = "오후 배치 프로그램", description = "오후 11시에 실행되는 프로그램입니다. 오후 11시~오전6시 출퇴근 불가 및 미퇴근자 Missing 처리")
     @PostMapping("/batch/closing-batch")
     public ResponseEntity<String> closingBatch() {
         attendanceService.processMissingCheckouts();
@@ -59,7 +61,7 @@ public class AttendanceController {
         return ResponseEntity.ok("오후 배치 프로그램이 실행되었습니다.");
     }
     
-	@Operation(summary = "오전 배치 프로그램", description = "오전 6시에 실행되는 프로그램입니다.")
+	@Operation(summary = "오전 배치 프로그램", description = "오전 6시에 실행되는 프로그램입니다. 휴가자 제외 active 직원 ready 상태로 result 생성")
     @PostMapping("/batch/open-batch")
     public ResponseEntity<String> openBatch() {
     	attendanceService.createDailyAttendanceResults();
@@ -83,27 +85,36 @@ public class AttendanceController {
       return attendanceService.findEmployeesWithFilters(type, departmentId, keyword, status, date);
 	}
 	
-    // 일용직 정정(관리자만)
+    // (관리자)일용직 근태 기록 수정
     @PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
     @PatchMapping("/daily/{logId}")
-    @Operation(summary = "일용직 근태 기록 수정", description = "관리자가 일용직 근태 기록을 직접 수정합니다.")
-    public ResponseEntity<Void> correctDailyAttendance(
-            @PathVariable("logId") Long logId, 
-            @RequestBody DailyCorrectionDto dto,
-            Authentication authInfo
-    		) {
-    	
-    	String currentId = authInfo.getName();
+    @Operation(summary = "일용직 근태 기록 수정", description = "관리자가 일용직 근태 기록을 직접 수정합니다. 출퇴근 한번에 수정 가능")
+    @PostMapping("/daily/{logId}/correction")
+    public ResponseEntity<Void> applyDailyCorrection(
+            @PathVariable Long logId,
+            @RequestBody List<DailyCorrectionDto> dtoList,
+            @AuthenticationPrincipal String loginId) {
+        
+    	attendanceCorrectionService.applyDailyCorrection(logId, dtoList, loginId);
+        return ResponseEntity.ok().build();
+    }
     
-    	attendanceCorrectionService.correctDaily(logId, dto, currentId);
-    	
+    // (관리자)정규직 근태 기록 정정
+    @Operation(summary = "정규직 근태 기록 수정", description = "정규직 근태 기록이 정정됩니다.")
+    @PostMapping("/regular/{logId}/correction")
+    public ResponseEntity<Void> applyDocumentCorrection(
+            @PathVariable("logId") Long logId,
+            @RequestBody AttendanceCorrectionRequestDto.CorrectionDto dto,
+            @AuthenticationPrincipal String loginId) {
+        
+    	attendanceCorrectionService.applyRegularCorrection(logId, dto, loginId);
         return ResponseEntity.ok().build();
     }
 	
 //	 일별 근태 상세 조회
 //	 관리자는 모든 사용자 조회 가능
 //	 일반 사용자는 본인 것만 조회 가능
-    @Operation(summary = "일별 근태 상세 조회", description = "관리자/본인만 조회 가능")
+    @Operation(summary = "일별 근태 상세 조회", description = "관리자(정규직, 일용직) 혹은 본인 것만 조회 가능")
     @PreAuthorize("isAuthenticated()") // 로그인만 되어 있으면 일단 호출 가능
     @GetMapping("/{employeeId}")
     public ResponseEntity<AttendanceDetailResponseDto> getAttendanceDetail(

@@ -19,7 +19,7 @@ import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.AttendanceResultDto;
-import com.hr24.attendance.dto.CorrectionDto;
+import com.hr24.attendance.dto.AttendanceCorrectionRecordDto;
 import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
@@ -78,7 +78,7 @@ public class AttendanceService{
 	private static final String FIXED_WORKPLACE_NAME = "HQ";
 	
 	// 시간 관련 API 테스트용 메서드
-	private final boolean IS_TEST_MODE = true; 
+	private final boolean IS_TEST_MODE = false; 
 	public LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분
@@ -255,7 +255,7 @@ public class AttendanceService{
 	    LocalDateTime checkIn;
 	    LocalDateTime checkOut;
 	    AttendanceStatus status = null;
-	    List<CorrectionDto> correctionDtos;
+	    List<AttendanceCorrectionRecordDto> correctionDtos;
 	    String workplaceName;
 	    boolean isHoliday = holidayRepository.findByHolidayDate(date).isPresent();
 	    
@@ -330,11 +330,11 @@ public class AttendanceService{
 	}
 
 	// CorrectionDto 변환 로직
-	private CorrectionDto convertToCorrectionDto(AttendanceCorrection c) {
+	private AttendanceCorrectionRecordDto convertToCorrectionDto(AttendanceCorrection c) {
 		Document doc = c.getDocument();
 		User processor = doc.getProcessor();
 		
-	    return CorrectionDto.builder()
+	    return AttendanceCorrectionRecordDto.builder()
 	            .correctionType(c.getCorrectionType())
 	            .processStatus(convertStatusToLabel(c.getDocument().getStatus()))
 	            .requestedAt(c.getDocument().getRequestedAt())
