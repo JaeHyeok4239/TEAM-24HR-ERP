@@ -1,6 +1,7 @@
 package com.hr24.payroll.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.payroll.dto.SalaryCreateRequestDto;
+import com.hr24.payroll.dto.SalaryResponseDto;
 import com.hr24.payroll.dto.SalaryUpdateRequestDto;
 import com.hr24.payroll.entity.Salary;
 import com.hr24.payroll.repository.SalaryRepository;
@@ -56,4 +58,7 @@ public class SalaryService {
 
         salary.setUpdatedAt(LocalDateTime.now());
     }
+    
+    
+    public List<SalaryResponseDto> getSalaryList() {return salaryRepository.findSalaryList();}
 }
