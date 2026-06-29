@@ -533,20 +533,6 @@ public class AttendanceService{
 		throw new RuntimeException("근무지 근처가 아닙니다.");
 	}
 	
-	// 숫자를 시간으로 변환
-	private LocalTime convertToLocalTime(Long timeNumber) {
-	    if (timeNumber == null) {
-	        throw new RuntimeException("시간 정책 값이 설정되지 않았습니다.");
-	    }
-	    // Long에서 int로 형변환
-	    int hours = (int) (timeNumber / 100);
-	    int minutes = (int) (timeNumber % 100);
-	    
-	    return LocalTime.of(hours, minutes);
-	}
-	
-
-	
 	// 출근 버튼(직원ID, 위도, 경도)
 	public void checkIn(String loginId, Double latitude, Double longitude) {
 	    validateOperatingTime(); // 시간 검증
