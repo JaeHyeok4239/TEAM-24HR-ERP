@@ -52,7 +52,9 @@ public class DocumentResponseDto {
     @Builder
 	public static class DocumentDto{
 		private Long documentId;
-		private String documentType;
+		private Long documentType;		
+		private String documentTypeName;
+		private String typeDetailTable;
 		private String documentTitle;
 		private String documentStatus;
 		private String requester;
@@ -73,13 +75,15 @@ public class DocumentResponseDto {
 				List<DocumentFileResponseDto> documentFileList) {
 			return DocumentDto.builder()
 					.documentId(document.getDocumentId())
-					.documentType(document.getDocumentType().getTypeName())
+					.documentType(document.getDocumentType().getTypeId())
+					.typeDetailTable(document.getDocumentType().getDetailTable())
+					.documentTypeName(document.getDocumentType().getTypeName())
 					.documentTitle(document.getDocumentTitle())
 					.documentStatus(document.getStatus())
 					.requester(document.getRequester().getName())
 					.processor(document.getProcessor() != null ? document.getProcessor().getName() : null)
 					.requestedAt(document.getCreatedAt())
-					.processedAt(document.getUpdatedAt())
+					.processedAt(document.getProcessedAt())
 					.rejectReason(document.getRejectReason())
 					.documentContent(document.getDocumentContent())
 					.approvalHistories(approvalHistories)

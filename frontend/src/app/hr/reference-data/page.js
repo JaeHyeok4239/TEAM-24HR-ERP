@@ -1,4 +1,4 @@
-import Header from '@/components/Header';
+import Header from '@/components/common/Header';
 import DepartmentManagement from '@/components/hr/reference-data/DepartmentManagement';
 import PositionManagement from '@/components/hr/reference-data/PositionManagement';
 

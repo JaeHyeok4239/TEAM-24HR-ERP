@@ -11,4 +11,6 @@ public interface DocumentTypeSchemaRepository extends JpaRepository<DocumentType
 	Optional<DocumentTypeSchema> findByDocumentType(DocumentType documentType);
 	
 	boolean existsByDocumentType(DocumentType documentType);
+
+	Optional<DocumentTypeSchema> findByDocumentType_TypeId(Long typeId);
 }

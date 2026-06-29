@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+import Header from "@/components/common/Header";
 import ScheduleCalendar from "@/components/work/schedule/ScheduleCalendar";
 
 export default function SchedulePage() {

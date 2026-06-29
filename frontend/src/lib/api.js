@@ -60,11 +60,14 @@ export const apiRequest = async (url, options = {}) => {
     useAuthStore.getState().accessToken || localStorage.getItem("accessToken");
 
   const request = (token) => {
+
+    const isFormData = options.body instanceof FormData;
+
     return fetch(`${BASE_URL}${url}`, {
       ...options,
       credentials: "include",
       headers: {
-        "Content-Type": "application/json",
+        ...(!isFormData && { "Content-Type": "application/json" }),
         ...options.headers,
         ...(token && {
           Authorization: `Bearer ${token}`,
@@ -75,11 +78,13 @@ export const apiRequest = async (url, options = {}) => {
 
   let response = await request(accessToken);
 
-  if (
-    response.status === 401 &&
-    url !== "/api/auth/login" &&
-    url !== "/api/auth/refresh"
-  ) {
+  const isRefreshExcludedUrl =
+    url === "/api/auth/login" ||
+    url === "/api/auth/refresh" ||
+    url === "/api/auth/logout" ||
+    url.startsWith("/api/auth/password-reset");
+
+  if (response.status === 401 && !isRefreshExcludedUrl) {
     try {
       const newAccessToken = await refreshAccessToken();
 
