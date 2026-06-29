@@ -41,7 +41,7 @@ export const sendPasswordResetCodeRequest = async (loginId, email) => {
 };
 
 export const verifyPasswordResetCodeRequest = async (loginId, email, code) => {
-  return await apiRequest("/api/auth/password-reset/code/verify", {
+  const response = await apiRequest("/api/auth/password-reset/code/verify", {
     method: "POST",
     body: JSON.stringify({
       loginId,
@@ -49,6 +49,8 @@ export const verifyPasswordResetCodeRequest = async (loginId, email, code) => {
       code,
     }),
   });
+
+  return await response.json();
 };
 
 export const resetPasswordRequest = async (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Briefcase, Pencil, Plus } from "lucide-react";
 
 import {
   createPositionRequest,
@@ -29,9 +30,7 @@ const POSITION_ERROR_MESSAGES = {
   INVALID_POSITION_ORDER: "직급 위치가 올바르지 않습니다.",
 };
 
-const CLOSE_MODAL_ERROR_CODES = [
-  "POSITION_HAS_ASSIGNED_EMPLOYEES",
-];
+const CLOSE_MODAL_ERROR_CODES = ["POSITION_HAS_ASSIGNED_EMPLOYEES"];
 
 export default function PositionManagement() {
   const [positions, setPositions] = useState([]);
@@ -67,6 +66,12 @@ export default function PositionManagement() {
     return first.positionId - second.positionId;
   });
 
+  const activePositionCount = positions.filter(
+    (position) => position.isActive === "Y",
+  ).length;
+
+  const inactivePositionCount = positions.length - activePositionCount;
+
   const activePositionOptions = positions
     .filter((position) => position.isActive === "Y")
     .filter((position) => position.positionId !== selectedPosition?.positionId)
@@ -83,6 +88,7 @@ export default function PositionManagement() {
 
   const refreshPositions = async () => {
     const response = await getPositionsRequest();
+
     setPositions(response);
 
     return response;
@@ -140,10 +146,7 @@ export default function PositionManagement() {
       (position) => position.positionId === targetPosition.positionId,
     );
 
-    if (
-      targetIndex < 0 ||
-      targetIndex === activePositionsAsc.length - 1
-    ) {
+    if (targetIndex < 0 || targetIndex === activePositionsAsc.length - 1) {
       return "";
     }
 
@@ -235,10 +238,7 @@ export default function PositionManagement() {
       return;
     }
 
-    if (
-      modalMode === "create" &&
-      !/^[A-Z0-9_-]+$/.test(positionCode)
-    ) {
+    if (modalMode === "create" && !/^[A-Z0-9_-]+$/.test(positionCode)) {
       setModalError("직급 코드는 대문자, 숫자, _, -만 사용할 수 있습니다.");
       return;
     }
@@ -248,10 +248,7 @@ export default function PositionManagement() {
       return;
     }
 
-    if (
-      modalMode === "update" &&
-      !["Y", "N"].includes(form.isActive)
-    ) {
+    if (modalMode === "update" && !["Y", "N"].includes(form.isActive)) {
       setModalError("사용 여부는 Y 또는 N만 가능합니다.");
       return;
     }
@@ -317,6 +314,7 @@ export default function PositionManagement() {
       await refreshPositions();
 
       setSelectedPositionId(savedPosition.positionId);
+
       setNotice({
         type: "success",
         message:
@@ -342,6 +340,7 @@ export default function PositionManagement() {
         setModalMode(null);
         setModalError("");
         setForm(createInitialForm());
+
         setNotice({
           type: "error",
           message,
@@ -356,247 +355,342 @@ export default function PositionManagement() {
 
   return (
     <>
-      <section className="rounded-md border bg-white p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="font-semibold text-slate-900">
-              직급 관리
-            </h2>
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-5 py-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#eef7ff] text-[#1a2f4e]">
+                <Briefcase size={21} strokeWidth={1.8} />
+              </div>
 
-            <p className="mt-1 text-xs text-slate-500">
-              높은 직급부터 낮은 직급 순서로 표시됩니다.
-            </p>
-          </div>
+              <div className="min-w-0">
+                <h2 className="text-base font-bold text-slate-950">
+                  직급 관리
+                </h2>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleOpenUpdateModal}
-              disabled={!selectedPosition || isLoading}
-              className="rounded border px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              수정
-            </button>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  높은 직급부터 낮은 직급 순서로 관리합니다.
+                </p>
+              </div>
+            </div>
 
-            <button
-              type="button"
-              onClick={handleOpenCreateModal}
-              className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              직급 추가
-            </button>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={handleOpenUpdateModal}
+                disabled={!selectedPosition || isLoading}
+                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Pencil size={15} />
+                수정
+              </button>
+
+              <button
+                type="button"
+                onClick={handleOpenCreateModal}
+                className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[#1a2f4e] px-3 text-sm font-semibold text-white hover:bg-[#25476e]"
+              >
+                <Plus size={16} />
+                직급 추가
+              </button>
+            </div>
           </div>
         </div>
 
-        {notice.message && (
-          <div
-            className={`mt-4 whitespace-pre-line rounded px-3 py-2 text-sm ${
-              notice.type === "success"
-                ? "bg-green-50 text-green-700"
-                : "bg-red-50 text-red-700"
-            }`}
-          >
-            {notice.message}
-          </div>
-        )}
+        <div className="grid grid-cols-3 border-b border-slate-100 bg-slate-50/70">
+          <SummaryItem label="전체" value={positions.length} />
+          <SummaryItem label="사용" value={activePositionCount} />
+          <SummaryItem label="미사용" value={inactivePositionCount} />
+        </div>
 
-        <div className="mt-4 overflow-hidden rounded border">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600">
-              <tr>
-                <th className="px-3 py-2 font-medium">
-                  직급명
-                </th>
-                <th className="px-3 py-2 font-medium">
-                  직급 코드
-                </th>
-                <th className="px-3 py-2 font-medium">
-                  사용 여부
-                </th>
-              </tr>
-            </thead>
+        <div className="px-5 py-4">
+          {notice.message && <Notice notice={notice} />}
 
-            <tbody>
-              {isLoading && (
+          <div className="overflow-hidden rounded-md border border-slate-200">
+            <table className="w-full border-collapse text-sm">
+              <thead className="bg-slate-50 text-slate-500">
                 <tr>
-                  <td
-                    colSpan={3}
-                    className="px-3 py-6 text-center text-slate-500"
-                  >
-                    직급 목록을 불러오는 중입니다.
-                  </td>
+                  <th className="w-[80px] border-b border-slate-200 px-4 py-3 text-left text-xs font-semibold">
+                    순서
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-semibold">
+                    직급명
+                  </th>
+                  <th className="w-[190px] border-b border-slate-200 px-4 py-3 text-left text-xs font-semibold">
+                    직급 코드
+                  </th>
+                  <th className="w-[110px] border-b border-slate-200 px-4 py-3 text-center text-xs font-semibold">
+                    상태
+                  </th>
                 </tr>
-              )}
+              </thead>
 
-              {!isLoading && sortedPositions.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="px-3 py-6 text-center text-slate-500"
-                  >
-                    등록된 직급이 없습니다.
-                  </td>
-                </tr>
-              )}
+              <tbody className="divide-y divide-slate-100">
+                {isLoading && (
+                  <EmptyRow colSpan={4} message="직급 목록을 불러오는 중입니다." />
+                )}
 
-              {!isLoading &&
-                sortedPositions.map((position) => {
-                  const isSelected =
-                    position.positionId === selectedPositionId;
+                {!isLoading && sortedPositions.length === 0 && (
+                  <EmptyRow colSpan={4} message="등록된 직급이 없습니다." />
+                )}
 
-                  return (
-                    <tr
-                      key={position.positionId}
-                      onClick={() =>
-                        handleSelectPosition(position.positionId)
-                      }
-                      className={`cursor-pointer border-t ${
-                        isSelected
-                          ? "bg-blue-50"
-                          : "hover:bg-slate-50"
-                      }`}
-                    >
-                      <td className="px-3 py-2">
-                        <div className="font-medium text-slate-900">
-                          {position.positionName}
-                        </div>
-                      </td>
+                {!isLoading &&
+                  sortedPositions.map((position, index) => {
+                    const isSelected =
+                      position.positionId === selectedPositionId;
 
-                      <td className="px-3 py-2 text-slate-600">
-                        {position.positionCode}
-                      </td>
+                    const isActive = position.isActive === "Y";
 
-                      <td className="px-3 py-2">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs ${
-                            position.isActive === "Y"
-                              ? "bg-green-50 text-green-700"
-                              : "bg-slate-100 text-slate-500"
-                          }`}
+                    return (
+                      <tr
+                        key={position.positionId}
+                        onClick={() =>
+                          handleSelectPosition(position.positionId)
+                        }
+                        className={[
+                          "cursor-pointer transition-colors",
+                          isSelected ? "bg-[#eef7ff]" : "hover:bg-slate-50",
+                        ].join(" ")}
+                      >
+                        <td
+                          className={[
+                            "border-l-4 px-4 py-3",
+                            isSelected
+                              ? "border-[#1a2f4e]"
+                              : "border-transparent",
+                          ].join(" ")}
                         >
-                          {position.isActive === "Y" ? "사용" : "미사용"}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
+                          <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-slate-100 px-2 text-xs font-bold text-slate-500">
+                            {index + 1}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <span
+                            className={[
+                              "font-semibold",
+                              isActive ? "text-slate-900" : "text-slate-400",
+                            ].join(" ")}
+                          >
+                            {position.positionName}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <CodeBadge>{position.positionCode}</CodeBadge>
+                        </td>
+
+                        <td className="px-4 py-3 text-center">
+                          <StatusBadge active={isActive} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-3 text-xs text-slate-400">
+            항목을 선택한 뒤 수정 버튼을 눌러 직급명, 사용 여부, 직급 위치를 변경할 수 있습니다.
+          </p>
         </div>
       </section>
 
       {modalMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-lg">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl"
+          >
+            <div className="border-b border-slate-200 px-6 py-5">
+              <h3 className="text-lg font-bold text-slate-950">
                 {modalMode === "create" ? "직급 추가" : "직급 수정"}
               </h3>
+
+              <p className="mt-1 text-sm text-slate-500">
+                직급 기준정보를 입력해주세요.
+              </p>
             </div>
 
-            {modalError && (
-              <div className="mb-4 whitespace-pre-line rounded bg-red-50 px-3 py-2 text-sm text-red-700">
-                {modalError}
-              </div>
-            )}
+            <div className="px-6 py-5">
+              {modalError && <ModalError message={modalError} />}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <FormField label="직급 코드">
-                <input
-                  type="text"
-                  name="positionCode"
-                  value={form.positionCode}
-                  onChange={handleChange}
-                  disabled={modalMode === "update"}
-                  placeholder="예: MANAGER"
-                  className="w-full rounded border px-3 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-500"
-                />
-              </FormField>
-
-              <FormField label="직급명">
-                <input
-                  type="text"
-                  name="positionName"
-                  value={form.positionName}
-                  onChange={handleChange}
-                  placeholder="예: 과장"
-                  className="w-full rounded border px-3 py-2 text-sm"
-                />
-              </FormField>
-
-              {modalMode === "update" && (
-                <FormField label="사용 여부">
-                  <select
-                    name="isActive"
-                    value={form.isActive}
+              <div className="space-y-4">
+                <FormField label="직급 코드">
+                  <input
+                    type="text"
+                    name="positionCode"
+                    value={form.positionCode}
                     onChange={handleChange}
-                    className="w-full rounded border px-3 py-2 text-sm"
+                    disabled={modalMode === "update"}
+                    placeholder="예: MANAGER"
+                    className={inputClassName}
+                  />
+                </FormField>
+
+                <FormField label="직급명">
+                  <input
+                    type="text"
+                    name="positionName"
+                    value={form.positionName}
+                    onChange={handleChange}
+                    placeholder="예: 과장"
+                    className={inputClassName}
+                  />
+                </FormField>
+
+                {modalMode === "update" && (
+                  <FormField label="사용 여부">
+                    <select
+                      name="isActive"
+                      value={form.isActive}
+                      onChange={handleChange}
+                      className={inputClassName}
+                    >
+                      <option value="Y">사용</option>
+                      <option value="N">미사용</option>
+                    </select>
+                  </FormField>
+                )}
+
+                <FormField
+                  label="바로 위 직급"
+                  help="선택한 직급보다 한 단계 낮은 위치에 저장됩니다."
+                >
+                  <select
+                    name="upperPositionId"
+                    value={form.upperPositionId}
+                    onChange={handleChange}
+                    disabled={modalMode === "update" && form.isActive === "N"}
+                    className={inputClassName}
                   >
-                    <option value="Y">사용</option>
-                    <option value="N">미사용</option>
+                    <option value="">없음 - 최상위 직급</option>
+
+                    {activePositionOptions.map((position) => (
+                      <option
+                        key={position.positionId}
+                        value={position.positionId}
+                      >
+                        {position.positionName}
+                      </option>
+                    ))}
                   </select>
                 </FormField>
-              )}
-
-              <FormField label="바로 위 직급">
-                <select
-                  name="upperPositionId"
-                  value={form.upperPositionId}
-                  onChange={handleChange}
-                  disabled={modalMode === "update" && form.isActive === "N"}
-                  className="w-full rounded border px-3 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-500"
-                >
-                  <option value="">없음 - 최상위 직급</option>
-
-                  {activePositionOptions.map((position) => (
-                    <option
-                      key={position.positionId}
-                      value={position.positionId}
-                    >
-                      {position.positionName}
-                    </option>
-                  ))}
-                </select>
-
-                <p className="mt-1 text-xs text-slate-500">
-                  선택한 직급보다 한 단계 낮은 위치에 저장됩니다.
-                </p>
-              </FormField>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  disabled={isSaving}
-                  className="rounded border px-4 py-2 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  취소
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isSaving ? "저장 중..." : "저장"}
-                </button>
               </div>
-            </form>
-          </div>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-6 py-4">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                disabled={isSaving}
+                className="h-9 rounded-md border border-slate-300 bg-white px-5 text-sm text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                취소
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="h-9 rounded-md bg-[#1a2f4e] px-6 text-sm font-semibold text-white hover:bg-[#25476e] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+              >
+                {isSaving ? "저장 중..." : "저장"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </>
   );
 }
 
-function FormField({ label, children }) {
+const inputClassName =
+  "h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-[#1a2f4e] focus:ring-2 focus:ring-[#a7f3ff]/40 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500";
+
+function SummaryItem({ label, value }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-medium text-slate-700">
+    <div className="border-r border-slate-100 px-5 py-3 last:border-r-0">
+      <p className="text-xs font-medium text-slate-400">{label}</p>
+      <p className="mt-1 text-lg font-bold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function Notice({ notice }) {
+  const isSuccess = notice.type === "success";
+
+  return (
+    <div
+      role="alert"
+      aria-live="polite"
+      className={[
+        "mb-4 whitespace-pre-line rounded-md border px-4 py-3 text-sm font-medium",
+        isSuccess
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+          : "border-red-200 bg-red-50 text-red-700",
+      ].join(" ")}
+    >
+      {notice.message}
+    </div>
+  );
+}
+
+function EmptyRow({ colSpan, message }) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="px-4 py-10 text-center text-slate-500">
+        {message}
+      </td>
+    </tr>
+  );
+}
+
+function CodeBadge({ children }) {
+  return (
+    <span className="inline-flex rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+      {children || "-"}
+    </span>
+  );
+}
+
+function StatusBadge({ active }) {
+  return (
+    <span
+      className={[
+        "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+        active
+          ? "bg-emerald-50 text-emerald-700"
+          : "bg-slate-100 text-slate-500",
+      ].join(" ")}
+    >
+      {active ? "사용" : "미사용"}
+    </span>
+  );
+}
+
+function ModalError({ message }) {
+  return (
+    <div
+      role="alert"
+      aria-live="polite"
+      className="mb-4 whitespace-pre-line rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+    >
+      {message}
+    </div>
+  );
+}
+
+function FormField({ label, help, children }) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-slate-700">
         {label}
-      </span>
+      </label>
 
       {children}
-    </label>
+
+      {help && <p className="mt-1.5 text-xs text-slate-400">{help}</p>}
+    </div>
   );
 }

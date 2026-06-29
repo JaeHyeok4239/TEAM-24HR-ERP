@@ -130,6 +130,7 @@ public class UserService {
                 .toList();
 
         return new MyInfoResponseDto(
+        		user.getEmployeeId(),
                 user.getEmployeeNo(),
                 user.getLoginId(),
                 user.getName(),

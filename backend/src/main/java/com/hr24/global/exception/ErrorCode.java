@@ -119,6 +119,32 @@ public enum ErrorCode {
 	        "직급 위치가 올바르지 않습니다."
 	),
 	
+	// 인사평가
+	DUPLICATE_EVALUATION_PERIOD(
+	        HttpStatus.CONFLICT,
+	        "이미 등록된 평가기간입니다."
+	),
+
+	INVALID_EVALUATION_DATE_RANGE(
+	        HttpStatus.BAD_REQUEST,
+	        "평가기간의 시작일과 종료일이 올바르지 않습니다."
+	),
+
+	INVALID_EVALUATION_PERIOD_STATUS(
+	        HttpStatus.BAD_REQUEST,
+	        "현재 평가기간 상태에서는 처리할 수 없습니다."
+	),
+
+	INVALID_EVALUATION_ANSWER(
+	        HttpStatus.BAD_REQUEST,
+	        "평가 답변 정보가 올바르지 않습니다."
+	),
+
+	EVALUATION_ALREADY_CONFIRMED(
+	        HttpStatus.CONFLICT,
+	        "이미 확정된 평가는 수정할 수 없습니다."
+	),
+	
 	// 인증
 	AUTHENTICATION_REQUIRED(
 	        HttpStatus.UNAUTHORIZED,

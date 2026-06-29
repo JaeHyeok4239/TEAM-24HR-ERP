@@ -21,14 +21,12 @@ import com.hr24.auth.dto.RefreshTokenResponseDto;
 import com.hr24.auth.service.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "인증 관리", description = "로그인, 로그아웃, 토큰 재발급 API")
+@Tag(name = "인증 관리", description = "로그인, 로그아웃, 토큰 재발급, 비밀번호 재설정 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
@@ -37,15 +35,13 @@ public class AuthController {
 	private final AuthService authService;
 	private final RefreshTokenCookieProvider refreshTokenCookieProvider;
 
-	@Operation(summary = "로그인", description = "아이디와 비밀번호로 로그인합니다.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "로그인 성공"),
-		@ApiResponse(responseCode = "401", description = "비밀번호 불일치"),
-		@ApiResponse(responseCode = "404", description = "사용자 없음")
-	})
+	@Operation(
+	        summary = "로그인",
+	        description = "로그인 성공 시 Access Token을 응답 body로 반환하고, Refresh Token은 HttpOnly Cookie로 저장합니다."
+	)
 	@PostMapping("/login")
 	public ResponseEntity<LoginResponseDto> login(
-	        @RequestBody LoginRequestDto requestDto
+	       @Valid @RequestBody LoginRequestDto requestDto
 	) {
 
 	    LoginTokenDto tokenDto =
@@ -65,7 +61,10 @@ public class AuthController {
                 .body(responseDto);
     }
 	
-	@Operation(summary = "토큰 재발급", description = "HttpOnly Cookie의 Refresh Token으로 Access Token을 재발급합니다.")
+	@Operation(
+	        summary = "Access Token 재발급",
+	        description = "HttpOnly Cookie에 저장된 Refresh Token을 검증하고 새로운 Access Token을 발급합니다."
+	)
     @PostMapping("/refresh")
     public ResponseEntity<RefreshTokenResponseDto> refresh(
             @CookieValue(
@@ -81,7 +80,10 @@ public class AuthController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @Operation(summary = "로그아웃", description = "Redis의 Refresh Token을 삭제하고 Refresh Token Cookie를 만료합니다.")
+	@Operation(
+	        summary = "로그아웃",
+	        description = "Redis에 저장된 Refresh Token을 삭제하고 Refresh Token Cookie를 만료합니다."
+	)
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             HttpServletRequest request,
@@ -109,7 +111,10 @@ public class AuthController {
                 .build();
     }
     
-    @Operation(summary = "비밀번호 재설정 인증코드 발송", description = "로그인 ID와 이메일이 일치하면 인증코드를 이메일로 발송합니다.")
+	@Operation(
+	        summary = "비밀번호 재설정 인증코드 발송",
+	        description = "로그인 ID와 이메일이 일치하면 비밀번호 재설정 인증코드를 이메일로 발송합니다."
+	)
     @PostMapping("/password-reset/code")
     public ResponseEntity<Void> sendPasswordResetCode(
             @Valid @RequestBody PasswordResetCodeSendRequestDto requestDto
@@ -119,7 +124,10 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
     
-    @Operation(summary = "비밀번호 재설정 인증코드 확인", description = "이메일 인증코드를 확인하고 비밀번호 재설정 토큰을 발급합니다.")
+	@Operation(
+	        summary = "비밀번호 재설정 인증코드 확인",
+	        description = "이메일로 발송된 인증코드를 검증하고 비밀번호 재설정용 resetToken을 발급합니다."
+	)
     @PostMapping("/password-reset/code/verify")
     public ResponseEntity<PasswordResetCodeVerifyResponseDto> verifyPasswordResetCode(
             @Valid @RequestBody PasswordResetCodeVerifyRequestDto requestDto
@@ -130,7 +138,10 @@ public class AuthController {
         return ResponseEntity.ok(responseDto);
     }
     
-    @Operation(summary = "비밀번호 재설정", description = "비밀번호 재설정 토큰으로 새 비밀번호를 설정합니다.")
+	@Operation(
+	        summary = "비밀번호 재설정",
+	        description = "resetToken을 검증한 뒤 새 비밀번호로 변경합니다."
+	)
     @PostMapping("/password-reset")
     public ResponseEntity<Void> resetPassword(
             @Valid @RequestBody PasswordResetRequestDto requestDto

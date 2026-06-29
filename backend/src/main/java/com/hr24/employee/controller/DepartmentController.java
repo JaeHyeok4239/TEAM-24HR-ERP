@@ -18,9 +18,12 @@ import com.hr24.employee.dto.department.DepartmentResponseDto;
 import com.hr24.employee.dto.department.DepartmentUpdateRequestDto;
 import com.hr24.employee.service.DepartmentService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "부서 관리", description = "HR 기준정보 중 부서 조회, 등록, 수정 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/hr/reference-data/departments")
@@ -29,7 +32,10 @@ public class DepartmentController {
 
     private final DepartmentService departmentService;
 
-    //부서 조회
+    @Operation(
+            summary = "부서 목록 조회",
+            description = "등록된 전체 부서 목록을 조회합니다."
+    )
     @GetMapping
     public ResponseEntity<List<DepartmentResponseDto>>
             getDepartments() {
@@ -40,7 +46,10 @@ public class DepartmentController {
         return ResponseEntity.ok(departments);
     }
 
-    //부서 등록
+    @Operation(
+            summary = "부서 등록",
+            description = "신규 부서를 등록합니다."
+    )
     @PostMapping
     public ResponseEntity<DepartmentResponseDto>
             createDepartment(
@@ -62,7 +71,10 @@ public class DepartmentController {
                 .body(responseDto);
     }
 
-    //부서 수정
+    @Operation(
+            summary = "부서 수정",
+            description = "부서명, 상위 부서, 사용 여부 등 부서 정보를 수정합니다."
+    )
     @PatchMapping("/{departmentId}")
     public ResponseEntity<DepartmentResponseDto>
             updateDepartment(
