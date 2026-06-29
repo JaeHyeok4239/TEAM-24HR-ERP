@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { BadgeCheck, Home, Mail, MapPin, Phone, UserRound } from "lucide-react";
+import {
+  BadgeCheck,
+  Briefcase,
+  Building2,
+  CalendarDays,
+  Home,
+  IdCard,
+  Mail,
+  MapPin,
+  Phone,
+  UserRound,
+} from "lucide-react";
 
 import KakaoPostcodeButton from "@/components/common/KakaoPostcodeButton";
 import { Button } from "@/components/ui/button";
@@ -41,7 +52,7 @@ const validateEmail = (email) => {
     return "";
   }
 
-  const emailPattern = /^[^\s@]+@[^\s@]+.[^\s@]+$/;
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   return emailPattern.test(trimmedEmail)
     ? ""
@@ -75,7 +86,7 @@ export default function MyInfoForm() {
 
   if (!userInfo) {
     return (
-      <div className="flex min-h-[240px] items-center justify-center rounded-md border border-slate-200 bg-white">
+      <div className="flex min-h-[240px] items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm">
         <p className="text-sm text-slate-500">
           사용자 정보를 불러오는 중입니다.
         </p>
@@ -198,20 +209,17 @@ function MyInfoFormContent({ userInfo }) {
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <div className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: "600px minmax(0, 1fr)",
-          }}
-        >
-          <aside className="border-r border-slate-200 bg-white p-6">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="grid grid-cols-1 xl:grid-cols-[430px_minmax(0,1fr)]">
+          <aside className="border-b border-slate-200 bg-slate-50/70 p-5 sm:p-6 xl:border-b-0 xl:border-r">
             <ProfileSection userInfo={userInfo} />
-            <div className="mt-6">
+
+            <div className="mt-5">
               <BasicInfoSection userInfo={userInfo} />
             </div>
           </aside>
-          <section className="min-w-0 bg-white p-6">
+
+          <section className="min-w-0 bg-white p-5 sm:p-6">
             <div className="space-y-5">
               <ContactSection
                 form={form}
@@ -232,7 +240,7 @@ function MyInfoFormContent({ userInfo }) {
           </section>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-6 py-4">
+        <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:px-6">
           <Button
             type="button"
             variant="outline"
@@ -258,19 +266,32 @@ function MyInfoFormContent({ userInfo }) {
 
 function ProfileSection({ userInfo }) {
   return (
-    <section>
-      <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#1a2f4e] text-white">
-          <UserRound size={26} strokeWidth={1.8} />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-xl font-bold text-slate-950">
+    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="h-24 bg-gradient-to-r from-[#1a2f4e] via-[#355983] to-[#6f92b5]" />
+
+      <div className="-mt-9 px-5 pb-5">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-18 w-18 items-center justify-center rounded-full border-4 border-white bg-[#1a2f4e] text-white shadow-sm">
+            <UserRound size={32} strokeWidth={1.8} />
+          </div>
+
+          <p className="mt-3 max-w-full truncate text-xl font-bold text-slate-950">
             {userInfo.name ?? "사용자"}
           </p>
 
           <p className="mt-1 text-sm font-medium text-slate-500">
             @{userInfo.loginId ?? "-"}
           </p>
+
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+              {userInfo.departmentName ?? "부서 없음"}
+            </span>
+
+            <span className="rounded-full bg-[#eef7ff] px-3 py-1 text-xs font-semibold text-[#1a2f4e]">
+              {userInfo.positionName ?? "직급 없음"}
+            </span>
+          </div>
         </div>
       </div>
     </section>
@@ -279,44 +300,64 @@ function ProfileSection({ userInfo }) {
 
 function BasicInfoSection({ userInfo }) {
   return (
-    <section>
+    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-slate-950">기본 정보 </h2>
-          <p className="mt-1 text-xs text-slate-400">
+          <h2 className="text-base font-bold text-slate-950">기본 정보</h2>
+          <p className="mt-1 text-xs leading-5 text-slate-400">
             관리자만 변경할 수 있는 인사 정보입니다.
           </p>
         </div>
-        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#eef7ff] text-[#2563eb]">
+
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#eef7ff] text-[#2563eb]">
           <BadgeCheck size={19} strokeWidth={1.8} />
         </div>
       </div>
-      <dl className="overflow-hidden rounded-md border border-slate-200 bg-white">
-        <ReadOnlyItem label="사번" value={userInfo.employeeNo} />
-        <ReadOnlyItem label="부서" value={userInfo.departmentName} />
-        <ReadOnlyItem label="직급" value={userInfo.positionName} />
-        <ReadOnlyItem label="입사일" value={formatDate(userInfo.hireDate)} />
-      </dl>
+
+      <div className="space-y-3">
+        <ReadOnlyField
+          icon={<IdCard size={16} />}
+          label="사번"
+          value={userInfo.employeeNo}
+        />
+        <ReadOnlyField
+          icon={<Building2 size={16} />}
+          label="부서"
+          value={userInfo.departmentName}
+        />
+        <ReadOnlyField
+          icon={<Briefcase size={16} />}
+          label="직급"
+          value={userInfo.positionName}
+        />
+        <ReadOnlyField
+          icon={<CalendarDays size={16} />}
+          label="입사일"
+          value={formatDate(userInfo.hireDate)}
+        />
+      </div>
     </section>
   );
 }
 
-function ReadOnlyItem({ label, value }) {
+function ReadOnlyField({ icon, label, value }) {
   return (
-    <div className="grid grid-cols-[92px_1fr] border-b border-slate-100 last:border-b-0">
-      <dt className="bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500">
+    <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
+      <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-slate-500">
+        <span className="text-slate-400">{icon}</span>
         {label}
-      </dt>
-      <dd className="px-4 py-3 text-sm font-medium text-slate-900">
+      </div>
+
+      <p className="min-w-0 break-words text-sm font-semibold text-slate-900">
         {value || "-"}
-      </dd>
+      </p>
     </div>
   );
 }
 
 function ContactSection({ form, errors, onChange, disabled }) {
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-5">
+    <section className="rounded-lg border border-slate-200 bg-white p-11 shadow-sm">
       <SectionHeader
         title="연락처 정보"
         description="이메일과 전화번호를 수정할 수 있습니다."
@@ -324,7 +365,7 @@ function ContactSection({ form, errors, onChange, disabled }) {
         iconClassName="bg-[#e2fcff] text-[#1a2f4e]"
       />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <EditableField
           icon={<Mail size={15} />}
           label="이메일"
@@ -359,7 +400,7 @@ function ContactSection({ form, errors, onChange, disabled }) {
 
 function AddressSection({ form, onChange, onPostcodeComplete, disabled }) {
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-5">
+    <section className="rounded-lg border border-slate-200 bg-white p-14 shadow-sm">
       <SectionHeader
         title="주소 정보"
         description="우편번호와 주소는 검색으로 입력하고 상세주소는 직접 입력합니다."
@@ -368,55 +409,57 @@ function AddressSection({ form, onChange, onPostcodeComplete, disabled }) {
       />
 
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label
-            htmlFor="zipcode"
-            className="flex items-center gap-2 text-sm font-semibold text-slate-700"
-          >
-            <span className="text-slate-400">
-              <MapPin size={15} />
-            </span>
-            우편번호
-          </Label>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label
+              htmlFor="zipcode"
+              className="flex items-center gap-2 text-sm font-semibold text-slate-700"
+            >
+              <span className="text-slate-400">
+                <MapPin size={15} />
+              </span>
+              우편번호
+            </Label>
 
-          <div className="flex gap-2">
+            <div className="flex gap-2">
+              <Input
+                id="zipcode"
+                name="zipcode"
+                value={form.zipcode}
+                placeholder="우편번호"
+                readOnly
+                disabled={disabled}
+                className="h-9 max-w-[200px] bg-slate-50 text-sm text-slate-700"
+              />
+
+              <KakaoPostcodeButton
+                onComplete={onPostcodeComplete}
+                disabled={disabled}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="address"
+              className="flex items-center gap-2 text-sm font-semibold text-slate-700"
+            >
+              <span className="text-slate-400">
+                <Home size={15} />
+              </span>
+              주소
+            </Label>
+
             <Input
-              id="zipcode"
-              name="zipcode"
-              value={form.zipcode}
-              placeholder="우편번호"
+              id="address"
+              name="address"
+              value={form.address}
+              placeholder="주소 검색을 통해 입력해주세요."
               readOnly
               disabled={disabled}
-              className="h-9 max-w-[180px] bg-slate-50 text-sm text-slate-700"
-            />
-
-            <KakaoPostcodeButton
-              onComplete={onPostcodeComplete}
-              disabled={disabled}
+              className="h-9 bg-slate-50 text-sm text-slate-700"
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label
-            htmlFor="address"
-            className="flex items-center gap-2 text-sm font-semibold text-slate-700"
-          >
-            <span className="text-slate-400">
-              <Home size={15} />
-            </span>
-            주소
-          </Label>
-
-          <Input
-            id="address"
-            name="address"
-            value={form.address}
-            placeholder="주소 검색을 통해 입력해주세요."
-            readOnly
-            disabled={disabled}
-            className="h-9 bg-slate-50 text-sm text-slate-700"
-          />
         </div>
 
         <div className="space-y-2">
@@ -446,14 +489,15 @@ function AddressSection({ form, onChange, onPostcodeComplete, disabled }) {
 
 function SectionHeader({ title, description, icon, iconClassName }) {
   return (
-    <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-4">
-      <div>
-        <h2 className="text-base font-bold text-slate-950">{title} </h2>
-        <p className="mt-1 text-xs text-slate-400">{description}</p>
+    <div className="mb-5 flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+      <div className="min-w-0">
+        <h2 className="text-base font-bold text-slate-950">{title}</h2>
+        <p className="mt-1 text-xs leading-5 text-slate-400">{description}</p>
       </div>
+
       <div
         className={[
-          "flex h-9 w-9 items-center justify-center rounded-md",
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-md",
           iconClassName,
         ].join(" ")}
       >
@@ -494,6 +538,7 @@ function EditableField({
         <span className="text-slate-400">{icon}</span>
         {label}
       </Label>
+
       <Input
         id={name}
         type={type}
@@ -508,6 +553,7 @@ function EditableField({
         aria-describedby={error ? errorId : undefined}
         className={inputClassName}
       />
+
       {error && (
         <p id={errorId} className="text-xs font-medium text-red-500">
           {error}

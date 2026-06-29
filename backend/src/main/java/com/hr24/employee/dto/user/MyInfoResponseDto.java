@@ -10,6 +10,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class MyInfoResponseDto {
 	
+	private Long employeeId;
     private String employeeNo;
     private String loginId;
     private String name;

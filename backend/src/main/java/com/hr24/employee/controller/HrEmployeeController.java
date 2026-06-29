@@ -89,6 +89,7 @@ public class HrEmployeeController {
 	        summary = "부서 트리 조회",
 	        description = "부서 계층 구조와 부서별 직원 수를 조회합니다."
 	)
+	@GetMapping("/departments/tree")
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<DepartmentTreeResponseDto> findDepartmentTree() {
 		DepartmentTreeResponseDto departmentTree =
