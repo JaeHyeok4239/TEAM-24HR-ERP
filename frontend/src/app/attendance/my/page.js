@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect} from "react";
 import Calendar from '@/components/attendance/Calendar';
 import PageHeader from '@/components/attendance/PageHeader';
 import { useCalendar } from "@/hooks/useCalendar";
@@ -14,30 +14,27 @@ export default function AttendanceUserPage(){
 
     const { currentDate, handleDatesSet } = useCalendar();
 
-    const fetchAttendanceStats = async (yearMonth) => {
-        try {
-            // 날짜 포맷 변환
-            const [y, m] = yearMonth.split('.');
-            const formattedDate = `${y}-${m.padStart(2, '0')}`;
-            
-            // targetEmployeeId 생략
-            const response = await fetch(`/api/attendance/summary?yearMonth=${formattedDate}`);
-            
-            if (!response.ok) throw new Error("데이터를 가져올 수 없습니다.");
-            const data = await response.json();
-            
-            // 백엔드 응답 구조에 맞게 상태 저장
-            setStats(data);
-        } catch (error) {
-            console.error("통계 조회 실패:", error);
-        }
-    };
-
     // 날짜가 바뀔 때마다 실행
     useEffect(() => {
-        if (currentDate) {
-            fetchAttendanceStats(currentDate);
-        }
+        if (!currentDate) return;
+
+        const fetchAttendanceStats = async () => {
+            try {
+                // 날짜 포맷 맞추기
+                const [y, m] = currentDate.split('.'); 
+                const formattedDate = `${y}-${m.padStart(2, '0')}`;
+                
+                const response = await fetch(`/api/attendance/summary?yearMonth=${formattedDate}`);
+                
+                if (!response.ok) throw new Error("데이터를 가져올 수 없습니다.");
+                const data = await response.json();
+                
+                setStats(data);
+            } catch (error) {
+                console.error("통계 조회 실패:", error);
+            }
+        };
+        fetchAttendanceStats();
     }, [currentDate]);
 
     return(
