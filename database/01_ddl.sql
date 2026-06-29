@@ -817,3 +817,18 @@ COMMENT ON COLUMN work_notifications.title           IS '알림 제목';
 COMMENT ON COLUMN work_notifications.message         IS '알림 내용';
 COMMENT ON COLUMN work_notifications.is_read         IS 'Y=읽음, N=미읽음 (PERSONAL만 사용)';
 COMMENT ON COLUMN work_notifications.created_at      IS '발송일시';
+
+-- 인사평가 등급 컬럼 추가
+ALTER TABLE employee_evaluations ADD grade VARCHAR2(5);
+
+-- 기존 확정 평가 데이터 등급 백필
+UPDATE employee_evaluations
+SET grade = CASE
+    WHEN total_score >= 43 THEN 'S'
+    WHEN total_score >= 38 THEN 'A'
+    WHEN total_score >= 33 THEN 'B'
+    WHEN total_score >= 28 THEN 'C'
+    ELSE 'D'
+END
+WHERE status = 'CONFIRMED' AND total_score IS NOT NULL;
+COMMIT;
