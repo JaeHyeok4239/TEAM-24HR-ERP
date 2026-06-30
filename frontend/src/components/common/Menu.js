@@ -55,8 +55,16 @@ const NAV_ITEMS = [
     label: "근태 관리",
     children: [
       { href: "/attendance/my", label: "내 근태 현황" },
-      { href: "/attendance/admin/regular", label: "정규직 근태 관리" },
-      { href: "/attendance/admin/daily", label: "일용직 근태 관리" },
+      { 
+        href: "/attendance/admin/regular", 
+        label: "정규직 근태 관리",
+        allowedRoles: [ROLES.ADMIN, ROLES.ATTENDANCE]
+      },
+      { 
+        href: "/attendance/admin/daily", 
+        label: "일용직 근태 관리",
+        allowedRoles: [ROLES.ADMIN, ROLES.ATTENDANCE]
+      },
     ],
   },
   {

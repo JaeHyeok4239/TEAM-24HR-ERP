@@ -9,6 +9,12 @@ export const ROLES = Object.freeze({
   HR_LEAD: "HR_LEAD",
 });
 
+// 근태관리 조회 권한
+export const ATTENDANCE_VIEW_ROLES = [
+  ROLES.ADMIN, 
+  ROLES.ATTENDANCE
+];
+
 // 인사관리 직원 목록 조회 권한
 // 직원 목록, 직원 상세 조회 가능
 export const HR_VIEW_ROLES = [
