@@ -16,7 +16,6 @@ import {
 import { logoutRequest } from "@/services/authService";
 import { useAuthStore } from "@/store/authStore";
 
-// Base UI 컴포넌트 임포트
 import { Collapsible } from "@base-ui/react/collapsible";
 import { Menu } from "@base-ui/react/menu";
 
@@ -60,7 +59,16 @@ const NAV_ITEMS = [
       { href: "/attendance/daily", label: "일용직 근태 관리" },
     ],
   },
-  { href: "/payroll", icon: DollarSign, label: "급여 관리" },
+  {
+    href: "/payroll",
+    icon: DollarSign,
+    label: "급여 관리",
+    children: [
+      { href: "/payroll", label: "급여 대장" },
+      { href: "/payroll/calculate", label: "급여 계산" },
+      { href: "/payroll/salary", label: "기본급 관리" },
+    ],
+  },
   {
     href: "/hr",
     icon: Users,
@@ -100,7 +108,6 @@ const NAV_ITEMS = [
       { href: "/approval/document", label: "내 문서함" },
       { href: "/approval/write", label: "문서 작성" },
       { href: "/approval/pending", label: "결재함" },
-      { href: "/approval/process", label: "업무 처리함" },
       { href: "/approval/lines", label: "결재선 관리" },
       { href: "/approval/delegate", label: "대리 결재 관리" },
     ],
@@ -118,6 +125,14 @@ export default function MainMenu() {
     userInfo?.roles ?? [],
   );
 
+  // 현재 열린 부모 메뉴의 href를 단일 상태로 관리
+  const [openMenu, setOpenMenu] = useState(() => {
+    const active = NAV_ITEMS.find(
+      (item) => item.children?.some((c) => pathname === c.href)
+    );
+    return active?.href ?? null;
+  });
+
   const handleLogout = async () => {
     try {
       await logoutRequest();
@@ -130,14 +145,12 @@ export default function MainMenu() {
 
   return (
     <Sidebar collapsible="none" className="w-46 bg-[#1a2f4e] border-r-0">
-      {/* 로고 영역 */}
       <SidebarHeader>
         <div className="flex items-center p-2">
           <span className="font-bold text-white">24HR</span>
         </div>
       </SidebarHeader>
 
-      {/* 네비게이션 */}
       <SidebarContent className="w-46">
         <SidebarGroup>
           <SidebarGroupContent>
@@ -169,6 +182,10 @@ export default function MainMenu() {
                     key={item.href}
                     item={item}
                     pathname={pathname}
+                    open={openMenu === item.href}
+                    onOpenChange={(next) =>
+                      setOpenMenu(next ? item.href : null)
+                    }
                   />
                 );
               })}
@@ -180,7 +197,6 @@ export default function MainMenu() {
       <SidebarFooter>
         <div className="relative w-full pb-2">
           <Menu.Root>
-            {/* 프로필 메뉴 열기 버튼 */}
             <Menu.Trigger className="flex w-full flex-col items-center gap-2 outline-none cursor-pointer">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#8a9bb0]">
                 <Users size={20} className="text-white" strokeWidth={1.5} />
@@ -232,22 +248,15 @@ export default function MainMenu() {
   );
 }
 
-// 주소창 변경 시 상태 변화 경고를 방지하기 위한 제어형 서브메뉴 컴포넌트 (JavaScript 버전)
-function ControlledCollapsibleMenuItem({ item, pathname }) {
+function ControlledCollapsibleMenuItem({ item, pathname, open, onOpenChange }) {
   const Icon = item.icon;
   const isChildActive = item.children.some((c) => pathname === c.href);
   const isActive = pathname === item.href;
 
-  const [open, setOpen] = useState(isChildActive);
-
-  const handleOpenChange = (nextOpen) => {
-    setOpen(nextOpen);
-  };
-
   return (
     <Collapsible.Root
       open={open}
-      onOpenChange={handleOpenChange}
+      onOpenChange={onOpenChange}
       className="group/collapsible"
     >
       <SidebarMenuItem>
