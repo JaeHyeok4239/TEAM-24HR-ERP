@@ -13,15 +13,18 @@ import {
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
+import Swal from "sweetalert2";
+
 import { usePagination } from "@/hooks/usePagination";
 
-import {
-  CommonPagination,
-} from "@/components/common/CommonPagination";
+import { CommonPagination } from "@/components/common/CommonPagination";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 import DocumentDetail from "./DocumentDetail";
 import { Card, CardContent, CardHeader } from "../ui/card";
+import { FileText, Plus } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
 
 export default function MyDocument() {
   const [selectedTab, setSelectedTab] = useState("my");
@@ -94,18 +97,38 @@ export default function MyDocument() {
 
   if (documentList.length === 0) {
     return (
-      <div className="p-5">
-        <h1>작성한 문서가 없습니다</h1>
+      <div className="flex flex-col items-center justify-center gap-4 p-20 text-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center gap-3 py-10">
+            <FileText size={48} className="text-gray-300" />
+            <h2 className="text-lg font-semibold text-[#1a2f4e]">
+              작성한 문서가 없습니다
+            </h2>
+            <p className="text-sm text-gray-400">
+              새 문서를 작성하려면 아래 버튼을 클릭하세요
+            </p>
+            <Link href="/approval/document/write">
+              <Button className="mt-2 bg-[#1a2f4e] hover:bg-[#2a4a6e] gap-1">
+                <Plus size={16} />
+                문서 작성하기
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     );
   }
-  
+
   return (
     <>
       <div className="flex flex-col xl:flex-row gap-4 p-5">
         {/* 왼쪽: 문서 목록 */}
         <div className="flex-1 h-full">
-          <Card className={"xl:h-[calc(100vh-140px)] overflow-y-auto transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"}>
+          <Card
+            className={
+              "xl:h-[calc(100vh-140px)] overflow-y-auto transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
+            }
+          >
             <CardContent className={"flex-1 flex flex-col p-0"}>
               <Tabs
                 value={selectedTab}
@@ -195,7 +218,8 @@ export default function MyDocument() {
                         {documentList.map((d) => (
                           <TableRow
                             key={d.documentId}
-                            className="text-center text-[#1a2f4e]"
+                            className="text-center text-[#1a2f4e] cursor-pointer"
+                            onClick={() => handleRowClick(d.documentId)}
                           >
                             <TableCell>{d.documentId}</TableCell>
                             <TableCell>{d.documentTypeName}</TableCell>
@@ -207,12 +231,14 @@ export default function MyDocument() {
                                 className={
                                   "mx-2 bg-[#ffc23f8c] hover:bg-[#ffae00]"
                                 }
+                                onClick={() =>
+                                  router.push(
+                                    `/approval/document/${d.documentId}/edit`,
+                                  )
+                                }
                                 size="lg"
                               >
                                 수정
-                              </Button>
-                              <Button variant="destructive" size="lg">
-                                삭제
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -233,7 +259,12 @@ export default function MyDocument() {
         {/* 오른쪽: 문서 상세 */}
         {documentId && (
           <div className="flex-1 sticky top-5">
-            <Card className={"xl:h-[calc(100vh-140px)] overflow-y-auto transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg"} onClick={() => router.push(`/approval/document/${documentId}`)}>
+            <Card
+              className={
+                "xl:h-[calc(100vh-140px)] overflow-y-auto transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg"
+              }
+              onClick={() => router.push(`/approval/document/${documentId}`)}
+            >
               <CardContent>
                 <DocumentDetail key={documentId} documentId={documentId} />
               </CardContent>

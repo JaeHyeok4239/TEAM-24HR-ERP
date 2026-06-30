@@ -24,6 +24,13 @@ export const HR_MANAGE_ROLES = [
   ROLES.HR_LEAD,
 ];
 
+export const DEFAULT_APR_ROLES = [
+  ROLES.ADMIN,
+  ROLES.HR_LEAD,
+  ROLES.ATTENDANCE,
+  ROLES.PAYROLL,
+];
+
 // 백엔드에서 ROLE_ADMIN 형태로 내려와도 ADMIN으로 비교하기 위해 정규화한다.
 export const normalizeRole = (role) => {
   if (!role || typeof role !== "string") {

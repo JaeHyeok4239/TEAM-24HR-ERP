@@ -1,11 +1,10 @@
 export const documentSchemas = {
   leave: {
-    leaveType: { label: "휴가 종류" },
+    leaveTypeName: { label: "휴가 종류" },
     leaveDates: { label: "휴가 날짜" },
     leaveReason: { label: "신청 사유" },
   },
   attendance_correction: {
-    correctionTarget: { label: "변경할 근태 이력" },
     targetDate : {label : "정정 대상 날짜"},
     correctionType: { label: "정정 유형(IN/OUT)" },
     correctionReason : { label : "정정 이유" },

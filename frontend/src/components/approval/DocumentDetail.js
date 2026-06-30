@@ -26,8 +26,9 @@ export default function DocumentDetail({ documentId }) {
   const router = useRouter();
   const userInfo = useAuthStore((state) => state.userInfo);
   const loginId = userInfo?.loginId;
-  const [canApprove, setCanApprove] = useState(false);
+  const currentUserId = userInfo?.employeeId;
   const [comment, setComment] = useState("");
+  const isOwner = document?.requesterId === currentUserId;
 
   useEffect(() => {
     const loadData = async () => {
@@ -43,6 +44,7 @@ export default function DocumentDetail({ documentId }) {
         console.log(loginId);
 
         setDocument(data);
+
       } catch (err) {
         throw new Error("데이터를 불러올 수 없습니다");
       }
@@ -50,18 +52,6 @@ export default function DocumentDetail({ documentId }) {
     if (documentId) {
       loadData();
     }
-  }, [documentId]);
-
-  useEffect(() => {
-    if (!documentId) return;
-    const check = async () => {
-      const res = await apiRequest(`/api/approval/${documentId}/can-approve`, {
-        method: "GET",
-      });
-      const data = await res.json();
-      setCanApprove(data);
-    };
-    check();
   }, [documentId]);
 
   //결재 승인
@@ -93,11 +83,17 @@ export default function DocumentDetail({ documentId }) {
     return <>로딩중</>;
   }
 
-  // 본인 문서 여부
-  const isOwner = document?.requesterLoginId === loginId;
-
-  // 본인 + 임시저장
-  const canEdit = isOwner && document?.documentStatus === "TMP";
+  // 결재자 여부
+  const canApprove = document.approvalHistories?.some(
+    (h) =>
+      h.approvalStatus === "PND" &&
+      h.stepOrder === document.currentStep &&
+      Number(h.approverId) === Number(currentUserId),
+  );
+console.log(document.approvalHistories);
+  console.log(canApprove);
+  console.log("currentUserId", currentUserId);
+console.log("currentStep", document.currentStep);
 
   return (
     <>
@@ -207,12 +203,13 @@ export default function DocumentDetail({ documentId }) {
                   </>
                 )}
 
-                {document.documentStatus === "REQ" && document.documentVersion === 1 && (
-                  <>
-                    <Clock size={32} className="text-gray-300" />
-                    <p className="text-sm">결재 진행 중입니다</p>
-                  </>
-                )}
+                {document.documentStatus === "REQ" &&
+                  document.documentVersion === 1 && (
+                    <>
+                      <Clock size={32} className="text-gray-300" />
+                      <p className="text-sm">결재 진행 중입니다</p>
+                    </>
+                  )}
 
                 {document.documentStatus === "REQ" &&
                   document.documentVersion !== 1 && (
@@ -246,6 +243,9 @@ export default function DocumentDetail({ documentId }) {
                     <Button
                       size="sm"
                       className="mt-1  bg-[#ffc23f8c] hover:bg-[#ffae00]"
+                      onClick={() =>
+                        router.push(`/approval/document/${documentId}/edit`)
+                      }
                     >
                       수정
                     </Button>
@@ -255,23 +255,17 @@ export default function DocumentDetail({ documentId }) {
             </CardContent>
           </Card>
         </div>
-        {canEdit && (
-          <div className="flex gap-2 mt-4">
+
+        {isOwner && document.documentStatus === "TMP" && (
+          <div className="flex justify-end">
             <Button
-              size="sm"
-              className="bg-[#ffc23f8c] hover:bg-[#ffae00]"
+              size="lg"
+              className="mt-1  bg-[#ffc23f8c] hover:bg-[#ffae00]"
               onClick={() =>
                 router.push(`/approval/document/${documentId}/edit`)
               }
             >
               수정
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => handleDelete(documentId)}
-            >
-              삭제
             </Button>
           </div>
         )}

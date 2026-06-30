@@ -23,6 +23,7 @@ import {
   ROLES,
   HR_MANAGE_ROLES,
   HR_VIEW_ROLES,
+  DEFAULT_APR_ROLES,
   filterNavItemsByRole,
 } from "@/lib/roles";
 
@@ -105,11 +106,11 @@ const NAV_ITEMS = [
     icon: CheckCircle,
     label: "전자 결재",
     children: [
-      { href: "/approval/document", label: "내 문서함" },
-      { href: "/approval/write", label: "문서 작성" },
-      { href: "/approval/pending", label: "결재함" },
-      { href: "/approval/lines", label: "결재선 관리" },
-      { href: "/approval/delegate", label: "대리 결재 관리" },
+      { href: "/approval/document/write", label: "문서 작성"},
+      { href: "/approval/document", label: "내 문서함"},
+      { href: "/approval/pending", label: "결재함"},
+      { href: "/approval/lines", label: "결재선 관리", allowedRoles : HR_MANAGE_ROLES},
+      { href: "/approval/delegate", label: "대리 결재 관리", allowedRoles : DEFAULT_APR_ROLES},
     ],
   },
 ];
@@ -124,6 +125,7 @@ export default function MainMenu() {
     NAV_ITEMS,
     userInfo?.roles ?? [],
   );
+
 
   // 현재 열린 부모 메뉴의 href를 단일 상태로 관리
   const [openMenu, setOpenMenu] = useState(() => {
