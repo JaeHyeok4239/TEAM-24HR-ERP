@@ -1,13 +1,19 @@
 package com.hr24.approval.controller;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hr24.approval.dto.ApprovalManagementDto;
@@ -37,7 +43,22 @@ public class ApprovalManagementController {
 
 		return ResponseEntity.ok(ApprovalResponseDto.ApprovalLineDto.from(approvalLine));
 	}
+	
+	//대리 결재 조회
+	@GetMapping("/delegate")
+	public ResponseEntity<Page<ApprovalResponseDto.ApprovalDelegateDto>> listDelegates(
+	        @RequestParam(required = false, value = "keyword") String keyword,
+	        @PageableDefault(size = 10, sort = "approvalDelegateId", direction = Sort.Direction.DESC) Pageable pageable,
+	        Authentication authInfo) {
 
+	    boolean isAdmin = authInfo.getAuthorities().stream()
+	            .anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("HR_LEAD"));
+
+	    String loginId = authInfo.getName();
+
+	    return ResponseEntity.ok(approvalManagementService.listDelegates(loginId, isAdmin, keyword, pageable));
+	}
+	
 	// 대리 결재 생성은 컨트롤러에서 권한 검증 x(본인이 결재선에 결재자로 들어있으면 됨)
 	@PostMapping("/delegate")
 	public ResponseEntity<ApprovalResponseDto.ApprovalDelegateDto> createDelegate(

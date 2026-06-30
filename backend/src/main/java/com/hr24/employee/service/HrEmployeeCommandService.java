@@ -68,7 +68,7 @@ public class HrEmployeeCommandService {
 
 		String employeeNo = generateEmployeeNo();
 		String rawPassword = request.getPassword().trim();
-		String encodedPassword = passwordEncoder.encode(request.getPassword());
+		String encodedPassword = passwordEncoder.encode(rawPassword);
 
 		User user = User.createEmployee(
 				employeeNo,

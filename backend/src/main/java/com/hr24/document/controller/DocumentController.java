@@ -68,7 +68,7 @@ public class DocumentController {
 		return ResponseEntity.ok(documentId);
 	}
 	
-	// 문서 수정 (임시저장 수정 or 기안)
+	// 문서 수정 (임시저장 수정 or 재기안)
 	@PutMapping(value = "/{documentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<Void> update(
 	        @PathVariable("documentId") Long documentId,

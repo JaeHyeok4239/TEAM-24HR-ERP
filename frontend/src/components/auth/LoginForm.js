@@ -53,85 +53,86 @@ export default function LoginForm() {
     }
   };
   return (
-    <div className="h-full bg-gradient-to-br from-[#eefdff] via-[#2a436b] to-[#061429]">
-      <div className="flex justify-center items-center h-screen">
-        <Card className="flex flex-row w-full max-w-4xl h-[60%] bg-[#1a2f4e] overflow-hidden p-0 rounded-2xl shadow-2xl">
-          {/* 왼쪽 영역: 로그인 폼 컨테이너 */}
-          <div className="bg-[#1a2f4e] justify-center flex flex-col flex-1 p-10">
-            <CardHeader className="flex flex-col p-0 mb-5 items-end">
-              <CardTitle className="p-2 text-5xl italic font-extrabold tracking-tight text-balance text-[#dbfdffd2]">
-                24HR
-              </CardTitle>
-              <CardDescription className={"text-[#718ba8] p-2"}>
-                인사 관리 ERP 시스템
-              </CardDescription>
-            </CardHeader>
+    <div className="min-h-dvh bg-gradient-to-br from-[#eefdff] via-[#2a436b] to-[#061429] flex items-center justify-center px-4 py-6">
+      <Card className="flex flex-col md:flex-row w-full max-w-4xl h-auto bg-[#1a2f4e] overflow-hidden p-0 rounded-2xl shadow-2xl">
+        {/* 왼쪽 영역: 로그인 폼 컨테이너 */}
+        <div className="bg-[#1a2f4e] justify-center flex flex-col flex-1 p-6 sm:p-8 lg:p-10 [@media(max-height:720px)]:p-6">
+          <CardHeader className="flex flex-col p-0 mb-4 items-end [@media(max-height:720px)]:mb-3">
+            <CardTitle className="p-2 text-4xl [@media(max-height:720px)]:text-3xl italic font-extrabold tracking-tight text-balance text-[#dbfdffd2]">
+              24HR
+            </CardTitle>
+            <CardDescription className="text-[#718ba8] p-2">
+              인사 관리 ERP 시스템
+            </CardDescription>
+          </CardHeader>
 
-            <hr className="mb-10"></hr>
+          <hr className="mb-8 [@media(max-height:720px)]:mb-5" />
 
-            <form onSubmit={handleLogin} className="flex flex-col gap-5">
-              <CardContent className="flex flex-col gap-5 justify-center p-0">
-                <Field>
-                  <FieldLabel htmlFor="loginId" className="text-cyan-100/80">
-                    아이디
-                  </FieldLabel>
-                  <Input
-                    id="loginId"
-                    type="text"
-                    value={loginId}
-                    className="transition-opacity duration-300 hover:opacity-70 focus:opacity-70 w-full text-[#1a2f4e] h-12 bg-cyan-100/70 rounded-lg mt-1"
-                    onChange={(e) => setLoginId(e.target.value)}
-                  />
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="password" className="text-cyan-100/80">
-                    비밀번호
-                  </FieldLabel>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    className="transition-opacity duration-300 hover:opacity-70 focus:opacity-70 w-full text-[#1a2f4e] h-12 bg-cyan-100/70 rounded-lg mt-1"
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </Field>
-
-                {message && (
-                  <div className="text-red-300 text-sm mt-1">{message}</div>
-                )}
-              </CardContent>
-
-              <CardFooter className="flex flex-col justify-center p-0 mt-6">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="w-full font-bold bg-cyan-200/75 h-15 text-[#1a2f4e] hover:bg-[#37b6c781] transition-colors duration-300"
-                >
-                  로그인
-                </Button>
-
-                <Link
-                  href="/user/password-find"
-                  className="mt-4 text-sm text-cyan-100/70 hover:text-cyan-100 underline underline-offset-4 transition-colors"
-                >
-                  비밀번호를 잊으셨나요?
-                </Link>
-              </CardFooter>
-            </form>
-          </div>
-
-          {/* 오른쪽 이미지 영역 - 이미지 추후 수정*/}
-          <div
-            className="relative hidden md:block flex-1 bg-cover bg-center transition-opacity duration-300 hover:opacity-70"
-            style={{
-              backgroundImage: `url('/main.jpg')`,
-            }}
+          <form
+            onSubmit={handleLogin}
+            className="flex flex-col gap-5 [@media(max-height:720px)]:gap-4"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent pointer-events-none -ml-px" />
-          </div>
-        </Card>
-      </div>
+            <CardContent className="flex flex-col gap-5 [@media(max-height:720px)]:gap-4 justify-center p-0">
+              <Field>
+                <FieldLabel htmlFor="loginId" className="text-cyan-100/80">
+                  아이디
+                </FieldLabel>
+                <Input
+                  id="loginId"
+                  type="text"
+                  value={loginId}
+                  className="transition-opacity duration-300 hover:opacity-70 focus:opacity-70 w-full text-[#1a2f4e] h-12 [@media(max-height:720px)]:h-10 bg-cyan-100/70 rounded-lg mt-1"
+                  onChange={(e) => setLoginId(e.target.value)}
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="password" className="text-cyan-100/80">
+                  비밀번호
+                </FieldLabel>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  className="transition-opacity duration-300 hover:opacity-70 focus:opacity-70 w-full text-[#1a2f4e] h-12 [@media(max-height:720px)]:h-10 bg-cyan-100/70 rounded-lg mt-1"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </Field>
+
+              {message && (
+                <div className="text-red-300 text-sm mt-1">{message}</div>
+              )}
+            </CardContent>
+
+            <CardFooter className="flex flex-col justify-center p-0 mt-5 [@media(max-height:720px)]:mt-3">
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full font-bold bg-cyan-200/75 h-12 [@media(max-height:720px)]:h-10 text-[#1a2f4e] hover:bg-[#37b6c781] transition-colors duration-300"
+              >
+                로그인
+              </Button>
+
+              <Link
+                href="/user/password-find"
+                className="mt-4 [@media(max-height:720px)]:mt-3 text-sm text-cyan-100/70 hover:text-cyan-100 underline underline-offset-4 transition-colors"
+              >
+                비밀번호를 잊으셨나요?
+              </Link>
+            </CardFooter>
+          </form>
+        </div>
+
+        {/* 오른쪽 이미지 영역 */}
+        <div
+          className="relative hidden md:block [@media(max-height:640px)]:hidden flex-1 bg-cover bg-center transition-opacity duration-300 hover:opacity-70"
+          style={{
+            backgroundImage: `url('/main.jpg')`,
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent pointer-events-none -ml-px" />
+        </div>
+      </Card>
     </div>
   );
 }

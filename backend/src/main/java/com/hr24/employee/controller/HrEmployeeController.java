@@ -32,9 +32,12 @@ import com.hr24.employee.service.EmployeeSensitiveInfoService;
 import com.hr24.employee.service.HrEmployeeCommandService;
 import com.hr24.employee.service.HrEmployeeQueryService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "인사 직원 관리", description = "직원 조회, 등록, 수정, 권한, 민감정보, 인사이력 관리 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/hr/employees")
@@ -45,7 +48,10 @@ public class HrEmployeeController {
 	private final EmployeeSensitiveInfoService employeeSensitiveInfoService;
 	private final EmployeeHistoryService employeeHistoryService;
 
-	// 직원 목록 조회
+	@Operation(
+	        summary = "직원 목록 조회",
+	        description = "부서, 재직상태, 고용형태, 검색어 조건으로 직원 목록을 조회합니다."
+	)
 	@GetMapping
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<List<EmployeeListResponseDto>> findEmployees(
@@ -64,7 +70,10 @@ public class HrEmployeeController {
 		return ResponseEntity.ok(employees);
 	}
 
-	// 직원 등록
+	@Operation(
+	        summary = "직원 등록",
+	        description = "신규 직원을 등록하고 기본 사용자 권한을 부여합니다."
+	)
 	@PostMapping
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeDetailResponseDto> createEmployee(
@@ -76,7 +85,10 @@ public class HrEmployeeController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(employee);
 	}
 
-	// 부서 트리 및 부서별 직원 수 조회
+	@Operation(
+	        summary = "부서 트리 조회",
+	        description = "부서 계층 구조와 부서별 직원 수를 조회합니다."
+	)
 	@GetMapping("/departments/tree")
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<DepartmentTreeResponseDto> findDepartmentTree() {
@@ -86,7 +98,10 @@ public class HrEmployeeController {
 		return ResponseEntity.ok(departmentTree);
 	}
 
-	// 직원 등록/수정 폼 옵션 조회
+	@Operation(
+	        summary = "직원 등록/수정 옵션 조회",
+	        description = "직원 등록 또는 수정 화면에서 사용할 부서, 직급, 고용형태, 재직상태 등의 옵션 정보를 조회합니다."
+	)
 	@GetMapping("/form-options")
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeFormOptionsResponseDto> findEmployeeFormOptions() {
@@ -96,7 +111,10 @@ public class HrEmployeeController {
 		return ResponseEntity.ok(options);
 	}
 
-	// 직원 상세 조회
+	@Operation(
+	        summary = "직원 상세 조회",
+	        description = "직원 ID를 기준으로 직원의 기본정보, 인사정보, 권한 정보를 조회합니다."
+	)
 	@GetMapping("/{employeeId}")
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeDetailResponseDto> findEmployeeDetail(
@@ -108,7 +126,10 @@ public class HrEmployeeController {
 		return ResponseEntity.ok(employeeDetail);
 	}
 
-	// 직원 기본정보 수정
+	@Operation(
+	        summary = "직원 기본정보 수정",
+	        description = "직원의 이름, 연락처, 이메일, 주소 등 기본정보를 수정합니다."
+	)
 	@PatchMapping("/{employeeId}/basic-info")
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeDetailResponseDto> updateBasicInfo(
@@ -121,7 +142,10 @@ public class HrEmployeeController {
 		return ResponseEntity.ok(employeeDetail);
 	}
 
-	// 직원 인사정보 수정
+	@Operation(
+	        summary = "직원 인사정보 수정",
+	        description = "직원의 부서, 직급, 고용형태, 재직상태, 입사일, 퇴사일 등 인사정보를 수정합니다."
+	)
 	@PatchMapping("/{employeeId}/employment-info")
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeDetailResponseDto> updateEmploymentInfo(
@@ -134,7 +158,10 @@ public class HrEmployeeController {
 		return ResponseEntity.ok(employeeDetail);
 	}
 
-	// 직원 접근 권한 수정
+	@Operation(
+	        summary = "직원 접근 권한 수정",
+	        description = "직원에게 부여된 시스템 접근 권한을 수정합니다."
+	)
 	@PatchMapping("/{employeeId}/roles")
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD')")
 	public ResponseEntity<EmployeeDetailResponseDto> updateRoles(
@@ -147,7 +174,10 @@ public class HrEmployeeController {
 		return ResponseEntity.ok(employeeDetail);
 	}
 	
-	// 민감 정보 조회
+	@Operation(
+	        summary = "직원 민감정보 조회",
+	        description = "직원의 주민등록번호, 계좌번호 등 민감정보를 조회합니다."
+	)
 	@GetMapping("/{employeeId}/sensitive-info")
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD')")
 	public ResponseEntity<EmployeeSensitiveInfoResponseDto> findSensitiveInfo(
@@ -159,7 +189,10 @@ public class HrEmployeeController {
 		return ResponseEntity.ok(sensitiveInfo);
 	}
 
-	// 민감 정보 수정
+	@Operation(
+	        summary = "직원 민감정보 수정",
+	        description = "직원의 주민등록번호, 은행명, 계좌번호, 예금주 정보를 수정합니다."
+	)
 	@PatchMapping("/{employeeId}/sensitive-info")
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD')")
 	public ResponseEntity<EmployeeSensitiveInfoResponseDto> updateSensitiveInfo(
@@ -172,7 +205,10 @@ public class HrEmployeeController {
 		return ResponseEntity.ok(sensitiveInfo);
 	}
 	
-	//인사 이력 조회
+	@Operation(
+	        summary = "직원 인사이력 조회",
+	        description = "직원의 부서, 직급, 고용형태, 재직상태 변경 이력을 조회합니다."
+	)
 	@GetMapping("/{employeeId}/histories")
 	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<List<EmployeeHistoryResponseDto>> findHistories(

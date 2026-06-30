@@ -27,7 +27,7 @@ public class LeaveType {
 	@Column(name = "type_id")
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "leave_seq")
 	@SequenceGenerator(name = "leave_seq", sequenceName = "leave_seq", allocationSize = 1)
-	private Long leaveId;
+	private Long typeId;
 	
 	@Column(name = "type_name", nullable = false)
 	private String typeName;

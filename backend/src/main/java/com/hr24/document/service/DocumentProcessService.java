@@ -82,8 +82,10 @@ public class DocumentProcessService {
 	    } catch (IllegalArgumentException e) {
 	        throw new IllegalArgumentException("연차 정보 형식이 올바르지 않습니다.");
 	    }
-
-	    LeaveType leaveType = leaveTypeRepository.findById(dto.getLeaveType())
+	    
+	    Long leaveTypeId = leaveTypeRepository.findTypeIdByTypeName(dto.getLeaveTypeName());
+	    
+	    LeaveType leaveType = leaveTypeRepository.findById(leaveTypeId)
 	            .orElseThrow(() -> new EntityNotFoundException("휴가 유형이 존재하지 않습니다"));
 
 	    BigDecimal leaveCnt;

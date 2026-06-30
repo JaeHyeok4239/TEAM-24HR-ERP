@@ -252,13 +252,13 @@ create table attendance_correction(
 	correction_target number NULL, -- FK 근태 결과(수정 대상)
     document_id number NULL, -- FK Document(일용직의 경우 결재 없이 직접 수정이므로 null 허용)
 
-    correction_daily_log number null, -- FK 일용직 근태 정정 로그
+    correction_daily_log number, -- FK 일용직 근태 정정 로그
 
 	correction_type varchar2(3char) not null, -- (IN/OUT) 출근/퇴근 정정 종류
 	is_processed CHAR(1) DEFAULT 'N' not null, -- (Y/N) results 테이블 수정해서 근태 정정 처리 되었는지 나타냄
 	processed_by NUMBER NOT NULL, -- 담당자 FK USERS
     correction_reason varchar2(300char) NOT NULL, -- 정정 사유
-    before_time TIMESTAMP NOT NULL, -- 수정 전 시간 
+    before_time TIMESTAMP, -- 수정 전 시간(누락일 경우 있으므로 null 허용)
     after_time TIMESTAMP NOT NULL, -- 수정 후 시간
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NULL,

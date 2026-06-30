@@ -22,13 +22,18 @@ function SelectGroup({
 
 function SelectValue({
   className,
+  label,
+  children,
   ...props
 }) {
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
+      label={label}
       className={cn("flex flex-1 text-left", className)}
-      {...props} />
+      {...props}>
+        {label}
+      </SelectPrimitive.Value>
   );
 }
 

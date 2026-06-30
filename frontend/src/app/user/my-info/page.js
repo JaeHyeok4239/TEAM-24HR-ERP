@@ -6,8 +6,8 @@ export default function MyInfoPage() {
     <>
       <Header title="내 정보 수정" />
 
-      <div className="w-full bg-slate-100 px-6 py-6">
-        <div className="mx-auto max-w-6xl">
+      <div className="w-full bg-slate-100 px-4 py-5 sm:px-6">
+        <div className="mx-auto w-full max-w-[1480px]">
           <MyInfoForm />
         </div>
       </div>

@@ -59,8 +59,10 @@ public class AttendanceProcessService {
 
 	    Document document = documentRepository.findById(documentId)
 	            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
-
-	    LeaveType leaveType = leaveTypeRepository.findById(data.getLeaveType())
+	    
+	    Long leaveTypeId = leaveTypeRepository.findTypeIdByTypeName(data.getLeaveTypeName());
+	    
+	    LeaveType leaveType = leaveTypeRepository.findById(leaveTypeId)
 	            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 휴가 유형입니다"));
 
 	    // 유급휴가면 연차 잔액 먼저 검증
@@ -126,9 +128,8 @@ public class AttendanceProcessService {
 		//문서 찾기
 		Document document = documentRepository.findById(documentId)
 	            .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 문서입니다"));
-
 		
-		AttendanceResult result = attendanceResultRepository.findById(data.getCorrectionTarget())
+		AttendanceResult result = attendanceResultRepository.findByEmployeeAndWorkDate(document.getRequester(), data.getTargetDate())
 				.orElseThrow(() -> new EntityNotFoundException("존재하지 않는 근태 이력입니다"));
 
 		AttendanceCorrection correction = AttendanceCorrection.builder()
