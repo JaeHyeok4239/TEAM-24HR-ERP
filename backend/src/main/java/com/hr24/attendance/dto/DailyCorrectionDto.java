@@ -21,3 +21,4 @@ public class DailyCorrectionDto {
     private String correctionReason; // 수정 사유(최대 100자)
     private String correctionType; // IN/OUT
 }
+
