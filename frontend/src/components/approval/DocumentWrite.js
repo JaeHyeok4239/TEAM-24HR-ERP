@@ -7,8 +7,19 @@ import { Card, CardContent, CardHeader } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Paperclip, X, Send, Save } from "lucide-react";
+import { Paperclip, X, Send, Save, CalendarIcon } from "lucide-react";
 import { useDocumentSchema } from "@/hooks/useDocumentSchema";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectValue,
+  SelectTrigger,
+} from "../ui/select";
+import { Calendar } from "../ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { format } from "date-fns";
 
 export default function DocumentWrite() {
   const router = useRouter();
@@ -20,6 +31,7 @@ export default function DocumentWrite() {
   const [files, setFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { fields, isLoading } = useDocumentSchema(selectedType);
+  const [label, setLabel] = useState(null);
 
   // 문서 타입 목록 로드
   useEffect(() => {
@@ -94,22 +106,64 @@ export default function DocumentWrite() {
     const value = content[field.name] ?? "";
 
     if (field.type === "date_list") {
-      // 날짜 여러개 선택 - 간단하게 쉼표 구분 입력으로
+      const dates = Array.isArray(value) ? value.map((d) => new Date(d)) : [];
+
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <div className="w-full flex items-center gap-2 border border-input bg-input/50 rounded-2xl px-3 py-2 text-sm cursor-pointer hover:bg-accent transition-colors">
+              <CalendarIcon size={16} className="text-muted-foreground" />
+              <span className={dates.length > 0 ? "" : "text-muted-foreground"}>
+                {dates.length > 0
+                  ? dates.map((d) => format(d, "yyyy-MM-dd")).join(", ")
+                  : "날짜 선택"}
+              </span>
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="multiple"
+              selected={dates}
+              disabled={(date) => date.getDay() === 0 || date.getDay() === 6}
+              onSelect={(selected) =>
+                handleContentChange(
+                  field.name,
+                  (selected ?? []).map((d) => format(d, "yyyy-MM-dd")),
+                )
+              }
+            />
+          </PopoverContent>
+        </Popover>
+      );
+    }
+
+    if (field.type === "datetime-local") {
       return (
         <Input
-          type="text"
-          placeholder="2026-01-01, 2026-01-02"
-          value={Array.isArray(value) ? value.join(", ") : value}
+          type="datetime-local"
+          value={value ? value.replace(" ", "T").slice(0, 16) : ""}
           onChange={(e) =>
-            handleContentChange(
-              field.name,
-              e.target.value
-                .split(",")
-                .map((d) => d.trim())
-                .filter(Boolean),
-            )
+            handleContentChange(field.name, e.target.value.replace("T", " "))
           }
         />
+      );
+    }
+
+    // options 있으면 select
+    if (field.options?.length > 0) {
+      return (
+        <select
+          value={value}
+          onChange={(e) => handleContentChange(field.name, e.target.value)}
+          className="w-full border border-input bg-input/50 rounded-2xl px-3 py-2 text-sm outline-none focus-visible:border-ring transition-[color,box-shadow] duration-200"
+        >
+          <option value="">선택</option>
+          {field.options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
       );
     }
 
@@ -129,7 +183,7 @@ export default function DocumentWrite() {
   };
 
   return (
-    <div className="p-6 flex flex-col gap-4 max-w-4xl mx-auto">
+    <div className="p-6 flex flex-col gap-4 min-w-4xl mx-auto">
       {/* 문서 기본 정보 */}
       <Card>
         <CardHeader>
@@ -139,21 +193,36 @@ export default function DocumentWrite() {
           {/* 문서 타입 */}
           <div className="flex flex-col gap-1">
             <Label className="text-xs text-gray-500">문서 타입</Label>
-            <select
+            <Select
               value={selectedType ?? ""}
-              onChange={(e) => {
-                setSelectedType(e.target.value);
+              onValueChange={(val) => {
+                setSelectedType(val);
                 setContent({});
               }}
-              className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
             >
-              <option value="">문서 타입 선택</option>
-              {typeList.map((t) => (
-                <option key={t.typeId} value={t.typeId}>
-                  {t.typeName}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue
+                  placeholder="문서 타입 선택"
+                  label={label}
+                ></SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {typeList.map((t) => (
+                    <SelectItem
+                      key={t.typeName}
+                      label={t.typeName}
+                      value={t.typeId}
+                      onClick={() => {
+                        setLabel(t.typeName);
+                      }}
+                    >
+                      {t.typeName}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* 제목 */}

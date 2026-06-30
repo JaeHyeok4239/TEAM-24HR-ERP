@@ -3,11 +3,15 @@ package com.hr24.approval.repository;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.hr24.approval.dto.ApprovalResponseDto;
 import com.hr24.approval.entity.ApprovalDelegate;
+import com.hr24.employee.entity.User;
 
 public interface ApprovalDelegateRepository extends JpaRepository<ApprovalDelegate, Long>{
 	
@@ -36,4 +40,20 @@ public interface ApprovalDelegateRepository extends JpaRepository<ApprovalDelega
 	    @Param("endDate") LocalDate endDate
 	);
     
+	//조회용
+	// Repository
+	@Query("""
+	    select ad from ApprovalDelegate ad
+	    where 
+	    (:approver is null or ad.approver = :approver) 
+	    and (:keyword is null
+		           or ad.approver.name like concat('%', :keyword, '%') 
+		           or ad.delegate.name like concat('%', :keyword, '%'))
+	    order by ad.approvalDelegateId desc
+	    """)
+	Page<ApprovalDelegate> search(
+		@Param("approver") User approver,
+	    @Param("keyword") String keyword,
+	    Pageable pageable
+	);
 }

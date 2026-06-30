@@ -2,6 +2,8 @@ package com.hr24.approval.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -42,10 +44,11 @@ public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long
 		             al.documentType.typeId,
 		             al.stepOrder
 		""")
-		List<ApprovalLine> search(
+		Page<ApprovalLine> search(
 		        @Param("departmentId") Long departmentId,
 		        @Param("documentType") Long documentType,
-		        @Param("keyword") String keyword
+		        @Param("keyword") String keyword,
+		        Pageable pageable
 		);
 	
 	//중복 확인

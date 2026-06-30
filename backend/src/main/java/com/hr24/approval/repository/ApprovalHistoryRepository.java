@@ -74,7 +74,19 @@ public interface ApprovalHistoryRepository extends JpaRepository<ApprovalHistory
 	
 	@Query("SELECT MAX(ah.stepOrder) FROM ApprovalHistory ah WHERE ah.document.documentId = :documentId")
 	Integer findMaxStepOrder(@Param("documentId") Long documentId);
-
+	
+	
+	//결재자 검증
+	@Query("SELECT CASE WHEN COUNT(ah) > 0 THEN true ELSE false END " +
+		       "FROM ApprovalHistory ah " +
+		       "WHERE ah.document.documentId = :documentId " +
+		       "AND ah.approver = :approver " +
+		       "AND ah.status = :status " +
+		       "AND ah.stepOrder = ah.document.currentStep")
+		boolean existsByDocumentAndApproverAndStatusAndCurrentStep(
+		    @Param("documentId") Long documentId,
+		    @Param("approver") User approver,
+		    @Param("status") String status);
 	
 	//전단계에서 반려 시 미래 단계들 CAN(취소) 상태로 변경
 	@Modifying

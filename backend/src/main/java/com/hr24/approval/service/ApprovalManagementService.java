@@ -1,10 +1,13 @@
 package com.hr24.approval.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hr24.approval.dto.ApprovalManagementDto;
+import com.hr24.approval.dto.ApprovalResponseDto;
 import com.hr24.approval.entity.ApprovalDelegate;
 import com.hr24.approval.entity.ApprovalLine;
 import com.hr24.approval.repository.ApprovalDelegateRepository;
@@ -61,7 +64,20 @@ public class ApprovalManagementService {
 
 		return approvalLine;
 	}
+	
+	@Transactional(readOnly = true)
+	public Page<ApprovalResponseDto.ApprovalDelegateDto> listDelegates(
+	        String loginId, boolean isAdmin, String keyword, Pageable pageable) {
 
+	    User currentUser = userRepository.findByLoginId(loginId)
+	            .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+
+	    User approver = isAdmin ? null : currentUser;
+
+	    return approvalDelegateRepository.search(approver, keyword, pageable)
+	            .map(ApprovalResponseDto.ApprovalDelegateDto::from);
+	}
+	
 	// 대리결재 생성
 	@Transactional
 	public ApprovalDelegate createApprovalDelegate(ApprovalManagementDto.ApprovalDelegateRequestDto

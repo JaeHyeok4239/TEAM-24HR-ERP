@@ -19,7 +19,7 @@ public class DocumentDetailDto {
 		@Getter
 		@Setter
 		public static class LeaveRequestDto {
-		    private Long leaveType;
+		    private String leaveTypeName;
 		    private List<LocalDate> leaveDates;
 		    private BigDecimal leaveCnt;
 		    private String leaveReason;
@@ -29,7 +29,8 @@ public class DocumentDetailDto {
 	    @Getter
 	    @Setter
 	    public static class AttendanceCorrectionRequestDto {
-	        private Long correctionTarget;
+	        @JsonFormat(pattern = "yyyy-MM-dd")
+	        private LocalDate targetDate;
 	        private String correctionType;
 	        private String correctionReason;
 	        @JsonFormat(pattern = "yyyy-MM-dd HH:mm")

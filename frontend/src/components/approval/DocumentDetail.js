@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader } from "../ui/card";
@@ -18,9 +19,15 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { documentSchemas } from "@/schema/DocumentSchema";
 import Header from "../common/Header";
+import { useAuthStore } from "@/store/authStore";
 
 export default function DocumentDetail({ documentId }) {
   const [document, setDocument] = useState(null);
+  const router = useRouter();
+  const userInfo = useAuthStore((state) => state.userInfo);
+  const loginId = userInfo?.loginId;
+  const [canApprove, setCanApprove] = useState(false);
+  const [comment, setComment] = useState("");
 
   useEffect(() => {
     const loadData = async () => {
@@ -33,6 +40,8 @@ export default function DocumentDetail({ documentId }) {
 
         console.log("data", data);
 
+        console.log(loginId);
+
         setDocument(data);
       } catch (err) {
         throw new Error("데이터를 불러올 수 없습니다");
@@ -43,6 +52,38 @@ export default function DocumentDetail({ documentId }) {
     }
   }, [documentId]);
 
+  useEffect(() => {
+    if (!documentId) return;
+    const check = async () => {
+      const res = await apiRequest(`/api/approval/${documentId}/can-approve`, {
+        method: "GET",
+      });
+      const data = await res.json();
+      setCanApprove(data);
+    };
+    check();
+  }, [documentId]);
+
+  //결재 승인
+  const handleApprove = useCallback(async () => {
+    if (!confirm("승인하시겠습니까?")) return;
+    await apiRequest(`/api/approval/${documentId}/approve`, {
+      method: "POST",
+      body: JSON.stringify({ action: "APR", comment }),
+    });
+    router.push("/approval/pending");
+  }, [documentId, comment]);
+
+  const handleReject = useCallback(async () => {
+    const rejectComment = prompt("반려 사유를 입력하세요");
+    if (!rejectComment) return;
+    await apiRequest(`/api/approval/${documentId}/approve`, {
+      method: "POST",
+      body: JSON.stringify({ action: "REJ", comment: rejectComment }),
+    });
+    router.push("/approval/pending");
+  }, [documentId]);
+
   const schema = documentSchemas?.[document?.typeDetailTable];
   const content = document?.documentContent;
 
@@ -51,6 +92,12 @@ export default function DocumentDetail({ documentId }) {
   if (!document) {
     return <>로딩중</>;
   }
+
+  // 본인 문서 여부
+  const isOwner = document?.requesterLoginId === loginId;
+
+  // 본인 + 임시저장
+  const canEdit = isOwner && document?.documentStatus === "TMP";
 
   return (
     <>
@@ -65,9 +112,7 @@ export default function DocumentDetail({ documentId }) {
             <CardContent className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500 text-xs">문서번호</span>
-                <p>
-                  No.{document.documentId}
-                </p>
+                <p>No.{document.documentId}</p>
               </div>
               <div>
                 <span className="text-gray-500 text-xs">문서유형</span>
@@ -75,9 +120,7 @@ export default function DocumentDetail({ documentId }) {
               </div>
               <div>
                 <span className="text-gray-500 text-xs">제목</span>
-                <p className="text-base">
-                  {document.documentTitle}
-                </p>
+                <p className="text-base">{document.documentTitle}</p>
               </div>
               <div>
                 <span className="text-gray-500 text-xs">기안자</span>
@@ -85,9 +128,7 @@ export default function DocumentDetail({ documentId }) {
               </div>
               <div>
                 <span className="text-gray-500 text-xs">상태</span>
-                <p className="text-base">
-                  {document.documentStatus}
-                </p>
+                <p className="text-base">{document.documentStatus}</p>
               </div>
               <div>
                 <span className="text-gray-500 text-xs">기안일시</span>
@@ -165,12 +206,22 @@ export default function DocumentDetail({ documentId }) {
                     </p>
                   </>
                 )}
-                {document.documentStatus === "REQ" && (
+
+                {document.documentStatus === "REQ" && document.documentVersion === 1 && (
                   <>
                     <Clock size={32} className="text-gray-300" />
                     <p className="text-sm">결재 진행 중입니다</p>
                   </>
                 )}
+
+                {document.documentStatus === "REQ" &&
+                  document.documentVersion !== 1 && (
+                    <>
+                      <Clock size={32} className="text-gray-300" />
+                      <p className="text-sm">(재)결재 진행 중입니다</p>
+                    </>
+                  )}
+
                 {document.documentStatus === "APR" && (
                   <>
                     <CheckCircle size={32} className="text-blue-400" />
@@ -204,6 +255,46 @@ export default function DocumentDetail({ documentId }) {
             </CardContent>
           </Card>
         </div>
+        {canEdit && (
+          <div className="flex gap-2 mt-4">
+            <Button
+              size="sm"
+              className="bg-[#ffc23f8c] hover:bg-[#ffae00]"
+              onClick={() =>
+                router.push(`/approval/document/${documentId}/edit`)
+              }
+            >
+              수정
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => handleDelete(documentId)}
+            >
+              삭제
+            </Button>
+          </div>
+        )}
+
+        {canApprove && (
+          <div className="flex gap-2 mt-4">
+            <Button
+              className="flex-1 bg-[#1a2f4e] hover:bg-[#2a4a6e]"
+              onClick={() => handleApprove(document.documentId)}
+            >
+              <CheckCircle size={16} className="mr-1" />
+              승인
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={() => handleReject(document.documentId)}
+            >
+              <X size={16} className="mr-1" />
+              반려
+            </Button>
+          </div>
+        )}
       </div>
     </>
   );
