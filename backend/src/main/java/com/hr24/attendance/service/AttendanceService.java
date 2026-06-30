@@ -666,7 +666,12 @@ public class AttendanceService{
         
         // 응답 객체 생성 및 반환
         AttendanceResponse response = new AttendanceResponse();
-        response.setWorkCount(counts.getOrDefault(AttendanceStatus.WORK.name(), 0L).intValue());
+        
+        // work+out 둘 다 출근 처리
+        Long workCount = counts.getOrDefault(AttendanceStatus.WORK.name(), 0L);
+        Long outCount = counts.getOrDefault(AttendanceStatus.OUT.name(), 0L);
+        response.setWorkCount((int)(workCount + outCount));
+        
         response.setLateCount(counts.getOrDefault(AttendanceStatus.LATE.name(), 0L).intValue());
         response.setEarlyLeaveCount(counts.getOrDefault(AttendanceStatus.EARLY_LEAVE.name(), 0L).intValue());
         response.setAbsentCount(counts.getOrDefault(AttendanceStatus.ABSENT.name(), 0L).intValue());
