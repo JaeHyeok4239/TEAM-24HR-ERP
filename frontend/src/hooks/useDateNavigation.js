@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 
 // 헤더 날짜 이동 버튼 클릭 시
 export const useDateNavigation = (calendarRef) => {
-    const [currentDate, setCurrentDate] = useState(dayjs().format("YYYY.MM"));
+    const [currentDate, setCurrentDate] = useState(dayjs().format("YYYY.MM.DD"));
 
     // 버튼 핸들러
     const handlePrev = () => {

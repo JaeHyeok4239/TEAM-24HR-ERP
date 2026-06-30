@@ -3,7 +3,6 @@
 import { useRef } from "react";
 import { useDateNavigation } from "@/hooks/useDateNavigation";
 import PageHeader from '@/components/attendance/PageHeader';
-import AttendanceCalendar from "@/components/attendance/AdminCalendar";
 
 export default function AttendanceRegularPage() {
     const calendarRef = useRef(null);
