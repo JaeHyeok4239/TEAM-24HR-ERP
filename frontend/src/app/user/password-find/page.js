@@ -77,8 +77,6 @@ export default function PasswordFindPage() {
       setMessage("인증코드를 발송했습니다.");
       setStep(2);
     } catch (error) {
-      console.error("인증코드 발송 실패:", error);
-
       if (
         error.code === "INVALID_PASSWORD_RESET_INFO" ||
         error.status === 400
@@ -122,7 +120,6 @@ export default function PasswordFindPage() {
       setMessage("인증이 완료되었습니다. 새 비밀번호를 입력해주세요.");
       setStep(3);
     } catch (error) {
-      console.error("인증코드 확인 실패:", error);
       setErrorMessage(
         error.message || "인증코드가 올바르지 않거나 만료되었습니다.",
       );
@@ -160,8 +157,6 @@ export default function PasswordFindPage() {
       setMessage("");
       setErrorMessage("");
     } catch (error) {
-      console.error("비밀번호 재설정 실패:", error);
-
       if (error.code === "SAME_AS_OLD_PASSWORD") {
         setErrorMessage("기존 비밀번호와 다른 비밀번호를 입력해주세요.");
         return;

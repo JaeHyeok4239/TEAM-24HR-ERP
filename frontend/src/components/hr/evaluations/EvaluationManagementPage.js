@@ -114,6 +114,7 @@ export default function EvaluationManagementPage() {
         setSelectedPeriodId(String(data[0].evaluationPeriodId));
       }
     } catch (error) {
+      // (추후/나중에 콘솔에러 삭제 예정)
       console.error(error);
       alert(error.message || "평가기간 조회 중 오류가 발생했습니다.");
     } finally {

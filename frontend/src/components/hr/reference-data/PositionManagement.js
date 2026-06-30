@@ -104,8 +104,6 @@ export default function PositionManagement() {
         }
       })
       .catch((error) => {
-        console.error("직급 목록 조회 실패:", error);
-
         if (!cancelled) {
           setNotice({
             type: "error",
@@ -327,8 +325,6 @@ export default function PositionManagement() {
       setModalError("");
       setForm(createInitialForm());
     } catch (error) {
-      console.error("직급 저장 실패:", error);
-
       const message =
         POSITION_ERROR_MESSAGES[error.code] ||
         error.message ||

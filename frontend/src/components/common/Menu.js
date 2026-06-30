@@ -137,7 +137,7 @@ export default function MainMenu() {
     try {
       await logoutRequest();
     } catch (error) {
-      console.error("로그아웃 API 호출 실패", error);
+      // 로그아웃 API가 실패해도 프론트 인증 상태는 초기화한다.
     } finally {
       authLogout();
     }

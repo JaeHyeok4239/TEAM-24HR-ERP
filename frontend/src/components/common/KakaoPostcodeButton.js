@@ -94,7 +94,6 @@ export default function KakaoPostcodeButton({
         },
       }).open();
     } catch (error) {
-      console.error("주소 검색 실행 실패:", error);
       alert("주소 검색을 불러오지 못했습니다.");
     } finally {
       setIsLoading(false);

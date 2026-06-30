@@ -5,19 +5,24 @@ export default function AdminDashboardCard({
   rightContent,
 }) {
   return (
-    <section className="flex h-full min-h-0 flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex items-start justify-between gap-4 border-b border-slate-100 pb-3">
-        <div>
-          <h2 className="text-base font-bold text-slate-950">{title}</h2>
+    <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-100 px-4 py-3">
+        <div className="min-w-0">
+          <h2 className="truncate text-base font-bold text-slate-950">
+            {title}
+          </h2>
+
           {description && (
-            <p className="mt-1 text-sm text-slate-500">{description}</p>
+            <p className="mt-1 truncate text-xs font-medium text-slate-500">
+              {description}
+            </p>
           )}
         </div>
 
-        {rightContent}
+        {rightContent && <div className="shrink-0">{rightContent}</div>}
       </div>
 
-      <div className="min-h-0 flex-1">{children}</div>
+      <div className="min-h-0 flex-1 p-4">{children}</div>
     </section>
   );
 }

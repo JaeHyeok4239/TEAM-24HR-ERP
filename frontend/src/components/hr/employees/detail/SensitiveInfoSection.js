@@ -7,10 +7,14 @@ import {
   findHrEmployeeSensitiveInfoRequest,
   updateHrEmployeeSensitiveInfoRequest,
 } from "@/services/hrEmployeeService";
+import { useAuthStore } from "@/store/authStore";
 
 import DetailSection from "./DetailSection";
 import { ReadOnlyField } from "./DetailFields";
 import { BANK_OPTIONS } from "./employeeDetailConstants";
+
+const VIEW_ALLOWED_ROLE_CODES = ["ADMIN", "HR", "HR_LEAD"];
+const EDIT_ALLOWED_ROLE_CODES = ["ADMIN", "HR_LEAD"];
 
 const createSensitiveInfoForm = (sensitiveInfo) => ({
   bankName: sensitiveInfo?.bankName ?? "",
@@ -19,7 +23,15 @@ const createSensitiveInfoForm = (sensitiveInfo) => ({
   rrn: sensitiveInfo?.rrn ?? "",
 });
 
+const hasAnyRole = (roles, allowedRoles) => {
+  return roles?.some((role) => allowedRoles.includes(role));
+};
+
 export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
+  const userRoles = useAuthStore((state) => state.userInfo?.roles ?? []);
+  const canViewSensitiveInfo = hasAnyRole(userRoles, VIEW_ALLOWED_ROLE_CODES);
+  const canEditSensitiveInfo = hasAnyRole(userRoles, EDIT_ALLOWED_ROLE_CODES);
+
   const [editEmployeeId, setEditEmployeeId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingSensitiveInfo, setIsLoadingSensitiveInfo] = useState(false);
@@ -27,7 +39,9 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
   const [revealedInfo, setRevealedInfo] = useState(null);
   const [form, setForm] = useState(createSensitiveInfoForm(null));
 
-  const isEditMode = editEmployeeId === employee?.employeeId;
+  const employeeId = employee?.employeeId;
+  const isEditMode =
+    canEditSensitiveInfo && editEmployeeId === employee?.employeeId;
 
   const displayInfo =
     isRevealed && revealedInfo
@@ -42,6 +56,11 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
   const handleToggleReveal = async () => {
     if (!employee?.employeeId) {
       alert("직원 정보가 없습니다.");
+      return;
+    }
+
+    if (!canViewSensitiveInfo) {
+      alert("민감정보 조회 권한이 없습니다.");
       return;
     }
 
@@ -60,7 +79,6 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
       setRevealedInfo(sensitiveInfo);
       setIsRevealed(true);
     } catch (error) {
-      console.error(error);
       alert(error.message || "민감정보 조회 중 오류가 발생했습니다.");
     } finally {
       setIsLoadingSensitiveInfo(false);
@@ -70,6 +88,11 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
   const handleStartEdit = async () => {
     if (!employee?.employeeId) {
       alert("직원 정보가 없습니다.");
+      return;
+    }
+
+    if (!canEditSensitiveInfo) {
+      alert("민감정보 수정 권한이 없습니다.");
       return;
     }
 
@@ -85,7 +108,6 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
       setIsRevealed(true);
       setEditEmployeeId(employee.employeeId);
     } catch (error) {
-      console.error(error);
       alert(error.message || "민감정보 조회 중 오류가 발생했습니다.");
     } finally {
       setIsLoadingSensitiveInfo(false);
@@ -107,6 +129,11 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
   };
 
   const handleSave = async () => {
+    if (!canEditSensitiveInfo) {
+      alert("민감정보 수정 권한이 없습니다.");
+      return;
+    }
+
     if (!employee?.employeeId) {
       alert("직원 정보가 없습니다.");
       return;
@@ -160,7 +187,6 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
 
       alert("민감정보가 수정되었습니다.");
     } catch (error) {
-      console.error(error);
       alert(error.message || "민감정보 수정 중 오류가 발생했습니다.");
     } finally {
       setIsSaving(false);
@@ -178,7 +204,7 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
               type="button"
               onClick={handleSave}
               disabled={isSaving}
-              className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+              className="h-9 rounded-md bg-[#1a2f4e] px-4 text-sm font-semibold text-white hover:bg-[#25476e] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSaving ? "저장 중..." : "저장"}
             </button>
@@ -187,37 +213,41 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
               type="button"
               onClick={handleCancel}
               disabled={isSaving}
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 disabled:opacity-50"
+              className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               취소
             </button>
           </div>
-        ) : (
+        ) : canViewSensitiveInfo || canEditSensitiveInfo ? (
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleToggleReveal}
-              disabled={isLoadingSensitiveInfo}
-              className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              {isRevealed ? <EyeOff size={15} /> : <Eye size={15} />}
-              {isLoadingSensitiveInfo
-                ? "조회 중..."
-                : isRevealed
-                  ? "숨김"
-                  : "보기"}
-            </button>
+            {canViewSensitiveInfo && (
+              <button
+                type="button"
+                onClick={handleToggleReveal}
+                disabled={isLoadingSensitiveInfo}
+                className="inline-flex h-9 items-center gap-1 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isRevealed ? <EyeOff size={15} /> : <Eye size={15} />}
+                {isLoadingSensitiveInfo
+                  ? "조회 중..."
+                  : isRevealed
+                    ? "숨김"
+                    : "보기"}
+              </button>
+            )}
 
-            <button
-              type="button"
-              onClick={handleStartEdit}
-              disabled={isLoadingSensitiveInfo}
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              수정
-            </button>
+            {canEditSensitiveInfo && (
+              <button
+                type="button"
+                onClick={handleStartEdit}
+                disabled={isLoadingSensitiveInfo}
+                className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                수정
+              </button>
+            )}
           </div>
-        )
+        ) : null
       }
     >
       {isEditMode ? (
@@ -289,7 +319,7 @@ function SelectField({ label, name, value, onChange, children }) {
         name={name}
         value={value}
         onChange={onChange}
-        className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none focus:border-slate-500"
+        className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none focus:border-[#1a2f4e] focus:ring-2 focus:ring-[#a7f3ff]/40"
       >
         {children}
       </select>
@@ -317,7 +347,7 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none focus:border-slate-500"
+        className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none focus:border-[#1a2f4e] focus:ring-2 focus:ring-[#a7f3ff]/40"
       />
     </div>
   );

@@ -179,7 +179,7 @@ public class HrEmployeeController {
 	        description = "직원의 주민등록번호, 계좌번호 등 민감정보를 조회합니다."
 	)
 	@GetMapping("/{employeeId}/sensitive-info")
-	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD', 'HR')")
 	public ResponseEntity<EmployeeSensitiveInfoResponseDto> findSensitiveInfo(
 			@PathVariable("employeeId") Long employeeId
 	) {

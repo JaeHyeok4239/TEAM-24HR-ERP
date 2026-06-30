@@ -1,7 +1,7 @@
 export const DETAIL_TABS = [
   { value: "basic", label: "기본정보" },
   { value: "hr", label: "인사정보" },
-  { value: "history", label: "인사 이력" },
+  { value: "history", label: "인사이력" },
 ];
 
 export const STATUS_LABELS = {
