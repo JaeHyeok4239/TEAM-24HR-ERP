@@ -192,8 +192,6 @@ export default function PasswordChangeForm() {
         router.replace("/");
       }, 1200);
     } catch (error) {
-      console.error("비밀번호 변경 실패:", error);
-
       setNotice({
         type: "error",
         message:

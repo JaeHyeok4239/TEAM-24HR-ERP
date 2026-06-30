@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/refresh").permitAll()
                 .requestMatchers("/api/auth/logout").permitAll()
                 .requestMatchers("/api/auth/password-reset/**").permitAll()
-                .requestMatchers("/attendance/**").permitAll()
+                .requestMatchers("/attendance/**").permitAll() //나중에 제거
                 .requestMatchers("/ws/**").permitAll() // WebSocket 핸드셰이크 허용
                 .requestMatchers(
                 		"/api.html",

@@ -56,8 +56,6 @@ export default function HistoryTab({ employee }) {
           setHistories(data);
         }
       } catch (error) {
-        console.error(error);
-
         if (!ignore) {
           alert(error.message || "인사 이력 조회 중 오류가 발생했습니다.");
         }

@@ -1,5 +1,11 @@
 import { apiRequest } from "@/lib/api";
 
+// (추후/나중에 수정)
+// 배포/환경 분리를 위해 나중에 수정할 것
+// 예시:
+// const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+// .env.local
+// NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
 const BASE_URL = "http://localhost:8080";
 
 // 로그인 요청

@@ -167,7 +167,6 @@ export default function HrInfoTab({ employee, options, onEmployeeUpdated }) {
 
       alert("인사정보가 수정되었습니다.");
     } catch (error) {
-      console.error(error);
       alert(error.message || "인사정보 수정 중 오류가 발생했습니다.");
     } finally {
       setIsSaving(false);

@@ -113,7 +113,6 @@ export default function BasicInfoTab({ employee, onEmployeeUpdated }) {
 
       alert("기본정보가 수정되었습니다.");
     } catch (error) {
-      console.error(error);
       alert(error.message || "기본정보 수정 중 오류가 발생했습니다.");
     } finally {
       setIsBasicSaving(false);

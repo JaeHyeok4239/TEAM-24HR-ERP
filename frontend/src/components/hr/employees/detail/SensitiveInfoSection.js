@@ -79,7 +79,6 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
       setRevealedInfo(sensitiveInfo);
       setIsRevealed(true);
     } catch (error) {
-      console.error(error);
       alert(error.message || "민감정보 조회 중 오류가 발생했습니다.");
     } finally {
       setIsLoadingSensitiveInfo(false);
@@ -109,7 +108,6 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
       setIsRevealed(true);
       setEditEmployeeId(employee.employeeId);
     } catch (error) {
-      console.error(error);
       alert(error.message || "민감정보 조회 중 오류가 발생했습니다.");
     } finally {
       setIsLoadingSensitiveInfo(false);
@@ -189,7 +187,6 @@ export default function SensitiveInfoSection({ employee, onEmployeeUpdated }) {
 
       alert("민감정보가 수정되었습니다.");
     } catch (error) {
-      console.error(error);
       alert(error.message || "민감정보 수정 중 오류가 발생했습니다.");
     } finally {
       setIsSaving(false);

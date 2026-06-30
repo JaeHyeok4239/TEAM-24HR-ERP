@@ -122,7 +122,6 @@ export default function RoleInfoSection({ employee, onEmployeeUpdated }) {
 
       alert("접근 권한이 수정되었습니다.");
     } catch (error) {
-      console.error(error);
       alert(error.message || "접근 권한 수정 중 오류가 발생했습니다.");
     } finally {
       setIsSaving(false);

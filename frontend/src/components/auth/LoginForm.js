@@ -48,7 +48,6 @@ export default function LoginForm() {
       }
     } catch (error) {
       authLogout();
-      console.error("로그인 처리 실패:", error);
       setMessage("아이디 또는 비밀번호를 확인해주세요.");
     }
   };
