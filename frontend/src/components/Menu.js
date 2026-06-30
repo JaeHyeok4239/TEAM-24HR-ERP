@@ -67,6 +67,7 @@ const NAV_ITEMS = [
     children: [
       { href: "/payroll", label: "급여 대장" },
       { href: "/payroll/calculate", label: "급여 계산" },
+      { href: "/payroll/salary", label: "기본급 관리" },
     ],
   },
   {
