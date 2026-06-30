@@ -23,6 +23,7 @@ import com.hr24.attendance.dto.AttendanceCorrectionRecordDto;
 import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
+import com.hr24.attendance.dto.WorkplaceDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceLogsDaily;
@@ -75,6 +76,20 @@ public class AttendanceService{
 	        return LocalDateTime.of(2026, 6, 29, 9, 0); 
 	    }
 	    return LocalDateTime.now();
+	}
+	
+	// 모든 근무지 읽어오기
+	@Transactional(readOnly = true)
+	public List<WorkplaceDto> getWorkplaces() {
+	    List<Workplace> workplaceList = workplaceRepository.findAll();
+
+	    return workplaceList.stream()
+	            .map(wp -> WorkplaceDto.builder()
+	                    .name(wp.getWorkplaceName())
+	                    .latitude(wp.getLatitude())
+	                    .longitude(wp.getLongitude())
+	                    .build())
+	            .collect(Collectors.toList());
 	}
 	
 	// 매일 밤 오후 11시 배치 프로그램

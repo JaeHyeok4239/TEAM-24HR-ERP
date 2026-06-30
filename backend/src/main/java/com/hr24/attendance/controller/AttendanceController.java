@@ -25,6 +25,7 @@ import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.CheckInOutRequestDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
+import com.hr24.attendance.dto.WorkplaceDto;
 import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.attendance.service.AttendanceCorrectionService;
 import com.hr24.attendance.service.AttendanceService;
@@ -43,6 +44,12 @@ import lombok.RequiredArgsConstructor;
 public class AttendanceController {
 	private final AttendanceService attendanceService;
 	private final AttendanceCorrectionService attendanceCorrectionService;
+	
+	// DB에 있는 근무지를 리스트로 반환
+	@GetMapping("/workplaces")
+	public ResponseEntity<List<WorkplaceDto>> getWorkplaces() {
+	    return ResponseEntity.ok(attendanceService.getWorkplaces());
+	}
 
 	@PreAuthorize("hasRole('ADMIN')")
 	@Operation(summary = "오후 배치 프로그램", description = "오후 11시에 실행되는 프로그램입니다. 오후 11시~오전6시 출퇴근 불가 및 미퇴근자 Missing 처리")
