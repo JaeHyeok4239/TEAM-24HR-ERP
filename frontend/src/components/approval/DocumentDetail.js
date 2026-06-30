@@ -20,6 +20,7 @@ import { Button } from "../ui/button";
 import { documentSchemas } from "@/schema/DocumentSchema";
 import Header from "../common/Header";
 import { useAuthStore } from "@/store/authStore";
+import Swal from "sweetalert2";
 
 export default function DocumentDetail({ documentId }) {
   const [document, setDocument] = useState(null);
@@ -44,7 +45,6 @@ export default function DocumentDetail({ documentId }) {
         console.log(loginId);
 
         setDocument(data);
-
       } catch (err) {
         throw new Error("데이터를 불러올 수 없습니다");
       }
@@ -56,12 +56,24 @@ export default function DocumentDetail({ documentId }) {
 
   //결재 승인
   const handleApprove = useCallback(async () => {
-    if (!confirm("승인하시겠습니까?")) return;
-    await apiRequest(`/api/approval/${documentId}/approve`, {
-      method: "POST",
-      body: JSON.stringify({ action: "APR", comment }),
+    const result = await Swal.fire({
+      title: "결재 승인",
+      text: "결재를 승인하시겠습니까?",
+      icon: "success",
+      showCancelButton: true,
+      cancelButtonColor: "#C8D8E5",
+      confirmButtonColor: "#759EBD",
+      confirmButtonText: "승인",
+      cancelButtonText: "취소",
     });
-    router.push("/approval/pending");
+
+    if (result.isConfirmed) {
+      await apiRequest(`/api/approval/${documentId}/approve`, {
+        method: "POST",
+        body: JSON.stringify({ action: "APR", comment }),
+      });
+      router.push("/approval/pending");
+    }
   }, [documentId, comment]);
 
   const handleReject = useCallback(async () => {
@@ -90,10 +102,10 @@ export default function DocumentDetail({ documentId }) {
       h.stepOrder === document.currentStep &&
       Number(h.approverId) === Number(currentUserId),
   );
-console.log(document.approvalHistories);
+  console.log(document.approvalHistories);
   console.log(canApprove);
   console.log("currentUserId", currentUserId);
-console.log("currentStep", document.currentStep);
+  console.log("currentStep", document.currentStep);
 
   return (
     <>
