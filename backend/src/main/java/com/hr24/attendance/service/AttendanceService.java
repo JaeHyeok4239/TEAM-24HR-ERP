@@ -85,7 +85,7 @@ public class AttendanceService{
 
 	    return workplaceList.stream()
 	            .map(wp -> WorkplaceDto.builder()
-	                    .name(wp.getWorkplaceName())
+	                    .name(wp.getWorkplaceCode())
 	                    .latitude(wp.getLatitude())
 	                    .longitude(wp.getLongitude())
 	                    .build())
