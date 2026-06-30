@@ -69,7 +69,7 @@ public class AttendanceService{
 	private final HolidayRepository holidayRepository;
 	
 	// 시간 관련 API 테스트용 메서드
-	private final boolean IS_TEST_MODE = true; 
+	private final boolean IS_TEST_MODE = false; 
 	public LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분

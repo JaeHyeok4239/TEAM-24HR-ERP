@@ -6,7 +6,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // 지도
-export default function AttendanceMap() {
+export default function AttendanceMap({ userLocation }) {
   const mapRef = useRef(null);
   const [hqLocation, setHqLocation] = useState(null);
 
@@ -25,7 +25,7 @@ export default function AttendanceMap() {
 
   // 지도 그리기
   useEffect(() => {
-    if (!hqLocation) return;
+    if (!hqLocation || !mapRef.current) return;
     const map = L.map(mapRef.current).setView([hqLocation.latitude, hqLocation.longitude], 18);
 
     // 오픈스트리트맵 타일 추가
@@ -33,7 +33,7 @@ export default function AttendanceMap() {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // 아이콘 설정(SVG 문자열 직접 사용)
+    // HQ 아이콘 설정(SVG 문자열 직접 사용)
     const buildingIcon = L.divIcon({
       html: `
         <div style="background-color: #3182ce; border-radius: 50%; padding: 4px; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px;">
@@ -57,9 +57,27 @@ export default function AttendanceMap() {
         opacity: 100
     });
 
+    // 내 위치 마커
+    if (userLocation) {
+      console.log("마커 작성:", userLocation);
+      const userIcon = L.divIcon({
+        html: `<div style="background-color: #25d16d; border-radius: 50%; width: 16px; height: 16px; border: 2px solid white; "></div>`,
+        className: 'user-icon',
+        iconSize: [24, 24],
+      });
+      
+      L.marker([userLocation.latitude, userLocation.longitude], { icon: userIcon })
+        .addTo(map)
+        .bindTooltip("내 위치", { 
+          permanent: true, 
+          direction: 'bottom', 
+          className: 'text-label' 
+        });
+    }
+
     // 컴포넌트가 사라질 때 지도 메모리 정리
     return () => map.remove();
-  }, [hqLocation]);
+  }, [hqLocation, userLocation]);
 
   return (
     <div className="w-full h-full p-3 bg-white border border-slate-200 rounded-xl">
