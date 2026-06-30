@@ -31,14 +31,10 @@ import com.hr24.attendance.repository.AttendanceCorrectionRepository;
 import com.hr24.attendance.repository.AttendanceLogDailyRepository;
 import com.hr24.attendance.repository.AttendanceLogRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
-import com.hr24.attendance.repository.AttendanceThresholdRepository;
-import com.hr24.attendance.repository.AttendanceTimePolicyRepository;
 import com.hr24.attendance.repository.WorkplaceRepository;
 import com.hr24.attendance.utils.TimeUtils;
 import com.hr24.document.entity.Document;
-import com.hr24.document.entity.Leave;
 import com.hr24.document.repository.LeaveDateRepository;
-import com.hr24.document.repository.LeaveRepository;
 import com.hr24.employee.dto.hr.EmployeeListResponseDto;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.enums.EmploymentType;
@@ -64,25 +60,19 @@ public class AttendanceService{
 	private final AttendanceResultRepository attendanceResultRepository;
 	private final WorkplaceRepository workplaceRepository;
 	private final UserRepository userRepository;
-	private final LeaveRepository leaveRepository;
 	private final LeaveDateRepository leaveDateRepository;
 	private final AttendanceLogDailyRepository attendanceLogDailyRepository;
-	private final AttendanceTimePolicyRepository attendanceTimePolicyRepository;
-	private final AttendanceThresholdRepository attendanceThresholdRepository;
 	private final AttendanceCorrectionRepository attendanceCorrectionRepository;
 	private final AttendanceCalculator attendanceCalculator;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
-	private final AttendanceLogDailyRepository attendanceLogDatilyrepository;
 	private final HolidayRepository holidayRepository;
 	
-	private static final String FIXED_WORKPLACE_NAME = "HQ";
-	
 	// 시간 관련 API 테스트용 메서드
-	private final boolean IS_TEST_MODE = false; 
+	private final boolean IS_TEST_MODE = true; 
 	public LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분
-	        return LocalDateTime.of(2026, 6, 25, 9, 0); 
+	        return LocalDateTime.of(2026, 6, 29, 9, 0); 
 	    }
 	    return LocalDateTime.now();
 	}
