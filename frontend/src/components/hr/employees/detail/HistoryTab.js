@@ -28,7 +28,12 @@ export default function HistoryTab({ employee }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const employeeId = employee?.employeeId;
-  const visibleHistories = employeeId ? histories : [];
+  const visibleHistories = employeeId
+    ? [...histories].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+    : [];
 
   useEffect(() => {
     if (!employeeId) {

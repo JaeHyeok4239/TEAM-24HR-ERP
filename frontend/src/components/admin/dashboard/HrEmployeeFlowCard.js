@@ -5,7 +5,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -28,6 +27,11 @@ const EMPTY_SUMMARY = {
   leaveCount: 0,
 };
 
+const CHART_COLORS = {
+  join: "#1a2f4e",
+  leave: "#cbd5e1",
+};
+
 export default function HrEmployeeFlowCard() {
   const [selectedType, setSelectedType] = useState("ALL");
   const [data, setData] = useState(null);
@@ -41,6 +45,7 @@ export default function HrEmployeeFlowCard() {
         setErrorMessage("");
 
         const response = await getHrEmployeeFlowRequest();
+
         setData(response);
       } catch (error) {
         console.error("인사 변동 현황 조회 실패:", error);
@@ -54,6 +59,9 @@ export default function HrEmployeeFlowCard() {
   }, []);
 
   const summary = data?.summary?.[selectedType] ?? EMPTY_SUMMARY;
+
+  const selectedTypeLabel =
+    FILTERS.find((filter) => filter.key === selectedType)?.label ?? "전체";
 
   const chartData = useMemo(() => {
     if (!data?.monthly) {
@@ -88,37 +96,40 @@ export default function HrEmployeeFlowCard() {
   return (
     <AdminDashboardCard
       title="인사 변동 현황"
-      description="최근 6개월 입사/퇴사 추이를 고용형태별로 확인합니다."
+      description="최근 6개월 입사/퇴사 추이"
       rightContent={
-        <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
-          <BarChart3 size={22} />
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef7ff] text-[#1a2f4e]">
+          <BarChart3 size={19} />
         </div>
       }
     >
-      <div className="flex h-full min-h-0 flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
+      <div className="flex h-full min-h-0 flex-col gap-3">
+        <div className="flex shrink-0 items-center justify-between gap-3">
           <div className="flex rounded-lg bg-slate-100 p-1">
             {FILTERS.map((filter) => (
               <button
                 key={filter.key}
                 type="button"
                 onClick={() => setSelectedType(filter.key)}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                className={[
+                  "rounded-md px-3 py-1.5 text-xs font-semibold transition",
                   selectedType === filter.key
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
+                    ? "bg-white text-[#1a2f4e] shadow-sm"
+                    : "text-slate-500 hover:text-slate-900",
+                ].join(" ")}
               >
                 {filter.label}
               </button>
             ))}
           </div>
 
-          <p className="text-xs text-slate-400">기준: 최근 6개월</p>
+          <p className="whitespace-nowrap text-xs font-medium text-slate-400">
+            기준: 최근 6개월
+          </p>
         </div>
 
         {isLoading && (
-          <div className="flex flex-1 items-center justify-center rounded-lg bg-slate-50">
+          <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg bg-slate-50">
             <p className="text-sm text-slate-400">
               데이터를 불러오는 중입니다.
             </p>
@@ -126,72 +137,91 @@ export default function HrEmployeeFlowCard() {
         )}
 
         {!isLoading && errorMessage && (
-          <div className="flex flex-1 items-center justify-center rounded-lg bg-red-50">
+          <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg bg-red-50">
             <p className="text-sm text-red-500">{errorMessage}</p>
           </div>
         )}
 
         {!isLoading && !errorMessage && (
           <>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid shrink-0 grid-cols-3 gap-3">
               <SummaryBox
-                icon={<Users size={16} />}
-                label="현재 재직자"
+                icon={<Users size={15} />}
+                label="현재 재직"
                 value={summary.activeCount}
               />
+
               <SummaryBox
-                icon={<UserPlus size={16} />}
+                icon={<UserPlus size={15} />}
                 label="이번 달 입사"
                 value={summary.joinCount}
               />
+
               <SummaryBox
-                icon={<UserMinus size={16} />}
+                icon={<UserMinus size={15} />}
                 label="이번 달 퇴사"
                 value={summary.leaveCount}
               />
             </div>
 
-            <div className="min-h-0 flex-1 rounded-lg bg-slate-50 p-4">
-              <div className="mb-3 flex items-center justify-between">
+            <div className="flex min-h-0 flex-1 flex-col rounded-lg bg-slate-50 p-3">
+              <div className="mb-2 flex shrink-0 items-center justify-between">
                 <p className="text-sm font-semibold text-slate-700">
-                  최근 6개월 입퇴사 추이
+                  입퇴사 추이
                 </p>
-                <p className="text-xs text-slate-400">
-                  {FILTERS.find((filter) => filter.key === selectedType)?.label}
+
+                <p className="text-xs font-medium text-slate-400">
+                  {selectedTypeLabel}
                 </p>
               </div>
-              <div className="h-56 w-full">
-                <ResponsiveContainer width="100%" height={220}>
+
+              <div className="min-h-[150px] flex-1">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={chartData}
                     barGap={8}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    margin={{ top: 8, right: 8, left: -24, bottom: 0 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#e2e8f0"
+                    />
+
                     <XAxis
                       dataKey="month"
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 11, fill: "#64748b" }}
                     />
+
                     <YAxis
                       allowDecimals={false}
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 11, fill: "#64748b" }}
                     />
-                    <Tooltip />
-                    <Legend />
+
+                    <Tooltip
+                      cursor={{ fill: "rgba(148, 163, 184, 0.12)" }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "1px solid #e2e8f0",
+                        fontSize: "12px",
+                      }}
+                    />
+
                     <Bar
                       dataKey="joinCount"
                       name="입사"
-                      fill="#60a5fa"
+                      fill={CHART_COLORS.join}
                       radius={[4, 4, 0, 0]}
                     />
+
                     <Bar
                       dataKey="leaveCount"
                       name="퇴사"
-                      fill="#cbd5e1"
+                      fill={CHART_COLORS.leave}
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
@@ -207,13 +237,13 @@ export default function HrEmployeeFlowCard() {
 
 function SummaryBox({ icon, label, value }) {
   return (
-    <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-3">
-      <div className="flex items-center gap-2 text-slate-500">
+    <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
+      <div className="flex items-center gap-1.5 text-slate-500">
         {icon}
-        <span className="text-xs font-semibold">{label}</span>
+        <span className="truncate text-xs font-semibold">{label}</span>
       </div>
 
-      <p className="mt-2 text-xl font-bold text-slate-950">
+      <p className="mt-1.5 text-xl font-bold text-slate-950">
         {Number(value).toLocaleString()}
       </p>
     </div>

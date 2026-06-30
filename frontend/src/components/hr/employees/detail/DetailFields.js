@@ -11,7 +11,7 @@ export function ReadOnlyField({ label, value }) {
       <Input
         value={value || "-"}
         readOnly
-        className="h-10 border-slate-200 bg-white text-sm text-slate-800"
+        className="h-10 cursor-default border-slate-200 bg-white text-sm font-medium text-slate-800"
       />
     </div>
   );
@@ -29,9 +29,12 @@ export function EditableField({ label, name, value, onChange, readOnly }) {
         value={value}
         onChange={onChange}
         readOnly={readOnly}
-        className={`h-10 border-slate-200 bg-white text-sm text-slate-800 ${
-          readOnly ? "cursor-default" : "border-slate-300 bg-white"
-        }`}
+        className={[
+          "h-10 text-sm text-slate-800",
+          readOnly
+            ? "cursor-default border-slate-200 bg-white font-medium"
+            : "border-slate-300 bg-white focus-visible:ring-[#a7f3ff]",
+        ].join(" ")}
       />
     </div>
   );

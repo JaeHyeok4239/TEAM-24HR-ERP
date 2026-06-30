@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { UserCog } from "lucide-react";
 
 import { updateHrEmployeeEmploymentInfoRequest } from "@/services/hrEmployeeService";
-import SensitiveInfoSection from "./SensitiveInfoSection";
+import { useAuthStore } from "@/store/authStore";
 
+import SensitiveInfoSection from "./SensitiveInfoSection";
 import DetailSection from "./DetailSection";
 import { ReadOnlyField } from "./DetailFields";
 import RoleInfoSection from "./RoleInfoSection";
@@ -12,6 +14,8 @@ import {
   EMPLOYMENT_TYPE_LABELS,
   STATUS_LABELS,
 } from "./employeeDetailConstants";
+
+const EDIT_ALLOWED_ROLE_CODES = ["ADMIN", "HR", "HR_LEAD"];
 
 const STATUS_OPTIONS = [
   { value: "ACTIVE", label: "재직" },
@@ -36,18 +40,37 @@ const createEmploymentInfoForm = (employee) => ({
   changeReason: "",
 });
 
+const hasAnyRole = (roles, allowedRoles) => {
+  return roles?.some((role) => allowedRoles.includes(role));
+};
+
 export default function HrInfoTab({ employee, options, onEmployeeUpdated }) {
+  const userRoles = useAuthStore((state) => state.userInfo?.roles ?? []);
+  const canEditEmploymentInfo = hasAnyRole(userRoles, EDIT_ALLOWED_ROLE_CODES);
+
   const [editEmployeeId, setEditEmployeeId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState(createEmploymentInfoForm(null));
 
-  const isEditMode = editEmployeeId === employee?.employeeId;
+  const isEditMode =
+    canEditEmploymentInfo && editEmployeeId === employee?.employeeId;
+
   const visibleForm = isEditMode ? form : createEmploymentInfoForm(employee);
 
   const departments = options?.departments ?? [];
   const positions = options?.positions ?? [];
 
   const handleStartEdit = () => {
+    if (!employee?.employeeId) {
+      alert("직원 정보가 없습니다.");
+      return;
+    }
+
+    if (!canEditEmploymentInfo) {
+      alert("직원 인사정보 수정 권한이 없습니다.");
+      return;
+    }
+
     setForm(createEmploymentInfoForm(employee));
     setEditEmployeeId(employee.employeeId);
   };
@@ -86,6 +109,11 @@ export default function HrInfoTab({ employee, options, onEmployeeUpdated }) {
   };
 
   const handleSave = async () => {
+    if (!canEditEmploymentInfo) {
+      alert("직원 인사정보 수정 권한이 없습니다.");
+      return;
+    }
+
     if (!employee?.employeeId) {
       alert("직원 정보가 없습니다.");
       return;
@@ -136,6 +164,7 @@ export default function HrInfoTab({ employee, options, onEmployeeUpdated }) {
       onEmployeeUpdated?.(updatedEmployee);
       setEditEmployeeId(null);
       setForm(createEmploymentInfoForm(updatedEmployee));
+
       alert("인사정보가 수정되었습니다.");
     } catch (error) {
       console.error(error);
@@ -149,36 +178,39 @@ export default function HrInfoTab({ employee, options, onEmployeeUpdated }) {
     <div className="space-y-5">
       <DetailSection
         title="소속 및 상태"
+        icon={<UserCog size={16} />}
         action={
-          isEditMode ? (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={isSaving}
-                className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-              >
-                {isSaving ? "저장 중..." : "저장"}
-              </button>
+          canEditEmploymentInfo ? (
+            isEditMode ? (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="h-9 rounded-md bg-[#1a2f4e] px-4 text-sm font-semibold text-white hover:bg-[#25476e] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSaving ? "저장 중..." : "저장"}
+                </button>
 
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                  className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  취소
+                </button>
+              </div>
+            ) : (
               <button
                 type="button"
-                onClick={handleCancel}
-                disabled={isSaving}
-                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 disabled:opacity-50"
+                onClick={handleStartEdit}
+                className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
-                취소
+                수정
               </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleStartEdit}
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              수정
-            </button>
-          )
+            )
+          ) : null
         }
       >
         {isEditMode ? (
@@ -272,14 +304,16 @@ export default function HrInfoTab({ employee, options, onEmployeeUpdated }) {
                 onChange={handleChange}
                 rows={3}
                 placeholder="예: 인사발령으로 인한 부서 변경, 승진, 오입력 정정"
-                className="w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500"
+                className="w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#1a2f4e] focus:ring-2 focus:ring-[#a7f3ff]/40"
               />
             </div>
           </>
         ) : (
           <div className="grid grid-cols-2 gap-4">
             <ReadOnlyField label="부서" value={employee.departmentName} />
+
             <ReadOnlyField label="직급" value={employee.positionName} />
+
             <ReadOnlyField
               label="고용형태"
               value={
@@ -287,14 +321,17 @@ export default function HrInfoTab({ employee, options, onEmployeeUpdated }) {
                 employee.employmentType
               }
             />
+
             <ReadOnlyField
               label="재직상태"
               value={STATUS_LABELS[employee.status] ?? employee.status}
             />
+
             <ReadOnlyField
               label="입사일"
               value={formatDate(employee.hireDate)}
             />
+
             <ReadOnlyField
               label="퇴사일"
               value={formatDate(employee.resignationDate)}
@@ -309,6 +346,7 @@ export default function HrInfoTab({ employee, options, onEmployeeUpdated }) {
       />
 
       <SensitiveInfoSection
+        key={employee?.employeeId}
         employee={employee}
         onEmployeeUpdated={onEmployeeUpdated}
       />
@@ -335,7 +373,7 @@ function SelectField({
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+        className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none focus:border-[#1a2f4e] focus:ring-2 focus:ring-[#a7f3ff]/40 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500"
       >
         {children}
       </select>
@@ -363,7 +401,7 @@ function InputField({
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+        className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none focus:border-[#1a2f4e] focus:ring-2 focus:ring-[#a7f3ff]/40 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500"
       />
     </div>
   );

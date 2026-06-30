@@ -1,13 +1,33 @@
 "use client";
 
 import { useState } from "react";
+import { MousePointerClick } from "lucide-react";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 import BasicInfoTab from "./detail/BasicInfoTab";
 import HrInfoTab from "./detail/HrInfoTab";
 import HistoryTab from "./detail/HistoryTab";
-import { DETAIL_TABS } from "./detail/employeeDetailConstants";
+import {
+  DETAIL_TABS,
+  STATUS_LABELS,
+} from "./detail/employeeDetailConstants";
+
+const STATUS_STYLES = {
+  ACTIVE: "bg-emerald-50 text-emerald-700",
+  LEAVE: "bg-amber-50 text-amber-700",
+  RESIGNED: "bg-slate-100 text-slate-500",
+  INACTIVE: "bg-slate-100 text-slate-500",
+  LOCKED: "bg-red-50 text-red-700",
+};
+
+const getAvatarLabel = (name) => {
+  if (!name) {
+    return "-";
+  }
+
+  return name.slice(-2);
+};
 
 export default function EmployeeDetailPanel({
   employee,
@@ -22,49 +42,54 @@ export default function EmployeeDetailPanel({
   }
 
   if (!employee) {
-    return <EmptyDetailPanel message="직원을 선택해주세요." />;
+    return <EmptyDetailPanel message="좌측에서 직원을 선택해주세요." />;
   }
 
   return (
     <Card className="flex h-full flex-col overflow-hidden rounded-xl border-slate-200 bg-white shadow-sm">
-      <CardHeader className="flex h-[82px] shrink-0 justify-center border-b px-5 py-0">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-300 text-sm font-semibold text-white">
-            {employee.name?.slice(-2)}
+      <div className="shrink-0 border-b border-slate-200 bg-white px-5 py-3">
+        <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center">
+          <div className="flex min-w-[260px] items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1a2f4e] text-sm font-bold text-white">
+              {getAvatarLabel(employee.name)}
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
+                <p className="truncate text-base font-bold text-slate-950">
+                  {employee.name}
+                </p>
+
+                <StatusBadge status={employee.status} />
+              </div>
+
+              <p className="mt-0.5 truncate text-xs font-medium text-slate-500">
+                {employee.positionName ?? "-"} · {employee.departmentName ?? "-"}
+              </p>
+            </div>
           </div>
 
-          <div className="min-w-0">
-            <p className="truncate text-lg font-bold text-slate-900">
-              {employee.name}
-            </p>
+          <div className="flex h-10 min-w-0 flex-1 rounded-md bg-slate-100 p-1">
+            {DETAIL_TABS.map((tab) => {
+              const selected = activeTab === tab.value;
 
-            <p className="mt-1 text-sm text-slate-500">
-              {employee.positionName ?? "-"} · {employee.departmentName ?? "-"}
-            </p>
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => setActiveTab(tab.value)}
+                  className={[
+                    "flex-1 rounded-md px-4 text-sm font-semibold transition-colors",
+                    selected
+                      ? "bg-white text-[#1a2f4e] shadow-sm"
+                      : "text-slate-500 hover:text-slate-900",
+                  ].join(" ")}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
-        </div>
-      </CardHeader>
-
-      <div className="h-[52px] shrink-0 border-b bg-white px-5">
-        <div className="flex h-full items-end gap-8">
-          {DETAIL_TABS.map((tab) => {
-            const selected = activeTab === tab.value;
-
-            return (
-              <button
-                key={tab.value}
-                type="button"
-                onClick={() => setActiveTab(tab.value)}
-                className={`h-full border-b-2 px-1 text-sm font-medium transition ${
-                  selected
-                    ? "border-slate-900 text-slate-900"
-                    : "border-transparent text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
         </div>
       </div>
 
@@ -93,13 +118,31 @@ export default function EmployeeDetailPanel({
 function EmptyDetailPanel({ message }) {
   return (
     <Card className="flex h-full flex-col overflow-hidden rounded-xl border-slate-200 bg-white shadow-sm">
-      <CardHeader className="flex h-[58px] shrink-0 justify-center border-b px-5 py-0">
-        <p className="text-base font-semibold text-slate-900">직원 상세</p>
-      </CardHeader>
+      <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
+        <MousePointerClick
+          size={80}
+          strokeWidth={1.7}
+          className="text-slate-300"
+        />
 
-      <CardContent className="flex flex-1 items-center justify-center text-sm text-slate-400">
-        {message}
+        <p className="mt-6 text-base font-medium text-slate-400">{message}</p>
       </CardContent>
     </Card>
+  );
+}
+
+function StatusBadge({ status }) {
+  const label = STATUS_LABELS[status] ?? status ?? "-";
+  const className = STATUS_STYLES[status] ?? "bg-slate-100 text-slate-500";
+
+  return (
+    <span
+      className={[
+        "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold",
+        className,
+      ].join(" ")}
+    >
+      {label}
+    </span>
   );
 }
