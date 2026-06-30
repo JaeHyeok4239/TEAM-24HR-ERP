@@ -1,3 +1,4 @@
+import MyDocument from '@/components/approval/DocumentList';
 import AttendanceAction from '@/components/dashboard/AttendanceAction';
 import AttendanceMap from '@/components/dashboard/AttendanceMap';
 
@@ -31,7 +32,7 @@ export default function MainPage() {
           <h1>하단 영역 1</h1>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <h1>하단 영역 2</h1>
+          <MyDocument />
         </div>
       </div>
     </div>
