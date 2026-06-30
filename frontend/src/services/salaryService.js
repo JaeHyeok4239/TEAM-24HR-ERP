@@ -1,8 +1,8 @@
-const BASE_URL = "http://localhost:8080";
+import { apiRequest } from "@/lib/api";
 
 export async function getSalaryList() {
 
-  const response = await fetch(`${BASE_URL}/api/salaries`);
+  const response = await apiRequest(`/api/salaries`);
 
   if (!response.ok) {throw new Error("기본급 조회 실패");}
 
@@ -11,7 +11,7 @@ export async function getSalaryList() {
 
 export async function createSalary(request) {
 
-  const response = await fetch(`${BASE_URL}/api/salaries`, {
+  const response = await apiRequest(`/api/salaries`, {
 
     method: "POST",
 
@@ -24,11 +24,11 @@ export async function createSalary(request) {
   if (!response.ok) {throw new Error("기본급 등록 실패");}
 }
 
-export async function updateSalary(salaryId, request) {
+export async function updateSalary(employeeId, request) {
 
-  const response = await fetch(
+  const response = await apiRequest(
 
-    `${BASE_URL}/api/salaries/${salaryId}`,
+    `/api/salaries/${employeeId}`,
 
     {
       method: "PUT",
