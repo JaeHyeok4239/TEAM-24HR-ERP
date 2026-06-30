@@ -43,7 +43,7 @@ public class AuthService {
 	public LoginTokenDto login(LoginRequestDto requestDto) {
 		
 		User user = userRepository.findByLoginId(requestDto.getLoginId())
-				.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+				.orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PASSWORD));
 		
 		boolean passwordMatched = passwordEncoder.matches(
 				requestDto.getPassword(),

@@ -249,7 +249,7 @@ CREATE TABLE
 create table attendance_correction(
 	attendance_correction_id number primary key,
 
-	correction_target number, -- FK 근태 결과(수정 대상)
+	correction_target number NULL, -- FK 근태 결과(수정 대상)
     document_id number NULL, -- FK Document(일용직의 경우 결재 없이 직접 수정이므로 null 허용)
 
     correction_daily_log number, -- FK 일용직 근태 정정 로그
@@ -815,7 +815,6 @@ COMMENT ON COLUMN work_notifications.scope           IS 'PERSONAL/DEPT/COMPANY';
 COMMENT ON COLUMN work_notifications.type            IS '알림 유형 코드';
 COMMENT ON COLUMN work_notifications.title           IS '알림 제목';
 COMMENT ON COLUMN work_notifications.message         IS '알림 내용';
-
 COMMENT ON COLUMN work_notifications.is_read         IS 'Y=읽음, N=미읽음 (PERSONAL만 사용)';
 COMMENT ON COLUMN work_notifications.created_at      IS '발송일시';
 

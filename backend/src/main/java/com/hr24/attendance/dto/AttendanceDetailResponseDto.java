@@ -34,7 +34,7 @@ public class AttendanceDetailResponseDto {
     
     // 관리자 조회 시 필요
     @Builder.Default
-    private List<CorrectionDto> corrections = new ArrayList<>();
+    private List<AttendanceCorrectionRecordDto> corrections = new ArrayList<>();
     private String userName;
     private String department;
     private String userPosition;

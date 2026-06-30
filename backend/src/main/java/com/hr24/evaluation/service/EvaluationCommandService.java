@@ -56,7 +56,7 @@ public class EvaluationCommandService {
                 request.getEvaluationYear(),
                 request.getHalfType()
         )) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.DUPLICATE_EVALUATION_PERIOD);
         }
 
         String periodName = normalizeNullable(request.getPeriodName());
@@ -87,7 +87,7 @@ public class EvaluationCommandService {
         EvaluationPeriod period = findPeriod(periodId);
 
         if (period.getStatus() == EvaluationPeriodStatus.CLOSED) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.INVALID_EVALUATION_PERIOD_STATUS);
         }
 
         period.open();
@@ -99,7 +99,7 @@ public class EvaluationCommandService {
         EvaluationPeriod period = findPeriod(periodId);
 
         if (period.getStatus() == EvaluationPeriodStatus.DRAFT) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.INVALID_EVALUATION_PERIOD_STATUS);
         }
 
         period.close();
@@ -113,7 +113,7 @@ public class EvaluationCommandService {
         EvaluationPeriod period = findPeriod(periodId);
 
         if (period.getStatus() == EvaluationPeriodStatus.CLOSED) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.INVALID_EVALUATION_PERIOD_STATUS);
         }
 
         List<User> employees = userRepository.findAll()
@@ -191,7 +191,7 @@ public class EvaluationCommandService {
                 ));
 
         if (request.getAnswers().size() != questionMap.size()) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.INVALID_EVALUATION_ANSWER);
         }
 
         Set<Long> requestedQuestionIds = new HashSet<>();
@@ -201,19 +201,19 @@ public class EvaluationCommandService {
             Long questionId = answerRequest.getEvaluationQuestionId();
 
             if (!requestedQuestionIds.add(questionId)) {
-                throw new BusinessException(ErrorCode.INVALID_REQUEST);
+                throw new BusinessException(ErrorCode.INVALID_EVALUATION_ANSWER);
             }
 
             EvaluationQuestion question = questionMap.get(questionId);
 
             if (question == null) {
-                throw new BusinessException(ErrorCode.INVALID_REQUEST);
+                throw new BusinessException(ErrorCode.INVALID_EVALUATION_ANSWER);
             }
 
             Integer score = answerRequest.getScore();
 
             if (score == null || score < 1 || score > question.getMaxScore()) {
-                throw new BusinessException(ErrorCode.INVALID_REQUEST);
+                throw new BusinessException(ErrorCode.INVALID_EVALUATION_ANSWER);
             }
 
             totalScore += score;
@@ -264,21 +264,21 @@ public class EvaluationCommandService {
 
     private void validateDateRange(EvaluationPeriodCreateRequestDto request) {
         if (request.getTargetStartDate().isAfter(request.getTargetEndDate())) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.INVALID_EVALUATION_DATE_RANGE);
         }
 
         if (request.getInputStartDate().isAfter(request.getInputEndDate())) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.INVALID_EVALUATION_DATE_RANGE);
         }
     }
 
     private void validateEvaluationEditable(EmployeeEvaluation evaluation) {
         if (evaluation.getEvaluationPeriod().getStatus() != EvaluationPeriodStatus.OPEN) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.INVALID_EVALUATION_PERIOD_STATUS);
         }
 
         if (evaluation.getStatus() == EmployeeEvaluationStatus.CONFIRMED) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.EVALUATION_ALREADY_CONFIRMED);
         }
     }
 

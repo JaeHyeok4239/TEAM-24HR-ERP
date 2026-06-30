@@ -2,7 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  KeyRound,
+  LockKeyhole,
+  ShieldCheck,
+} from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { changePasswordRequest } from "@/services/userService";
 import { useAuthStore } from "@/store/authStore";
 
@@ -198,113 +208,158 @@ export default function PasswordChangeForm() {
     !form.currentPassword || !form.newPassword || !form.confirmPassword;
 
   return (
-    <div className="flex min-h-[calc(100vh-56px)] w-full items-center justify-center px-6 py-8">
+    <div className="flex min-h-[calc(100vh-128px)] w-full items-center justify-center">
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="w-full max-w-xl rounded-md border bg-white p-6 shadow-sm"
+        className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
       >
-        <div className="mb-6 border-b border-slate-200 pb-4">
-          <p className="mt-1 text-sm text-slate-500">
-            안전한 계정 사용을 위해 새로운 비밀번호를 입력해주세요.
-          </p>
+        <div className="grid grid-cols-1 xl:grid-cols-[340px_minmax(0,1fr)]">
+          <aside className="border-b border-slate-200 bg-[#1a2f4e] p-6 text-white xl:border-b-0 xl:border-r">
+            <div className="flex h-full flex-col justify-between gap-8">
+              <div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/10 text-cyan-100">
+                  <LockKeyhole size={25} strokeWidth={1.8} />
+                </div>
+
+                <h2 className="mt-5 text-xl font-bold">계정 보안 설정</h2>
+
+                <p className="mt-3 text-sm leading-6 text-cyan-100/70">
+                  안전한 계정 사용을 위해 주기적으로 비밀번호를 변경해주세요.
+                  변경 후에는 보안을 위해 다시 로그인합니다.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-cyan-100">
+                  <ShieldCheck size={17} />
+                  비밀번호 조건
+                </div>
+
+                <ul className="mt-3 space-y-2 text-sm text-cyan-100/70">
+                  <PasswordRule>8자 이상 20자 이하</PasswordRule>
+                  <PasswordRule>영문, 숫자, 특수문자 포함</PasswordRule>
+                  <PasswordRule>현재 비밀번호와 다르게 입력</PasswordRule>
+                  <PasswordRule>
+                    사용 가능 특수문자: @ $ ! % * # ? &
+                  </PasswordRule>
+                </ul>
+              </div>
+            </div>
+          </aside>
+
+          <section className="min-w-0 bg-white p-6">
+            <div className="mb-6 border-b border-slate-100 pb-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-950">
+                    비밀번호 변경
+                  </h2>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    현재 비밀번호를 확인한 뒤 새 비밀번호를 설정합니다.
+                  </p>
+                </div>
+
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#eef7ff] text-[#1a2f4e]">
+                  <KeyRound size={20} strokeWidth={1.8} />
+                </div>
+              </div>
+            </div>
+
+            {isFirstLogin && (
+              <div className="mb-5 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <div className="flex gap-2">
+                  <AlertTriangle size={17} className="mt-0.5 shrink-0" />
+
+                  <div>
+                    <p className="font-semibold">
+                      최초 로그인 비밀번호 변경이 필요합니다.
+                    </p>
+
+                    <p className="mt-1 leading-5">
+                      임시 비밀번호로 로그인한 상태입니다. 보안을 위해 새
+                      비밀번호로 변경해야 시스템을 사용할 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {notice.message && (
+              <Notice type={notice.type} message={notice.message} />
+            )}
+
+            <div className="grid gap-5">
+              <PasswordField
+                label="현재 비밀번호"
+                name="currentPassword"
+                autoComplete="current-password"
+                placeholder="현재 비밀번호를 입력해주세요."
+                value={form.currentPassword}
+                onChange={handleChange}
+                error={errors.currentPassword}
+              />
+
+              <PasswordField
+                label="새 비밀번호"
+                name="newPassword"
+                autoComplete="new-password"
+                placeholder="새 비밀번호를 입력해주세요."
+                value={form.newPassword}
+                onChange={handleChange}
+                error={errors.newPassword}
+              />
+
+              <PasswordField
+                label="새 비밀번호 확인"
+                name="confirmPassword"
+                autoComplete="new-password"
+                placeholder="새 비밀번호를 다시 입력해주세요."
+                value={form.confirmPassword}
+                onChange={handleChange}
+                error={errors.confirmPassword}
+              />
+            </div>
+          </section>
         </div>
 
-        {isFirstLogin && (
-          <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            <p className="font-semibold">
-              최초 로그인 비밀번호 변경이 필요합니다.
-            </p>
-
-            <p className="mt-1">
-              임시 비밀번호로 로그인한 상태입니다. 보안을 위해 새 비밀번호로
-              변경해야 시스템을 사용할 수 있습니다.
-            </p>
-          </div>
-        )}
-
-        {notice.message && (
-          <div
-            role="alert"
-            aria-live="polite"
-            className={`mb-6 rounded-md border px-4 py-3 text-sm ${
-              notice.type === "success"
-                ? "border-green-200 bg-green-50 text-green-700"
-                : "border-red-200 bg-red-50 text-red-700"
-            }`}
-          >
-            {notice.message}
-          </div>
-        )}
-
-        <div className="space-y-5">
-          <PasswordField
-            label="현재 비밀번호"
-            name="currentPassword"
-            autoComplete="current-password"
-            placeholder="현재 비밀번호를 입력해주세요."
-            value={form.currentPassword}
-            onChange={handleChange}
-            error={errors.currentPassword}
-          />
-
-          <PasswordField
-            label="새 비밀번호"
-            name="newPassword"
-            autoComplete="new-password"
-            placeholder="새 비밀번호를 입력해주세요."
-            value={form.newPassword}
-            onChange={handleChange}
-            error={errors.newPassword}
-          />
-
-          <PasswordField
-            label="새 비밀번호 확인"
-            name="confirmPassword"
-            autoComplete="new-password"
-            placeholder="새 비밀번호를 다시 입력해주세요."
-            value={form.confirmPassword}
-            onChange={handleChange}
-            error={errors.confirmPassword}
-          />
-        </div>
-
-        <div className="mt-4 rounded-md bg-slate-50 p-4 text-sm text-slate-500">
-          <p>비밀번호는 다음 조건을 만족해야 합니다.</p>
-
-          <p className="mt-1">
-            영문, 숫자, 특수문자를 포함한 8자 이상 20자 이하
-          </p>
-
-          <p className="mt-1">사용 가능한 특수문자: @ $ ! % * # ? &</p>
-        </div>
-
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-6 py-4">
           {!isFirstLogin && (
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleCancel}
               disabled={isSubmitting || isCompleted}
-              className="rounded-md bg-slate-100 px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-9 border-slate-300 bg-white px-5 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             >
               취소
-            </button>
+            </Button>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={isSubmitting || isCompleted || isFormEmpty}
-            className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-9 bg-[#1a2f4e] px-6 text-sm font-semibold text-white hover:bg-[#25476e] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
           >
             {isSubmitting
               ? "변경 중..."
               : isCompleted
                 ? "변경 완료"
                 : "비밀번호 변경"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
+  );
+}
+
+function PasswordRule({ children }) {
+  return (
+    <li className="flex gap-2">
+      <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-cyan-100/80" />
+      <span>{children}</span>
+    </li>
   );
 }
 
@@ -319,13 +374,21 @@ function PasswordField({
 }) {
   const errorId = `${name}-error`;
 
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-medium text-slate-700">
-        {label}
-      </span>
+  const inputClassName = [
+    "h-10 bg-white text-sm",
+    error
+      ? "border-red-400 focus-visible:ring-red-200"
+      : "border-slate-200 focus-visible:ring-[#a7f3ff]",
+  ].join(" ");
 
-      <input
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={name} className="text-sm font-semibold text-slate-700">
+        {label}
+      </Label>
+
+      <Input
+        id={name}
         type="password"
         name={name}
         autoComplete={autoComplete}
@@ -335,18 +398,31 @@ function PasswordField({
         onChange={onChange}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
-        className={`w-full rounded-md border px-3 py-2 text-sm outline-none ${
-          error
-            ? "border-red-500 focus:border-red-500"
-            : "border-slate-300 focus:border-blue-500"
-        }`}
+        className={inputClassName}
       />
 
       {error && (
-        <p id={errorId} className="mt-1 text-xs text-red-500">
+        <p id={errorId} className="text-xs font-medium text-red-500">
           {error}
         </p>
       )}
-    </label>
+    </div>
+  );
+}
+
+function Notice({ type, message }) {
+  const isSuccess = type === "success";
+
+  const noticeClassName = [
+    "mb-5 rounded-md border px-4 py-3 text-sm font-medium",
+    isSuccess
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : "border-red-200 bg-red-50 text-red-700",
+  ].join(" ");
+
+  return (
+    <div role="alert" aria-live="polite" className={noticeClassName}>
+      {message}
+    </div>
   );
 }
