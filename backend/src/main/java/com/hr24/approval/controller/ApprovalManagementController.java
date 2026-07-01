@@ -52,7 +52,7 @@ public class ApprovalManagementController {
 	        Authentication authInfo) {
 
 	    boolean isAdmin = authInfo.getAuthorities().stream()
-	            .anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("HR_LEAD"));
+	            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_HR_LEAD"));
 
 	    String loginId = authInfo.getName();
 
@@ -66,7 +66,7 @@ public class ApprovalManagementController {
 
 		// 관리자 및 인사 관리자는 통과할 수 있도록 검증 메소드 전달
 		boolean isAdmin = authInfo.getAuthorities().stream()
-				.anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("HR_LEAD"));
+				.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_HR_LEAD"));
 		
 		String loginId = authInfo.getName();
 		
@@ -79,7 +79,7 @@ public class ApprovalManagementController {
 	public ResponseEntity<Void> deactiveDelegate(@PathVariable("delegateId") Long delegateId, Authentication authInfo){
 		
 		boolean isAdmin = authInfo.getAuthorities().stream()
-				.anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("HR_LEAD"));
+				.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_HR_LEAD"));
 		
 		
 		String loginId = authInfo.getName();

@@ -126,7 +126,7 @@ export default function LoginForm() {
         <div
           className="relative hidden md:block [@media(max-height:640px)]:hidden flex-1 bg-cover bg-center transition-opacity duration-300 hover:opacity-70"
           style={{
-            backgroundImage: `url('/main.jpg')`,
+            backgroundImage: `url('/logo.png')`,
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent pointer-events-none -ml-px" />

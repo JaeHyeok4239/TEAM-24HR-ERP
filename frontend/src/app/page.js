@@ -25,7 +25,7 @@ export default function MainPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <h1>하단 영역 1</h1>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-white flex flex-1 rounded-xl border border-slate-200 p-4">
           <MyDocument />
         </div>
       </div>
