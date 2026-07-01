@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080";
+import { apiRequest } from "@/lib/api";
 
 export async function getPayrolls({
   month,
@@ -16,8 +16,8 @@ export async function getPayrolls({
   params.append("page", page);
   params.append("size", size);
 
-  const response = await fetch(
-    `${BASE_URL}/api/payrolls?${params.toString()}`
+  const response = await apiRequest(
+    `/api/payrolls?${params.toString()}`
   );
 
   if (!response.ok) {
@@ -29,8 +29,9 @@ export async function getPayrolls({
 
 
 export async function getPayrollDetail(payrollId) {
-  const response = await fetch(
-    `http://localhost:8080/api/payrolls/${payrollId}`
+
+  const response = await apiRequest(
+    `/api/payrolls/${payrollId}`
   );
 
   if (!response.ok) {
@@ -43,14 +44,12 @@ export async function getPayrollDetail(payrollId) {
 
 export async function calculatePayroll(request) {
 
-  const response = await fetch(
-    "http://localhost:8080/api/payrolls/calculate",
+  const response = await apiRequest(
+    "/api/payrolls/calculate",
     {
       method: "POST",
 
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: {"Content-Type": "application/json",},
 
       body: JSON.stringify(request),
     }
