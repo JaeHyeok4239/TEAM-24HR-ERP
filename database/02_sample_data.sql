@@ -378,9 +378,6 @@ VALUES (leave_seq.NEXTVAL, 2, 2, DATE '2025-06-11', DATE '2025-06-11', 0.50);
 
 ---------------------------------업무관리------------------------
 
-DELETE FROM mail_attachment;
-DELETE FROM mail_receiver;
-DELETE FROM mail;
 DELETE FROM reservation_participant;
 DELETE FROM room_reservation;
 DELETE FROM meeting_room;
@@ -522,76 +519,7 @@ VALUES (reservation_participant_seq.NEXTVAL, 5, 4, 0);
 
 
 
--- 5. 사내메일
-
-INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
-VALUES (mail_seq.NEXTVAL, 1, NULL, '6월 전사 공지사항', '안녕하세요. 6월 전사 공지사항을 안내드립니다.', SYSTIMESTAMP);
-
-INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
-VALUES (mail_seq.NEXTVAL, 2, NULL, '신규입사자 온보딩 준비 요청', '이번 주 신규입사자 온보딩 자료를 준비해주세요.', SYSTIMESTAMP);
-
-INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
-VALUES (mail_seq.NEXTVAL, 3, 2, 'RE: 신규입사자 온보딩 준비 요청', '네, 금요일까지 준비하겠습니다.', SYSTIMESTAMP);
-
-INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
-VALUES (mail_seq.NEXTVAL, 7, NULL, '현장 안전점검 일정 조율', '이번 달 현장 안전점검 일정을 조율하고자 합니다.', SYSTIMESTAMP);
-
-INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
-VALUES (mail_seq.NEXTVAL, 8, 4, 'RE: 현장 안전점검 일정 조율', '6월 25일로 잡는 게 좋을 것 같습니다.', SYSTIMESTAMP);
-
-INSERT INTO mail (mail_id, user_id, parent_mail_id, title, content, create_at)
-VALUES (mail_seq.NEXTVAL, 5, NULL, '6월 급여 처리 일정 안내', '6월 급여 처리는 25일 진행 예정입니다.', SYSTIMESTAMP);
-
-
-
--- 6. 메일 수신자
-
--- 메일1 수신: 인사팀장(2), 공사관리팀장(7), 안전관리팀장(8)
-INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
-VALUES (mail_receiver_seq.NEXTVAL, 1, 2, 1, 0);
-
-INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
-VALUES (mail_receiver_seq.NEXTVAL, 1, 7, 1, 0);
-
-INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
-VALUES (mail_receiver_seq.NEXTVAL, 1, 8, 0, 0);
-
--- 메일2 수신: 인사실무자(3)
-INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
-VALUES (mail_receiver_seq.NEXTVAL, 2, 3, 1, 0);
-
--- 메일3 수신: 인사팀장(2)
-INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
-VALUES (mail_receiver_seq.NEXTVAL, 3, 2, 1, 0);
-
--- 메일4 수신: 안전관리팀장(8)
-INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
-VALUES (mail_receiver_seq.NEXTVAL, 4, 8, 1, 0);
-
--- 메일5 수신: 공사관리팀장(7)
-INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
-VALUES (mail_receiver_seq.NEXTVAL, 5, 7, 0, 0);
-
--- 메일6 수신: 인사팀장(2)
-INSERT INTO mail_receiver (receiver_id, mail_id, user_id, is_read, is_deleted)
-VALUES (mail_receiver_seq.NEXTVAL, 6, 2, 0, 0);
-
-
-
--- 7. 첨부파일
-
-INSERT INTO mail_attachment (attachment_id, mail_id, original_name, saved_name, file_path, file_size, file_type, create_at)
-VALUES (mail_attachment_seq.NEXTVAL, 1, '6월공지사항.pdf', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890.pdf', '/uploads/mail/2025/06/', 204800, 'application/pdf', SYSTIMESTAMP);
-
-INSERT INTO mail_attachment (attachment_id, mail_id, original_name, saved_name, file_path, file_size, file_type, create_at)
-VALUES (mail_attachment_seq.NEXTVAL, 4, '안전점검_체크리스트.xlsx', 'b2c3d4e5-f6a7-8901-bcde-f12345678901.xlsx', '/uploads/mail/2025/06/', 51200, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', SYSTIMESTAMP);
-
-INSERT INTO mail_attachment (attachment_id, mail_id, original_name, saved_name, file_path, file_size, file_type, create_at)
-VALUES (mail_attachment_seq.NEXTVAL, 6, '6월급여처리일정.docx', 'c3d4e5f6-a7b8-9012-cdef-123456789012.docx', '/uploads/mail/2025/06/', 32768, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', SYSTIMESTAMP);
-
-
-
--- 8. 일정
+-- 5. 일정
 
 INSERT INTO schedule (schedule_id, user_id, dept_id, title, schedule_type, start_dt, end_dt, location, memo, created_at)
 VALUES (schedule_seq.NEXTVAL, 2, NULL, '외부 채용박람회 참가', 'PERSONAL', DATE '2025-06-14', DATE '2025-06-14', '코엑스', '채용박람회 부스 운영', SYSTIMESTAMP);

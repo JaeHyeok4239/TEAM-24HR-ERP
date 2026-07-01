@@ -1,4 +1,5 @@
 import AttendancePage from '@/components/dashboard/AttendancePage';
+import ScheduleMiniCalendar from '@/components/dashboard/ScheduleMiniCalendar';
 
 export default function MainPage() {
   return (
@@ -13,7 +14,7 @@ export default function MainPage() {
       </div>
         <div className="grid gap-4">
           <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <h1>상단 영역 2</h1>
+            <ScheduleMiniCalendar />
           </div>
         </div>
         
