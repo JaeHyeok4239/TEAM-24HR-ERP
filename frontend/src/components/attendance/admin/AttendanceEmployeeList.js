@@ -5,13 +5,13 @@ import { AttendanceSummaryCell } from "./AttendanceSummaryCell";
 // map 함수 때문에 employees가 들어오지 않았을 때를 대비해 빈 배열로 설정
 export default function AttendanceEmployeeList({ employees = [], isLoading, onSelect, type }) {
   return (
-    <Card className="!py-0 h-full rounded-xl border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col">
+    <Card className="!py-0 h-full rounded-xl border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col ">
       <CardContent className="p-0 h-full overflow-y-auto">
         <table className="w-full text-center border-collapse relative">
             <thead className="sticky top-0 bg-white z-10 shadow-sm">
                 <tr className="border-b border-slate-100 text-sm text-slate-500">
                 <th className="px-6 py-4 font-medium">이름</th>
-                {/* 정규직일 때만 나오는 필드 */}
+                {/* 정규직 */}
                 {type === 'regular' && (
                     <>
                         <th className="px-6 py-4 font-medium">부서</th>
@@ -27,9 +27,13 @@ export default function AttendanceEmployeeList({ employees = [], isLoading, onSe
                 <td colSpan="4" className="py-10 text-center text-slate-400">데이터를 불러오는 중</td>
               </tr>
             ) : employees.map((emp) => (
-              <tr key={emp.employeeId} className="hover:bg-slate-100 transition-colors text-sm">
+              <tr 
+                key={emp.employeeId} 
+                onClick={() => onSelect(emp)} //onClick 추가
+                className="hover:bg-slate-100 transition-colors text-sm cursor-pointer"
+              >
                 <td className="px-6 py-4 font-semibold text-slate-900">{emp.name}</td>
-                {/* 정규직일 때만 나오는 필드 */}
+                {/* 정규직 */}
                 {type === 'regular' && (
                     <>
                     <td className="px-6 py-4 text-slate-600">{emp.departmentName}</td>

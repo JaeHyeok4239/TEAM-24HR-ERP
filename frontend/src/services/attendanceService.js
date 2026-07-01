@@ -1,7 +1,7 @@
 import { apiRequest } from "@/lib/api";
 
-export const getMonthlyAttendanceStats = async (yearMonth) => {
-  const response = await apiRequest(`/api/attendance/monthly/summary?yearMonth=${yearMonth}`, {
+export const getMonthlyAttendanceStats = async (yearMonth, employeeId) => {
+  const response = await apiRequest(`/api/attendance/monthly/summary?yearMonth=${yearMonth}&targetEmployeeId=${employeeId}`, {
     method: "GET",
   });
 

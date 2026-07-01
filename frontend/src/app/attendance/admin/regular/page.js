@@ -13,7 +13,8 @@ export default function AttendanceRegularPage() {
     const [employees, setEmployees] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const calendarRef = useRef(null);
-    const { currentDate } = useDateNavigation();
+    const { currentDate } = useDateNavigation(calendarRef);
+    const [selectedEmployee, setSelectedEmployee] = useState(null); // 직원 선택
 
     // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
@@ -66,7 +67,7 @@ export default function AttendanceRegularPage() {
                 <SummaryDaily date={currentDate} type="regular" />
             </div>
 
-            {/* 필터링 버튼 */}
+            {/* 필터링 버튼 시간 되면 구현...*/}
 
             {/* 직원 목록/상세 달력 레이아웃 */}
             <div className="grid grid-cols-[550px_1fr] gap-4 mt-2 h-[calc(100vh-250px)]">
@@ -76,7 +77,11 @@ export default function AttendanceRegularPage() {
                     onSelect={(emp) => setSelectedEmployee(emp)}
                     type="regular"
                 />
-                <AdminCalendar />
+                <AdminCalendar 
+                    selectedEmployee={selectedEmployee}
+                    currentDate={currentDate}
+                    type="regular"
+                />
             </div>
         </main>
     );

@@ -72,6 +72,7 @@ public class AttendanceService{
 	private final AttendanceCalculator attendanceCalculator;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
 	private final HolidayRepository holidayRepository;
+	private List<AttendanceDetailResponseDto> attendanceList;
 	
 	// 시간 관련 API 테스트용 메서드
 	private final boolean IS_TEST_MODE = false; 
@@ -702,22 +703,23 @@ public class AttendanceService{
     }
 	
 	// 일용직 1명의 월별 통계 - 근태 상태 횟수 체크
-	public AttendanceResponse createDailyWorkerResponse(List<AttendanceResult> monthList) {
+	public AttendanceResponse createDailyWorkerResponse(List<AttendanceLogsDaily> logList) {
 		// 카운트 계산
-		Map<String, Long> counts = monthList.stream()
-			    .collect(Collectors.groupingBy(
-			        r -> r.getAttendanceStatus() != null ? r.getAttendanceStatus().name() : "NULL",
-			        Collectors.counting()
-			    )); 
+		long workCount = logList.stream()
+	            .filter(log -> "Y".equals(log.getIsAttended()))
+	            .count();
+		
         // DTO 리스트 변환
-        List<AttendanceResultDto> dtoList = monthList.stream()
-            .map(AttendanceResultDto::new)
-            .collect(Collectors.toList());
+		List<DailyAttendanceDetailResponseDto> dtoList = logList.stream()
+		        .map(log -> DailyAttendanceDetailResponseDto.builder()
+		            .workplaceName(log.getWorkplace() != null ? log.getWorkplace().getWorkplaceName() : "미지정")
+		            .build())
+		        .collect(Collectors.toList());
         
         // 응답 객체 생성 및 반환
-        AttendanceResponse response = new AttendanceResponse();
-        response.setWorkCount(counts.getOrDefault(AttendanceStatus.WORK.name(), 0L).intValue());
-        response.setAttendanceList(dtoList); // 전체 목록
+		AttendanceResponse response = new AttendanceResponse();
+	    response.setWorkCount((int) workCount);
+	    response.setAttendanceList(dtoList);
 		
 		return response;
 	}
@@ -739,16 +741,23 @@ public class AttendanceService{
 		LocalDateTime monthStart = yearMonth.atDay(1).atStartOfDay();
 	    LocalDateTime monthEnd = yearMonth.atEndOfMonth().atTime(LocalTime.MAX);
 
-		// 한 달 근태 기록 목록
-	    List<AttendanceResult> monthList = attendanceResultRepository.findByEmployeeWithUser(
-	    	    targetUser, 
-	    	    monthStart.toLocalDate(), 
-	    	    monthEnd.toLocalDate()
-	    	);
-	    
+		// 일용직 조회
 	    if (targetUser.getEmploymentType() == EmploymentType.DAILY) {
-	        return createDailyWorkerResponse(monthList);
+	        // 기존에 findAllWithEmployeeByWorkDateBetween 등을 사용하거나, 
+	        // repository에 해당 범위 조회 메서드가 없다면 추가하여 사용하세요.
+	        List<AttendanceLogsDaily> dailyLogs = attendanceLogDailyRepository.findAllWithEmployeeByWorkDateBetween(
+	                monthStart.toLocalDate(), monthEnd.toLocalDate())
+	                .stream()
+	                .filter(log -> log.getEmployee().getEmployeeId().equals(targetId))
+	                .collect(Collectors.toList());
+	        
+	        return createDailyWorkerResponse(dailyLogs);
 	    }
+	    List<AttendanceResult> monthList = attendanceResultRepository.findByEmployeeWithUser(
+	            targetUser, 
+	            monthStart.toLocalDate(), 
+	            monthEnd.toLocalDate()
+	    );
 	    return createGeneralResponse(monthList);
 	}
 	

@@ -74,7 +74,11 @@ export default function AttendanceDailyPage() {
                     onSelect={(emp) => setSelectedEmployee(emp)}
                     type="daily"
                 />
-                <AdminCalendar />
+                <AdminCalendar 
+                    selectedEmployee={selectedEmployee}
+                    currentDate={currentDate}
+                    type="daily"
+                />
             </div>
         </main>
     );
