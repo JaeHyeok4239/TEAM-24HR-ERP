@@ -25,7 +25,7 @@ export default function AttendanceUserPage(){
                 const [y, m] = currentDate.split('.'); 
                 const formattedDate = `${y}-${m.padStart(2, '0')}`;
                 
-                const response = await apiRequest(`/api/attendance/summary?yearMonth=${formattedDate}`);
+                const response = await apiRequest(`/api/attendance/monthly/summary?yearMonth=${formattedDate}`);
                 const data = await response.json();
                 
                 setStats(data);

@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,14 +17,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hr24.attendance.dto.AdminAttendanceDetailResponseDto;
+import com.hr24.attendance.dto.AttendanceCombinedSummaryDto;
 import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.AttendanceResultDto;
+import com.hr24.attendance.dto.AttendanceSummaryDto;
 import com.hr24.attendance.dto.AttendanceCorrectionRecordDto;
 import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
+import com.hr24.attendance.dto.MonthlyAttendanceListResponseDto;
 import com.hr24.attendance.dto.WorkplaceDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
 import com.hr24.attendance.entity.AttendanceLog;
@@ -67,13 +72,14 @@ public class AttendanceService{
 	private final AttendanceCalculator attendanceCalculator;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
 	private final HolidayRepository holidayRepository;
+	private List<AttendanceDetailResponseDto> attendanceList;
 	
 	// 시간 관련 API 테스트용 메서드
 	private final boolean IS_TEST_MODE = false; 
 	public LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분
-	        return LocalDateTime.of(2026, 6, 29, 9, 0); 
+	        return LocalDateTime.of(2026, 6, 1, 9, 0); 
 	    }
 	    return LocalDateTime.now();
 	}
@@ -697,22 +703,23 @@ public class AttendanceService{
     }
 	
 	// 일용직 1명의 월별 통계 - 근태 상태 횟수 체크
-	public AttendanceResponse createDailyWorkerResponse(List<AttendanceResult> monthList) {
+	public AttendanceResponse createDailyWorkerResponse(List<AttendanceLogsDaily> logList) {
 		// 카운트 계산
-		Map<String, Long> counts = monthList.stream()
-			    .collect(Collectors.groupingBy(
-			        r -> r.getAttendanceStatus() != null ? r.getAttendanceStatus().name() : "NULL",
-			        Collectors.counting()
-			    )); 
+		long workCount = logList.stream()
+	            .filter(log -> "Y".equals(log.getIsAttended()))
+	            .count();
+		
         // DTO 리스트 변환
-        List<AttendanceResultDto> dtoList = monthList.stream()
-            .map(AttendanceResultDto::new)
-            .collect(Collectors.toList());
+		List<DailyAttendanceDetailResponseDto> dtoList = logList.stream()
+		        .map(log -> DailyAttendanceDetailResponseDto.builder()
+		            .workplaceName(log.getWorkplace() != null ? log.getWorkplace().getWorkplaceName() : "미지정")
+		            .build())
+		        .collect(Collectors.toList());
         
         // 응답 객체 생성 및 반환
-        AttendanceResponse response = new AttendanceResponse();
-        response.setWorkCount(counts.getOrDefault(AttendanceStatus.WORK.name(), 0L).intValue());
-        response.setAttendanceList(dtoList); // 전체 목록
+		AttendanceResponse response = new AttendanceResponse();
+	    response.setWorkCount((int) workCount);
+	    response.setAttendanceList(dtoList);
 		
 		return response;
 	}
@@ -734,19 +741,134 @@ public class AttendanceService{
 		LocalDateTime monthStart = yearMonth.atDay(1).atStartOfDay();
 	    LocalDateTime monthEnd = yearMonth.atEndOfMonth().atTime(LocalTime.MAX);
 
-		// 한 달 근태 기록 목록
-	    List<AttendanceResult> monthList = attendanceResultRepository.findByEmployeeWithUser(
-	    	    targetUser, 
-	    	    monthStart.toLocalDate(), 
-	    	    monthEnd.toLocalDate()
-	    	);
-	    
+		// 일용직 조회
 	    if (targetUser.getEmploymentType() == EmploymentType.DAILY) {
-	        return createDailyWorkerResponse(monthList);
+	        // 기존에 findAllWithEmployeeByWorkDateBetween 등을 사용하거나, 
+	        // repository에 해당 범위 조회 메서드가 없다면 추가하여 사용하세요.
+	        List<AttendanceLogsDaily> dailyLogs = attendanceLogDailyRepository.findAllWithEmployeeByWorkDateBetween(
+	                monthStart.toLocalDate(), monthEnd.toLocalDate())
+	                .stream()
+	                .filter(log -> log.getEmployee().getEmployeeId().equals(targetId))
+	                .collect(Collectors.toList());
+	        
+	        return createDailyWorkerResponse(dailyLogs);
 	    }
+	    List<AttendanceResult> monthList = attendanceResultRepository.findByEmployeeWithUser(
+	            targetUser, 
+	            monthStart.toLocalDate(), 
+	            monthEnd.toLocalDate()
+	    );
 	    return createGeneralResponse(monthList);
 	}
 	
+	// active 모든 직원 monthly 통계
+	@Transactional(readOnly = true)
+	public MonthlyAttendanceListResponseDto getMonthlyAttendanceSummary(YearMonth yearMonth) {
+	    LocalDate start = yearMonth.atDay(1);
+	    LocalDate end = yearMonth.atEndOfMonth();
 
+	    // 전체 Active 직원 조회
+	    List<User> activeUsers = userRepository.findAll().stream()
+	            .filter(u -> UserStatus.ACTIVE.equals(u.getStatus()))
+	            .toList();
+
+	    // 정규직/일용직 조회 및 map 변환
+	    Map<Long, List<AttendanceResult>> regularMap = attendanceResultRepository
+	            .findAllWithEmployeeByWorkDateBetween(start, end)
+	            .stream()
+	            .collect(Collectors.groupingBy(r -> r.getEmployee().getEmployeeId()));
+	    Map<Long, List<AttendanceLogsDaily>> dailyMap = attendanceLogDailyRepository
+	            .findAllWithEmployeeByWorkDateBetween(start, end)
+	            .stream()
+	            .collect(Collectors.groupingBy(log -> log.getEmployee().getEmployeeId()));
+	    
+	    // DTO 빌드
+	    List<MonthlyAttendanceListResponseDto.EmployeeStats> statsList = activeUsers.stream()
+	            .map(user -> {
+	                if (user.getEmploymentType() == EmploymentType.DAILY) {
+	                    // 일용직 계산(Work count만 집계)
+	                    long workCount = dailyMap.getOrDefault(user.getEmployeeId(), Collections.emptyList()).stream()
+	                            .filter(l -> "Y".equals(l.getIsAttended())).count();
+	                    return buildStats(user, (int)workCount, 0, 0, 0);
+	                } else {
+	                    // 정규직 계산(기존 로직 재활용)
+	                    List<AttendanceResult> results = regularMap.getOrDefault(user.getEmployeeId(), Collections.emptyList());
+	                    Map<AttendanceStatus, Long> counts = results.stream()
+	                            .collect(Collectors.groupingBy(r -> r.getAttendanceStatus() != null ? r.getAttendanceStatus() : AttendanceStatus.READY, Collectors.counting()));
+	                    
+	                    return buildStats(user, 
+	                            (int)(counts.getOrDefault(AttendanceStatus.WORK, 0L) + counts.getOrDefault(AttendanceStatus.OUT, 0L)),
+	                            counts.getOrDefault(AttendanceStatus.LATE, 0L).intValue(),
+	                            counts.getOrDefault(AttendanceStatus.ABSENT, 0L).intValue(),
+	                            counts.getOrDefault(AttendanceStatus.LEAVE, 0L).intValue());
+	                }
+	            })
+	            .collect(Collectors.toList());
+
+	    return MonthlyAttendanceListResponseDto.builder()
+	            .yearMonth(yearMonth)
+	            .totalActiveEmployees(activeUsers.size())
+	            .employeeStatsList(statsList)
+	            .build();
+	}
+
+	// 빌더 코드 중복 방지용 헬퍼 메서드
+	private MonthlyAttendanceListResponseDto.EmployeeStats buildStats(User user, int work, int late, int absent, int leave) {
+	    return MonthlyAttendanceListResponseDto.EmployeeStats.builder()
+	            .employeeId(user.getEmployeeId())
+	            .name(user.getName())
+	            .departmentName(user.getDepartment() != null ? user.getDepartment().getDepartmentName() : "미정")
+	            .workCount(work)
+	            .lateCount(late)
+	            .absentCount(absent)
+	            .leaveCount(leave)
+	            .build();
+	}
+	
+	// active 모든 직원 day 통계
+	@Transactional(readOnly = true)
+	public AttendanceCombinedSummaryDto getDailyAttendanceSummary(LocalDate date) {
+	    // 정규직 근태 결과 조회
+	    List<AttendanceResult> regularResults = attendanceResultRepository.findAllByWorkDate(date);
+	    
+	    // 일용직 ID 리스트 조회
+	    List<Long> dailyEmployeeIds = hrEmployeeQueryService.findEmployees(null, UserStatus.ACTIVE, EmploymentType.DAILY, null)
+	            .stream()
+	            .map(EmployeeListResponseDto::getEmployeeId)
+	            .collect(Collectors.toList());
+	            
+	    // ID 리스트 사용해 일용직 근태 기록 조회
+	    List<AttendanceLogsDaily> dailyLogs = !dailyEmployeeIds.isEmpty() 
+	            ? attendanceLogDailyRepository.findByEmployeeIdAndWorkDate(dailyEmployeeIds, date)
+	            : Collections.emptyList();
+
+	    // 정규직 카운트 
+	    Map<AttendanceStatus, Long> regularCounts = regularResults.stream()
+	            .collect(Collectors.groupingBy(
+	                    AttendanceResult::getAttendanceStatus,
+	                    Collectors.counting()
+	            ));
+	    
+	    // 일용직 카운트
+	    long dailyWorkCount = dailyLogs.stream().filter(log -> "Y".equals(log.getIsAttended())).count();
+	    long dailyReadyCount = dailyEmployeeIds.size() - dailyWorkCount; // 전체 일용직 중 출근 안 한 인원
+	    
+	    Map<String, Object> response = new HashMap<>();
+
+	 // 통합 DTO 빌드
+	    return AttendanceCombinedSummaryDto.builder()
+	            .regular(AttendanceSummaryDto.builder()
+	                    .work(regularCounts.getOrDefault(AttendanceStatus.WORK, 0L) + regularCounts.getOrDefault(AttendanceStatus.OUT, 0L))
+	                    .late(regularCounts.getOrDefault(AttendanceStatus.LATE, 0L))
+	                    .absent(regularCounts.getOrDefault(AttendanceStatus.ABSENT, 0L))
+	                    .leave(regularCounts.getOrDefault(AttendanceStatus.LEAVE, 0L))
+	                    .ready(regularCounts.getOrDefault(AttendanceStatus.READY, 0L))
+	                    .build())
+	            .daily(AttendanceSummaryDto.builder()
+	                    .work(dailyWorkCount)
+	                    .ready(dailyReadyCount)
+	                    .build())
+	            .build();
+	}
 	
 }

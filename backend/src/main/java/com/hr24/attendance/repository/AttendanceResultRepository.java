@@ -20,6 +20,9 @@ import com.hr24.employee.enums.UserStatus;
 
 public interface AttendanceResultRepository extends JpaRepository<AttendanceResult, Long>{
 	
+	// 스케줄러
+	boolean existsByWorkDate(LocalDate workDate);
+	
 	// 한 명 조회
 	Optional<AttendanceResult> findByEmployeeAndWorkDate(User employee, LocalDate workDate);
 	
