@@ -175,7 +175,15 @@ public enum ErrorCode {
 	SCHEDULE_ACCESS_DENIED(
 			HttpStatus.FORBIDDEN,
 			"등록 권한이 없습니다. 다시 선택해주세요."),
-	
+
+	MEETING_ACCESS_DENIED(
+			HttpStatus.FORBIDDEN,
+			"팀장 회의는 차장 이상만 등록할 수 있습니다."),
+
+	MEETING_COMPANY_ACCESS_DENIED(
+			HttpStatus.FORBIDDEN,
+			"전사 회의는 ADMIN만 등록할 수 있습니다."),
+
 	INVALID_TOKEN(
 			HttpStatus.UNAUTHORIZED,
 			"유효하지 않은 토큰입니다."),

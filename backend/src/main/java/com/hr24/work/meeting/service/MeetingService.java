@@ -12,7 +12,10 @@ import com.hr24.employee.entity.User;
 import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.DepartmentRepository;
 import com.hr24.employee.repository.UserRepository;
+import com.hr24.global.exception.BusinessException;
+import com.hr24.global.exception.ErrorCode;
 import com.hr24.work.meeting.dto.DepartmentSimpleResponse;
+import com.hr24.work.meeting.dto.EmployeeSimpleResponse;
 import com.hr24.work.meeting.dto.MeetingRoomResponse;
 import com.hr24.work.meeting.dto.ParticipantResponse;
 import com.hr24.work.meeting.dto.ReservationRequest;
@@ -32,6 +35,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MeetingService {
 
+    // 팀장 회의(MANAGER) 등록 가능한 최소 직급 sortOrder - 차장(5) 이상
+    private static final int MIN_MANAGER_MEETING_SORT_ORDER = 5;
+
     private final MeetingRoomRepository meetingRoomRepository;
     private final RoomReservationRepository reservationRepository;
     private final ReservationParticipantRepository participantRepository;
@@ -43,6 +49,14 @@ public class MeetingService {
     public List<DepartmentSimpleResponse> getAllDepartments() {
         return departmentRepository.findAll().stream()
                 .map(DepartmentSimpleResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    // ACTIVE 상태인 직원 전체 목록 반환 (회의 참석자 선택용)
+    public List<EmployeeSimpleResponse> getAllEmployees() {
+        return userRepository.findAll().stream()
+                .filter(u -> u.getStatus() == UserStatus.ACTIVE)
+                .map(EmployeeSimpleResponse::from)
                 .collect(Collectors.toList());
     }
 
@@ -72,9 +86,22 @@ public class MeetingService {
 
     // 예약 생성 - 시간 중복 체크 후 예약 및 참석자 저장
     @Transactional
-    public ReservationResponse createReservation(String loginId, ReservationRequest request) {
+    public ReservationResponse createReservation(String loginId, boolean isAdmin, ReservationRequest request) {
         User user = userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+
+        // 팀장 회의는 차장 이상만 등록 가능
+        if ("MANAGER".equals(request.getMeetingType())) {
+            Integer sortOrder = user.getPosition() != null ? user.getPosition().getSortOrder() : null;
+            if (sortOrder == null || sortOrder < MIN_MANAGER_MEETING_SORT_ORDER) {
+                throw new BusinessException(ErrorCode.MEETING_ACCESS_DENIED);
+            }
+        }
+
+        // 전사 회의는 ADMIN만 등록 가능
+        if ("COMPANY".equals(request.getMeetingType()) && !isAdmin) {
+            throw new BusinessException(ErrorCode.MEETING_COMPANY_ACCESS_DENIED);
+        }
 
         MeetingRoom room = meetingRoomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회의실입니다."));
@@ -162,6 +189,20 @@ public class MeetingService {
                 "회의실 예약 완료",
                 room.getRoomName() + " 예약이 완료되었습니다 (" + request.getStartTime() + "~" + request.getEndTime() + ")"
             ));
+
+            // 초대된 참석자 개인 알림 (예약자 본인 제외)
+            if (request.getParticipantIds() != null) {
+                request.getParticipantIds().stream()
+                        .filter(id -> !id.equals(user.getEmployeeId()))
+                        .forEach(id -> userRepository.findById(id).ifPresent(participant ->
+                                notificationService.sendPersonalNotification(participant.getLoginId(),
+                                    new NotificationMessage(
+                                        "MEETING_INVITE",
+                                        "회의 참석 요청",
+                                        user.getName() + "님이 회의에 초대했습니다: " + request.getTitle() + " (" + timeInfo + ")"
+                                    ))
+                        ));
+            }
         } catch (Exception e) {
             // 알림 실패는 예약에 영향 없음
         }

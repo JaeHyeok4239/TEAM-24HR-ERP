@@ -1,5 +1,6 @@
 import MyDocument from "@/components/approval/DocumentList";
 import AttendancePage from "@/components/dashboard/AttendancePage";
+import ScheduleMiniCalendar from "@/components/dashboard/ScheduleMiniCalendar";
 
 export default function MainPage() {
   return (
@@ -9,7 +10,7 @@ export default function MainPage() {
           <AttendancePage />
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
-          {/* 일정 캘린더 */}
+          <ScheduleMiniCalendar />
         </div>
         {/* MyDocument는 아래로 전체 폭 */}
         <div className="lg:col-span-3 bg-white rounded-xl border border-slate-200 p-4">

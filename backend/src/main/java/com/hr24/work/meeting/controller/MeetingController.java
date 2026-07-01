@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hr24.work.meeting.dto.DepartmentSimpleResponse;
+import com.hr24.work.meeting.dto.EmployeeSimpleResponse;
 import com.hr24.work.meeting.dto.MeetingRoomResponse;
 import com.hr24.work.meeting.dto.ReservationRequest;
 import com.hr24.work.meeting.dto.ReservationResponse;
@@ -39,6 +40,13 @@ public class MeetingController {
     @GetMapping("/departments")
     public ResponseEntity<List<DepartmentSimpleResponse>> getDepartments() {
         return ResponseEntity.ok(meetingService.getAllDepartments());
+    }
+
+    // 직원 전체 목록 조회 (회의 참석자 선택용)
+    @Operation(summary = "직원 목록 조회", description = "회의 참석자 선택을 위한 ACTIVE 상태 전체 직원 목록을 반환합니다.")
+    @GetMapping("/employees")
+    public ResponseEntity<List<EmployeeSimpleResponse>> getEmployees() {
+        return ResponseEntity.ok(meetingService.getAllEmployees());
     }
 
     // 사용 가능한 회의실 목록 조회
@@ -72,7 +80,9 @@ public class MeetingController {
             Authentication authentication,
             @RequestBody ReservationRequest request) {
         String loginId = authentication.getName();
-        return ResponseEntity.ok(meetingService.createReservation(loginId, request));
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        return ResponseEntity.ok(meetingService.createReservation(loginId, isAdmin, request));
     }
 
     // 예약 취소 - 예약자 본인 또는 ADMIN만 가능
