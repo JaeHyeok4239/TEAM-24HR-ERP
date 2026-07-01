@@ -5,6 +5,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import { ChevronLeft } from "lucide-react";
 import { apiRequest } from "@/lib/api";
 
 const INIT_FORM = {
@@ -196,9 +197,10 @@ export default function ScheduleCalendar() {
           {currentView === "timeGridWeek" && (
             <button
               onClick={handleBackToMonth}
-              className="ml-2 text-blue-600 hover:underline"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 border rounded hover:bg-gray-50"
             >
-              ← 월별로 돌아가기
+              <ChevronLeft className="w-4 h-4" />
+              월별로 돌아가기
             </button>
           )}
         </div>
