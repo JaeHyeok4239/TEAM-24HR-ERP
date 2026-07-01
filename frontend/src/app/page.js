@@ -1,5 +1,4 @@
-import AttendanceAction from '@/components/dashboard/AttendanceAction';
-import AttendanceMap from '@/components/dashboard/AttendanceMap';
+import AttendancePage from '@/components/dashboard/AttendancePage';
 
 export default function MainPage() {
   return (
@@ -9,12 +8,7 @@ export default function MainPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col gap-3">
         {/* 지도 영역 */}
         <div className="w-full h-75">
-          <AttendanceMap />
-        </div>
-        
-        {/* 버튼 영역 */}
-        <div className="w-full">
-          <AttendanceAction />
+          <AttendancePage />
         </div>
       </div>
         <div className="grid gap-4">
