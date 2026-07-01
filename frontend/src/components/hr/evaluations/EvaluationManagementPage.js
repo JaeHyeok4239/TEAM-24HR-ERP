@@ -514,9 +514,7 @@ export default function EvaluationManagementPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 px-8 py-8">
-      <div className="mx-auto max-w-[1500px] space-y-6">
-        <PageHeader />
-
+      <div className="mx-auto max-w-[1700px] space-y-6">
         <div className="flex gap-2 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
           {TABS.map((tab) => {
             const selected = activeTab === tab.value;
@@ -541,6 +539,15 @@ export default function EvaluationManagementPage() {
         {activeTab === "manage" && (
           <div className="grid grid-cols-[360px_1fr] gap-6">
             <section className="space-y-4">
+              <SelectedPeriodActionCard
+                selectedPeriod={selectedPeriod}
+                targetCount={targets.length}
+                isSaving={isSaving}
+                onCreateTargets={handleCreateTargets}
+                onOpen={handleOpenPeriod}
+                onClose={handleClosePeriod}
+              />
+
               <Card>
                 <CardTitle
                   icon={<CalendarDays size={17} />}
@@ -578,9 +585,7 @@ export default function EvaluationManagementPage() {
                         key={period.evaluationPeriodId}
                         type="button"
                         onClick={() =>
-                          setSelectedPeriodId(
-                            String(period.evaluationPeriodId),
-                          )
+                          setSelectedPeriodId(String(period.evaluationPeriodId))
                         }
                         className={`w-full rounded-lg border px-4 py-3 text-left transition ${
                           String(selectedPeriodId) ===
@@ -599,8 +604,7 @@ export default function EvaluationManagementPage() {
 
                         <p className="mt-2 text-xs opacity-75">
                           {period.evaluationYear}년{" "}
-                          {HALF_TYPE_LABELS[period.halfType] ??
-                            period.halfType}
+                          {HALF_TYPE_LABELS[period.halfType] ?? period.halfType}
                         </p>
 
                         <p className="mt-1 text-xs opacity-75">
@@ -612,15 +616,6 @@ export default function EvaluationManagementPage() {
                   )}
                 </div>
               </Card>
-
-              <SelectedPeriodActionCard
-                selectedPeriod={selectedPeriod}
-                targetCount={targets.length}
-                isSaving={isSaving}
-                onCreateTargets={handleCreateTargets}
-                onOpen={handleOpenPeriod}
-                onClose={handleClosePeriod}
-              />
             </section>
 
             <section>
@@ -735,21 +730,6 @@ export default function EvaluationManagementPage() {
           onConfirm={handleConfirmEvaluation}
         />
       )}
-    </div>
-  );
-}
-
-function PageHeader() {
-  return (
-    <div className="flex items-end justify-between gap-4">
-      <div>
-        <p className="text-sm font-semibold text-slate-500">인사관리</p>
-        <h1 className="mt-1 text-2xl font-bold text-slate-950">인사평가</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          반기별 평가를 운영하고, 확정된 점수를 기준으로 진급심사 대상자를
-          조회합니다.
-        </p>
-      </div>
     </div>
   );
 }
