@@ -3,9 +3,11 @@
 import { useRef, useState, useEffect } from "react";
 import { useDateNavigation } from "@/hooks/useDateNavigation";
 import { getHrEmployeesRequest } from "@/services/hrEmployeeService";
+import { apiRequest } from "@/lib/api";
 import PageHeader from '@/components/attendance/PageHeader';
 import SummaryDaily from "@/components/attendance/admin/SummaryDaily";
 import AttendanceEmployeeList from "@/components/attendance/admin/AttendanceEmployeeList";
+import AdminCalendar from "@/components/attendance/admin/AdminCalendar";
 
 export default function AttendanceRegularPage() {
     const [employees, setEmployees] = useState([]);
@@ -13,23 +15,40 @@ export default function AttendanceRegularPage() {
     const calendarRef = useRef(null);
     const { currentDate } = useDateNavigation();
 
-    // getHrEmployeesRequest API 호출
+    // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
-        const fetchEmployees = async () => {
+        const fetchData = async () => {
             setIsLoading(true);
             try {
-                // 정규직 직원만 조회하도록 지정
-                const data = await getHrEmployeesRequest({ employmentType: 'REGULAR' });
-                setEmployees(data);
+                // 직원 목록 가져오기
+                const empData = await getHrEmployeesRequest({ employmentType: 'REGULAR' });
+                
+                // 월별 근태 조회 가져오기
+                const statsData = await apiRequest(`/api/attendance/summary-monthly-all?yearMonth=${currentDate.substring(0, 7)}`)
+                    .then(res => res.json());
+
+                // 데이터 합치기
+                const mergedEmployees = empData.map(emp => {
+                    const stats = statsData.employeeStatsList.find(s => s.employeeId === emp.employeeId);
+                    return {
+                        ...emp,
+                        workCount: stats?.workCount || 0,
+                        lateCount: stats?.lateCount || 0,
+                        absentCount: stats?.absentCount || 0,
+                        leaveCount: stats?.leaveCount || 0
+                    };
+                });
+
+                setEmployees(mergedEmployees);
             } catch (error) {
-                console.error("직원 목록을 불러오는데 실패했습니다:", error);
+                console.error("데이터 로딩 실패:", error);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchEmployees();
-    }, []); // 빈 배열을 넣어 컴포넌트 마운트 시 1회 실행
+        fetchData();
+    }, [currentDate]);
 
     return (
         <main className="h-screen p-4">
@@ -57,9 +76,7 @@ export default function AttendanceRegularPage() {
                     onSelect={(emp) => setSelectedEmployee(emp)}
                     type="regular"
                 />
-                {/* <AttendanceDetailPanel 
-                    employee={selectedEmployee} 
-                /> */}
+                <AdminCalendar />
             </div>
         </main>
     );

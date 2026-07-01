@@ -27,7 +27,7 @@ export default function AttendanceEmployeeList({ employees = [], isLoading, onSe
                 <td colSpan="4" className="py-10 text-center text-slate-400">데이터를 불러오는 중</td>
               </tr>
             ) : employees.map((emp) => (
-              <tr key={emp.employeeId} className="hover:bg-slate-50 transition-colors text-sm">
+              <tr key={emp.employeeId} className="hover:bg-slate-100 transition-colors text-sm">
                 <td className="px-6 py-4 font-semibold text-slate-900">{emp.name}</td>
                 {/* 정규직일 때만 나오는 필드 */}
                 {type === 'regular' && (
@@ -37,12 +37,13 @@ export default function AttendanceEmployeeList({ employees = [], isLoading, onSe
                     </>
                 )}
                 <td className="px-6 py-4 flex justify-center">
-                  <AttendanceSummaryCell
-                    work={emp.workCount} 
-                    late={emp.lateCount} 
-                    absent={emp.absentCount} 
-                    leave={emp.leaveCount} 
-                  />
+                    <AttendanceSummaryCell
+                        type={type}
+                        work={emp.workCount} 
+                        late={emp.lateCount} 
+                        absent={emp.absentCount} 
+                        leave={emp.leaveCount} 
+                    />
                 </td>
               </tr>
             ))}

@@ -5,11 +5,11 @@ const SummaryDaily = ({ date, type = 'regular' }) => {
     const [summaryData, setSummaryData] = useState(null);
     const [error, setError] = useState(null);
 
-
+    // api 호출
     useEffect(() => {
         const fetchSummary = async (targetDate) => {
             try {
-                const response = await apiRequest(`/api/attendance/summary-daily?date=${targetDate}`, {
+                const response = await apiRequest(`/api/attendance/summary-daily-all?date=${targetDate}`, {
                     method: "GET",
                 });
                 const data = await response.json();

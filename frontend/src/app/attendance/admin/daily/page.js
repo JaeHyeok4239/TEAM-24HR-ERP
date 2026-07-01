@@ -3,33 +3,50 @@
 import { useRef, useState, useEffect } from "react";
 import { useDateNavigation } from "@/hooks/useDateNavigation";
 import { getHrEmployeesRequest } from "@/services/hrEmployeeService";
+import { apiRequest } from "@/lib/api";
 import PageHeader from '@/components/attendance/PageHeader';
 import SummaryDaily from "@/components/attendance/admin/SummaryDaily";
 import AttendanceEmployeeList from "@/components/attendance/admin/AttendanceEmployeeList";
+import AdminCalendar from "@/components/attendance/admin/AdminCalendar";
 
 export default function AttendanceDailyPage() {
     const [employees, setEmployees] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
     const calendarRef = useRef(null);
     const { currentDate } = useDateNavigation();
 
-    // getHrEmployeesRequest API 호출
+    // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
-        const fetchEmployees = async () => {
+        const fetchData = async () => {
             setIsLoading(true);
             try {
-                // 일용직 직원만 조회
-                const data = await getHrEmployeesRequest({ employmentType: 'DAILY' });
-                setEmployees(data);
+                // 일용직 직원 목록 조회
+                const empData = await getHrEmployeesRequest({ employmentType: 'DAILY' });
+                
+                // 해당 날짜의 일용직 근태 데이터 조회
+                const statsData = await apiRequest(`/api/attendance/summary-monthly-all?yearMonth=${currentDate.substring(0, 7)}`)
+                    .then(res => res.json());
+
+                // 데이터 합치기
+                const mergedEmployees = empData.map(emp => {
+                    const stats = statsData.employeeStatsList.find(s => s.employeeId === emp.employeeId);
+                    return {
+                        ...emp,
+                        workCount: stats?.workCount || 0,
+                    };
+                });
+
+                setEmployees(mergedEmployees);
             } catch (error) {
-                console.error("직원 목록을 불러오는데 실패했습니다:", error);
+                console.error("데이터 로딩 실패:", error);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchEmployees();
-    }, []); // 빈 배열을 넣어 컴포넌트 마운트 시 1회 실행
+        fetchData();
+    }, [currentDate]);
 
     return (
         <main className="h-screen p-4">
@@ -57,9 +74,7 @@ export default function AttendanceDailyPage() {
                     onSelect={(emp) => setSelectedEmployee(emp)}
                     type="daily"
                 />
-                {/* <AttendanceDetailPanel 
-                    employee={selectedEmployee} 
-                /> */}
+                <AdminCalendar />
             </div>
         </main>
     );
