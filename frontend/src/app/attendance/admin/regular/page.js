@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { useDateNavigation } from "@/hooks/useDateNavigation";
 import PageHeader from '@/components/attendance/PageHeader';
+import SummaryDaily from "@/components/attendance/SummaryDaily";
 
 export default function AttendanceRegularPage() {
     const calendarRef = useRef(null);
@@ -21,7 +22,7 @@ export default function AttendanceRegularPage() {
             
             {/* body */}
             <div className="mt-4">
-                <p>정규직 근태 관리</p>
+                <SummaryDaily date={currentDate} type="regular" />
             </div>
         </main>
     );
