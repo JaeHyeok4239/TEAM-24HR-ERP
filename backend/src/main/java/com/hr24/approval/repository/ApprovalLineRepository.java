@@ -12,49 +12,36 @@ import com.hr24.approval.entity.ApprovalLine;
 import com.hr24.document.entity.DocumentType;
 import com.hr24.employee.entity.Department;
 
-public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long>{
-	
+public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long> {
+
 	// 문서타입 + 부서별 결재선
-	List<ApprovalLine> findByDocumentTypeAndDepartmentOrderByStepOrderAsc(
-	    DocumentType documentType, Department department);
+	List<ApprovalLine> findByDocumentTypeAndDepartmentOrderByStepOrderAsc(DocumentType documentType,
+			Department department);
 
 	// 문서타입 + 공통 결재선 (부서 null)
-	List<ApprovalLine> findByDocumentTypeAndDepartmentIsNullOrderByStepOrderAsc(
-	    DocumentType documentType);
-	
-	//문서 종류 + 부서
-	List<ApprovalLine> findByDepartmentAndDocumentTypeOrderByStepOrderAsc(
-	        Department department,
-	        DocumentType documentType
-	);
-	
-	//내 부서로 조회
-	
-	//검색(유형 + 부서 + 키워드)
+	List<ApprovalLine> findByDocumentTypeAndDepartmentIsNullOrderByStepOrderAsc(DocumentType documentType);
+
+	// 문서 종류 + 부서
+	List<ApprovalLine> findByDepartmentAndDocumentTypeOrderByStepOrderAsc(Department department,
+			DocumentType documentType);
+
+	// 내 부서로 조회
+
+	// 검색(유형 + 부서 + 키워드)
 	@Query("""
 		    select al
 		    from ApprovalLine al
-		    where (:departmentId is null
-		           or al.department.departmentId = :departmentId)
-		      and (:documentType is null
-		           or al.documentType.typeId = :documentType)
-		      and (:keyword is null
-		           or al.approver.name like concat('%', :keyword, '%'))
-		    order by al.department.departmentId,
-		             al.documentType.typeId,
-		             al.stepOrder
-		""")
-		Page<ApprovalLine> search(
-		        @Param("departmentId") Long departmentId,
-		        @Param("documentType") Long documentType,
-		        @Param("keyword") String keyword,
-		        Pageable pageable
-		);
-	
-	//중복 확인
-	boolean existsByDocumentTypeAndDepartmentAndStepOrder(
-		    DocumentType documentType,
-		    Department department,
-		    Integer stepOrder
-		);
+		    left join al.approver ap
+		    left join al.department d
+		    left join al.documentType dt
+		    where (:keyword is null
+		           or ap.name like concat('%', :keyword, '%')
+		           or d.departmentName like concat('%', :keyword, '%')
+		           or dt.typeName like concat('%', :keyword, '%'))
+		    order by al.approvalLineId asc
+		    """)
+		Page<ApprovalLine> search(@Param("keyword") String keyword, Pageable pageable);
+	// 중복 확인
+	boolean existsByDocumentTypeAndDepartmentAndStepOrder(DocumentType documentType, Department department,
+			Integer stepOrder);
 }

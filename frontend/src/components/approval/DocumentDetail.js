@@ -20,14 +20,16 @@ import { Button } from "../ui/button";
 import { documentSchemas } from "@/schema/DocumentSchema";
 import Header from "../common/Header";
 import { useAuthStore } from "@/store/authStore";
+import Swal from "sweetalert2";
 
 export default function DocumentDetail({ documentId }) {
   const [document, setDocument] = useState(null);
   const router = useRouter();
   const userInfo = useAuthStore((state) => state.userInfo);
   const loginId = userInfo?.loginId;
-  const [canApprove, setCanApprove] = useState(false);
+  const currentUserId = userInfo?.employeeId;
   const [comment, setComment] = useState("");
+  const isOwner = document?.requesterId === currentUserId;
 
   useEffect(() => {
     const loadData = async () => {
@@ -52,26 +54,26 @@ export default function DocumentDetail({ documentId }) {
     }
   }, [documentId]);
 
-  useEffect(() => {
-    if (!documentId) return;
-    const check = async () => {
-      const res = await apiRequest(`/api/approval/${documentId}/can-approve`, {
-        method: "GET",
-      });
-      const data = await res.json();
-      setCanApprove(data);
-    };
-    check();
-  }, [documentId]);
-
   //결재 승인
   const handleApprove = useCallback(async () => {
-    if (!confirm("승인하시겠습니까?")) return;
-    await apiRequest(`/api/approval/${documentId}/approve`, {
-      method: "POST",
-      body: JSON.stringify({ action: "APR", comment }),
+    const result = await Swal.fire({
+      title: "결재 승인",
+      text: "결재를 승인하시겠습니까?",
+      icon: "success",
+      showCancelButton: true,
+      cancelButtonColor: "#C8D8E5",
+      confirmButtonColor: "#759EBD",
+      confirmButtonText: "승인",
+      cancelButtonText: "취소",
     });
-    router.push("/approval/pending");
+
+    if (result.isConfirmed) {
+      await apiRequest(`/api/approval/${documentId}/approve`, {
+        method: "POST",
+        body: JSON.stringify({ action: "APR", comment }),
+      });
+      router.push("/approval/pending");
+    }
   }, [documentId, comment]);
 
   const handleReject = useCallback(async () => {
@@ -93,11 +95,17 @@ export default function DocumentDetail({ documentId }) {
     return <>로딩중</>;
   }
 
-  // 본인 문서 여부
-  const isOwner = document?.requesterLoginId === loginId;
-
-  // 본인 + 임시저장
-  const canEdit = isOwner && document?.documentStatus === "TMP";
+  // 결재자 여부
+  const canApprove = document.approvalHistories?.some(
+    (h) =>
+      h.approvalStatus === "PND" &&
+      h.stepOrder === document.currentStep &&
+      Number(h.approverId) === Number(currentUserId),
+  );
+  console.log(document.approvalHistories);
+  console.log(canApprove);
+  console.log("currentUserId", currentUserId);
+  console.log("currentStep", document.currentStep);
 
   return (
     <>
@@ -207,12 +215,13 @@ export default function DocumentDetail({ documentId }) {
                   </>
                 )}
 
-                {document.documentStatus === "REQ" && document.documentVersion === 1 && (
-                  <>
-                    <Clock size={32} className="text-gray-300" />
-                    <p className="text-sm">결재 진행 중입니다</p>
-                  </>
-                )}
+                {document.documentStatus === "REQ" &&
+                  document.documentVersion === 1 && (
+                    <>
+                      <Clock size={32} className="text-gray-300" />
+                      <p className="text-sm">결재 진행 중입니다</p>
+                    </>
+                  )}
 
                 {document.documentStatus === "REQ" &&
                   document.documentVersion !== 1 && (
@@ -246,6 +255,9 @@ export default function DocumentDetail({ documentId }) {
                     <Button
                       size="sm"
                       className="mt-1  bg-[#ffc23f8c] hover:bg-[#ffae00]"
+                      onClick={() =>
+                        router.push(`/approval/document/${documentId}/edit`)
+                      }
                     >
                       수정
                     </Button>
@@ -255,23 +267,17 @@ export default function DocumentDetail({ documentId }) {
             </CardContent>
           </Card>
         </div>
-        {canEdit && (
-          <div className="flex gap-2 mt-4">
+
+        {isOwner && document.documentStatus === "TMP" && (
+          <div className="flex justify-end">
             <Button
-              size="sm"
-              className="bg-[#ffc23f8c] hover:bg-[#ffae00]"
+              size="lg"
+              className="mt-1  bg-[#ffc23f8c] hover:bg-[#ffae00]"
               onClick={() =>
                 router.push(`/approval/document/${documentId}/edit`)
               }
             >
               수정
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => handleDelete(documentId)}
-            >
-              삭제
             </Button>
           </div>
         )}

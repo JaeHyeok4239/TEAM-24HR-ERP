@@ -23,6 +23,7 @@ import {
   ROLES,
   HR_MANAGE_ROLES,
   HR_VIEW_ROLES,
+  DEFAULT_APR_ROLES,
   filterNavItemsByRole,
 } from "@/lib/roles";
 
@@ -55,15 +56,15 @@ const NAV_ITEMS = [
     label: "근태 관리",
     children: [
       { href: "/attendance/my", label: "내 근태 현황" },
-      { 
-        href: "/attendance/admin/regular", 
+      {
+        href: "/attendance/admin/regular",
         label: "정규직 근태 관리",
-        allowedRoles: [ROLES.ADMIN, ROLES.ATTENDANCE]
+        allowedRoles: [ROLES.ADMIN, ROLES.ATTENDANCE],
       },
-      { 
-        href: "/attendance/admin/daily", 
+      {
+        href: "/attendance/admin/daily",
         label: "일용직 근태 관리",
-        allowedRoles: [ROLES.ADMIN, ROLES.ATTENDANCE]
+        allowedRoles: [ROLES.ADMIN, ROLES.ATTENDANCE],
       },
     ],
   },
@@ -113,11 +114,19 @@ const NAV_ITEMS = [
     icon: CheckCircle,
     label: "전자 결재",
     children: [
+      { href: "/approval/document/write", label: "문서 작성" },
       { href: "/approval/document", label: "내 문서함" },
-      { href: "/approval/write", label: "문서 작성" },
       { href: "/approval/pending", label: "결재함" },
-      { href: "/approval/lines", label: "결재선 관리" },
-      { href: "/approval/delegate", label: "대리 결재 관리" },
+      {
+        href: "/approval/lines",
+        label: "결재선 관리",
+        allowedRoles: HR_MANAGE_ROLES,
+      },
+      {
+        href: "/approval/delegate",
+        label: "대리 결재 관리",
+        allowedRoles: DEFAULT_APR_ROLES,
+      },
     ],
   },
 ];
@@ -135,8 +144,8 @@ export default function MainMenu() {
 
   // 현재 열린 부모 메뉴의 href를 단일 상태로 관리
   const [openMenu, setOpenMenu] = useState(() => {
-    const active = NAV_ITEMS.find(
-      (item) => item.children?.some((c) => pathname === c.href)
+    const active = NAV_ITEMS.find((item) =>
+      item.children?.some((c) => pathname === c.href),
     );
     return active?.href ?? null;
   });
@@ -154,8 +163,20 @@ export default function MainMenu() {
   return (
     <Sidebar collapsible="none" className="w-46 bg-[#1a2f4e] border-r-0">
       <SidebarHeader>
-        <div className="flex items-center p-2">
-          <span className="font-bold text-white">24HR</span>
+        <div className="flex items-center gap-1 pl-1 pr-3">
+          <img
+            src="/hr24-logo-theme.png"
+            alt="Logo"
+            className="h-15 w-auto -ml-1 shrink-0 mr-3"
+          />
+          <div className="flex items-baseline gap-0.5">
+            <span className="text-xl font-extrabold tracking-tight text-white">
+              24
+            </span>
+            <span className="text-xl font-extrabold tracking-tight text-[#a9e4d5]">
+              HR
+            </span>
+          </div>
         </div>
       </SidebarHeader>
 

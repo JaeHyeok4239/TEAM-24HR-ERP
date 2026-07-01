@@ -36,26 +36,13 @@ public class ApprovalController {
 
 	private final ApprovalService approvalService;
 	
-	
-	//결재자 검증
-	@GetMapping("/{documentId}/can-approve")
-	public ResponseEntity<Boolean> canApprove(
-	    @PathVariable("documentId") Long documentId,
-	    Authentication authInfo) {
-	    
-	    String loginId = authInfo.getName();
-	    return ResponseEntity.ok(approvalService.canApprove(loginId, documentId));
-	}
-	
 	// 결재선 조회(추후 페이지 적용)
 	@GetMapping("/line")
 	public ResponseEntity<Page<ApprovalResponseDto.ApprovalLineDto>> lineList(
-	        @RequestParam(required = false, value = "department_id") Long departmentId,
-	        @RequestParam(required = false, value = "document_type") Long documentType,
 	        @RequestParam(required = false, value = "keyword") String keyword,
 	        @PageableDefault(size = 10, sort = "approvalLineId", direction = Sort.Direction.DESC) Pageable pageable) {
 
-	    return ResponseEntity.ok(approvalService.listOrSearchApprovalLines(departmentId, documentType, keyword, pageable));
+	    return ResponseEntity.ok(approvalService.listOrSearchApprovalLines(keyword, pageable));
 	}
 	
 

@@ -25,7 +25,6 @@ const INPUT_TYPE_MAP = {
 export function useDocumentSchema(typeId) {
   const [fields, setFields] = useState(null); // null = 로딩중, [] = 스키마없음
   const [isLoading, setIsLoading] = useState(false);
-
   useEffect(() => {
     if (!typeId) return;
 
@@ -35,8 +34,21 @@ export function useDocumentSchema(typeId) {
         const res = await apiRequest(`/api/doctype/${typeId}/schema`, {
           method: "GET",
         });
+
+        // 404 등 실패 응답은 조용히 무시
+        if (!res.ok) {
+          setFields([]);
+          return;
+        }
+
         const data = await res.json();
-        console.log(data);
+
+        // schema 자체가 없거나 fields가 없으면 무시
+        if (!data?.schema?.fields) {
+          setFields([]);
+          return;
+        }
+
         const mapped = data.schema.fields.map((f) => ({
           name: f.name,
           label: LABEL_MAP[f.name] ?? f.name,
@@ -50,7 +62,7 @@ export function useDocumentSchema(typeId) {
         }));
         setFields(mapped);
       } catch (e) {
-        console.error("fail", e);
+        // 네트워크 에러 등도 조용히 무시
         setFields([]);
       } finally {
         setIsLoading(false);
