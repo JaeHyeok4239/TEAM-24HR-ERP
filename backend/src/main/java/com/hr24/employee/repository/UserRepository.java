@@ -49,7 +49,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
 			""")
 	List<User> searchHrEmployees(@Param("departmentId") Long departmentId, @Param("status") UserStatus status,
 			@Param("employmentType") EmploymentType employmentType, @Param("keyword") String keyword);
-
+	
+	//직원 선택용 
+	@Query("""
+	        select u from User u
+	        LEFT JOIN FETCH u.department d
+	        LEFT JOIN FETCH u.position p
+	        where u.status = 'ACTIVE'
+	            and (:keyword is null
+	                or u.name like CONCAT('%', :keyword, '%')
+	                or d.departmentName like CONCAT('%', :keyword, '%')
+	                or p.positionName like CONCAT('%', :keyword, '%'))
+	        """)
+	List<User> searchSimpleEmployees(@Param("keyword") String keyword);
+	
 	// 직원 상세 조회
 	@Query("""
 			SELECT u

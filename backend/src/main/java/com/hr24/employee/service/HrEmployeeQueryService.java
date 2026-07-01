@@ -54,7 +54,15 @@ public class HrEmployeeQueryService {
 				.map(EmployeeListResponseDto::from)
 				.toList();
 	}
-
+	
+	public List<EmployeeListResponseDto> findSimpleEmployees(String keyword) {
+		String normalizedKeyword = normalizeKeyword(keyword);
+		return userRepository.searchSimpleEmployees(normalizedKeyword)
+				.stream()
+				.map(EmployeeListResponseDto::from)
+				.toList();
+	}
+	
 	public EmployeeDetailResponseDto findEmployeeDetail(Long employeeId) {
 		User user = userRepository.findByEmployeeIdWithDepartmentAndPosition(employeeId)
 				.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

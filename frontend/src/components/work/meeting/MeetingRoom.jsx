@@ -14,7 +14,7 @@ for (let h = 7; h <= 19; h++) {
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MONTHS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 
-const INIT_FORM = { roomId: "", title: "", startTime: "", endTime: "", purpose: "", meetingType: "DEPT", invitedDeptIds: [] };
+const INIT_FORM = { roomId: "", title: "", startTime: "", endTime: "", purpose: "", meetingType: "DEPT", invitedDeptIds: [], participantIds: [] };
 
 const MEETING_TYPE_OPTIONS = [
   { value: "DEPT",    label: "부서 간 회의", desc: "선택한 부서에게 알림" },
@@ -48,6 +48,7 @@ export default function MeetingRoom() {
   const [error, setError] = useState("");
   const [detailReservation, setDetailReservation] = useState(null);
   const [departments, setDepartments] = useState([]);
+  const [employees, setEmployees] = useState([]);
 
   // 회의실 목록
   useEffect(() => {
@@ -62,6 +63,14 @@ export default function MeetingRoom() {
     apiRequest("/api/meeting/departments")
       .then((r) => r.json())
       .then(setDepartments)
+      .catch(() => {});
+  }, []);
+
+  // 직원 목록 (참석자 선택용)
+  useEffect(() => {
+    apiRequest("/api/meeting/employees")
+      .then((r) => r.json())
+      .then(setEmployees)
       .catch(() => {});
   }, []);
 
@@ -130,7 +139,7 @@ export default function MeetingRoom() {
           startTime: form.startTime,
           endTime: form.endTime,
           purpose: form.purpose,
-          participantIds: [],
+          participantIds: form.participantIds,
           meetingType: form.meetingType,
           invitedDeptIds: form.meetingType === "DEPT" ? form.invitedDeptIds : [],
         }),
@@ -139,8 +148,8 @@ export default function MeetingRoom() {
       setForm(INIT_FORM);
       fetchReservations(selectedDate);
       fetchMyReservations();
-    } catch {
-      setError("예약에 실패했습니다.");
+    } catch (err) {
+      setError(err.message || "예약에 실패했습니다.");
     } finally {
       setSaving(false);
     }
@@ -466,6 +475,14 @@ export default function MeetingRoom() {
                     <span className="text-gray-800 whitespace-pre-wrap">{detailReservation.purpose}</span>
                   </>
                 )}
+                {detailReservation.participants?.length > 0 && (
+                  <>
+                    <span className="text-gray-400">참석자</span>
+                    <span className="text-gray-800">
+                      {detailReservation.participants.map((p) => p.userName).join(", ")}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-6">
@@ -490,31 +507,33 @@ export default function MeetingRoom() {
 
       {/* 예약 모달 */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-[640px] max-w-full max-h-[90vh] overflow-y-auto shadow-xl">
             <h2 className="text-lg font-semibold mb-4">회의실 예약</h2>
             <div className="flex flex-col gap-3">
-              <div>
-                <label className="text-sm text-gray-600">회의실</label>
-                <select
-                  value={form.roomId}
-                  onChange={(e) => setForm((f) => ({ ...f, roomId: e.target.value }))}
-                  className="w-full border rounded px-3 py-2 mt-1 text-sm"
-                >
-                  <option value="">선택해주세요</option>
-                  {rooms.filter((r) => r.status === "ACTIVE").map((r) => (
-                    <option key={r.roomId} value={r.roomId}>{r.roomName}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm text-gray-600">날짜</label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  readOnly
-                  className="w-full border rounded px-3 py-2 mt-1 text-sm bg-gray-50"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm text-gray-600">회의실</label>
+                  <select
+                    value={form.roomId}
+                    onChange={(e) => setForm((f) => ({ ...f, roomId: e.target.value }))}
+                    className="w-full border rounded px-3 py-2 mt-1 text-sm"
+                  >
+                    <option value="">선택해주세요</option>
+                    {rooms.filter((r) => r.status === "ACTIVE").map((r) => (
+                      <option key={r.roomId} value={r.roomId}>{r.roomName}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600">날짜</label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    readOnly
+                    className="w-full border rounded px-3 py-2 mt-1 text-sm bg-gray-50"
+                  />
+                </div>
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
@@ -552,7 +571,7 @@ export default function MeetingRoom() {
               </div>
               <div>
                 <label className="text-sm text-gray-600">회의 유형</label>
-                <div className="flex flex-col gap-1.5 mt-1">
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-1">
                   {MEETING_TYPE_OPTIONS.map((opt) => (
                     <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -570,32 +589,60 @@ export default function MeetingRoom() {
                 </div>
               </div>
 
-              {form.meetingType === "DEPT" && (
-                <div>
-                  <label className="text-sm text-gray-600">초대 부서 선택</label>
+              <div className="grid grid-cols-2 gap-3">
+                {form.meetingType === "DEPT" && (
+                  <div>
+                    <label className="text-sm text-gray-600">초대 부서 선택</label>
+                    <div className="mt-1 border rounded p-2 max-h-32 overflow-y-auto flex flex-col gap-1">
+                      {departments.map((dept) => (
+                        <label key={dept.departmentId} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={form.invitedDeptIds.includes(dept.departmentId)}
+                            onChange={(e) => {
+                              const id = dept.departmentId;
+                              setForm((f) => ({
+                                ...f,
+                                invitedDeptIds: e.target.checked
+                                  ? [...f.invitedDeptIds, id]
+                                  : f.invitedDeptIds.filter((d) => d !== id),
+                              }));
+                            }}
+                            className="accent-blue-600"
+                          />
+                          <span className="text-sm text-gray-700">{dept.departmentName}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className={form.meetingType === "DEPT" ? "" : "col-span-2"}>
+                  <label className="text-sm text-gray-600">참석자 선택</label>
                   <div className="mt-1 border rounded p-2 max-h-32 overflow-y-auto flex flex-col gap-1">
-                    {departments.map((dept) => (
-                      <label key={dept.departmentId} className="flex items-center gap-2 cursor-pointer">
+                    {employees.map((emp) => (
+                      <label key={emp.employeeId} className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={form.invitedDeptIds.includes(dept.departmentId)}
+                          checked={form.participantIds.includes(emp.employeeId)}
                           onChange={(e) => {
-                            const id = dept.departmentId;
+                            const id = emp.employeeId;
                             setForm((f) => ({
                               ...f,
-                              invitedDeptIds: e.target.checked
-                                ? [...f.invitedDeptIds, id]
-                                : f.invitedDeptIds.filter((d) => d !== id),
+                              participantIds: e.target.checked
+                                ? [...f.participantIds, id]
+                                : f.participantIds.filter((p) => p !== id),
                             }));
                           }}
                           className="accent-blue-600"
                         />
-                        <span className="text-sm text-gray-700">{dept.departmentName}</span>
+                        <span className="text-sm text-gray-700">{emp.name}</span>
+                        <span className="text-xs text-gray-400">{emp.departmentName}</span>
                       </label>
                     ))}
                   </div>
                 </div>
-              )}
+              </div>
 
               <div>
                 <label className="text-sm text-gray-600">회의 목적</label>
