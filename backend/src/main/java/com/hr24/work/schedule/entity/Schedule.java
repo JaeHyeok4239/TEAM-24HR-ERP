@@ -59,4 +59,7 @@ public class Schedule {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "reservation_id")
+    private Long reservationId;
 }

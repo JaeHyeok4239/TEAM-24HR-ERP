@@ -554,10 +554,12 @@ CREATE TABLE schedule (
     end_time        VARCHAR2(5)     NULL,
     location        VARCHAR2(200)   NULL,
     memo            CLOB            NULL,
+    reservation_id  NUMBER          NULL,
     created_at      TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
     CONSTRAINT pk_schedule PRIMARY KEY (schedule_id),
     CONSTRAINT fk_sched_user FOREIGN KEY (user_id)  REFERENCES users (employee_id),
     CONSTRAINT fk_sched_dept FOREIGN KEY (dept_id)  REFERENCES departments (department_id),
+    CONSTRAINT fk_sched_rsv  FOREIGN KEY (reservation_id) REFERENCES room_reservation (reservation_id),
     CONSTRAINT ck_sched_type CHECK (schedule_type IN ('PERSONAL', 'DEPT', 'COMPANY', 'PROJECT'))
 );
 
@@ -573,6 +575,7 @@ COMMENT ON COLUMN schedule.start_time   IS '시작 시간 (HH:MM)';
 COMMENT ON COLUMN schedule.end_time     IS '종료 시간 (HH:MM)';
 COMMENT ON COLUMN schedule.location     IS '장소';
 COMMENT ON COLUMN schedule.memo         IS '메모';
+COMMENT ON COLUMN schedule.reservation_id IS '회의실 예약 FK (예약 연동 일정일 때, room_reservation.reservation_id)';
 COMMENT ON COLUMN schedule.created_at   IS '등록일시';
 
 
