@@ -36,27 +36,18 @@ public class ApprovalService {
 	private final DocumentRepository documentRepository;
 	private final AttendanceProcessService attendanceProcessService;
 
-	// 결재자 검증
-	public boolean canApprove(String loginId, Long documentId) {
-		User approver = userRepository.findByLoginId(loginId)
-				.orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
-
-		return approvalHistoryRepository.existsByDocumentAndApproverAndStatusAndCurrentStep(documentId, approver, "PND");
-	}
-
 	// 결재선 조회
-	public Page<ApprovalResponseDto.ApprovalLineDto> listOrSearchApprovalLines(
-	        Long departmentId, Long documentType, String keyword, Pageable pageable) {
+	public Page<ApprovalResponseDto.ApprovalLineDto> listOrSearchApprovalLines(String keyword, Pageable pageable) {
 
-	    Page<ApprovalLine> lines;
+		Page<ApprovalLine> lines;
 
-	    if (departmentId == null && documentType == null && (keyword == null || keyword.isBlank())) {
-	        lines = approvalLineRepository.findAll(pageable);
-	    } else {
-	        lines = approvalLineRepository.search(departmentId, documentType, keyword, pageable);
-	    }
+		if (keyword == null || keyword.isBlank()) {
+			lines = approvalLineRepository.findAll(pageable);
+		} else {
+			lines = approvalLineRepository.search(keyword, pageable);
+		}
 
-	    return lines.map(ApprovalResponseDto.ApprovalLineDto::from);
+		return lines.map(ApprovalResponseDto.ApprovalLineDto::from);
 	}
 
 	public List<ApprovalResponseDto.ApprovalLineDto> ApprovalLineList() {

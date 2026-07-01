@@ -65,6 +65,7 @@ public class ApprovalResponseDto {
 		private Integer stepOrder;
 		private Long defaultApprover;
 		private String approverName;
+		private String approverPosition;
 		private Long departmentId;
 		private String departmentName;
 		
@@ -76,6 +77,7 @@ public class ApprovalResponseDto {
 					.stepOrder(approvalLine.getStepOrder())
 					.defaultApprover(approvalLine.getApprover().getEmployeeId())
 					.approverName(approvalLine.getApprover().getName())
+					.approverPosition(approvalLine.getApprover().getPosition().getPositionName())
 					.departmentId(approvalLine.getDepartment() != null ? approvalLine.getDepartment().getDepartmentId() : null)
 					.departmentName(approvalLine.getDepartment() != null ? approvalLine.getDepartment().getDepartmentName() : null)
 					.build();

@@ -58,8 +58,10 @@ public class DocumentResponseDto {
 		private String documentTitle;
 		private String documentStatus;
 		private String requester;
+		private Long requesterId;
 		private String processor;
 		private String rejectReason;
+		private Integer currentStep;
 		private Map<String, Object> documentContent;
 		@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 		private LocalDateTime requestedAt;
@@ -81,10 +83,12 @@ public class DocumentResponseDto {
 					.documentTitle(document.getDocumentTitle())
 					.documentStatus(document.getStatus())
 					.requester(document.getRequester().getName())
+					.requesterId(document.getRequester().getEmployeeId())
 					.processor(document.getProcessor() != null ? document.getProcessor().getName() : null)
 					.requestedAt(document.getCreatedAt())
 					.processedAt(document.getProcessedAt())
 					.rejectReason(document.getRejectReason())
+					.currentStep(document.getCurrentStep())
 					.documentContent(document.getDocumentContent())
 					.approvalHistories(approvalHistories)
 					.documentFileList(documentFileList == null ? Collections.emptyList() : documentFileList)

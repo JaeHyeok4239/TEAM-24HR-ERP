@@ -7,11 +7,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "../ui/pagination";
-
 export const CommonPagination = ({ page, setPage, totalPages }) => {
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i);
   const isFirst = page === 0;
   const isLast = page === totalPages - 1;
+
+  if (totalPages === 0) return null;
 
   return (
     <Pagination>
