@@ -17,12 +17,10 @@ import { useAuthStore } from "@/store/authStore";
 import { hasAnyRole } from "@/lib/roles";
 import DocumentTypeFormModal from "./DocumentTypeFormModal";
 
-// TODO: 팀 roles 상수에 관리자 전용 역할 상수 있으면 그걸로 교체해주세요 (예: ADMIN_ROLES)
-const DOCTYPE_MANAGE_ROLES = ["ADMIN"];
 
 export default function DocumentTypeList() {
   const userInfo = useAuthStore((state) => state.userInfo);
-  const isAdmin = hasAnyRole(userInfo?.roles, DOCTYPE_MANAGE_ROLES);
+  const isAdmin = hasAnyRole(userInfo?.roles, HR_MANAGE_ROLES);
 
   const [typeList, setTypeList] = useState([]);
   const [searchTrigger, setSearchTrigger] = useState(0);
@@ -30,7 +28,6 @@ export default function DocumentTypeList() {
 
   useEffect(() => {
     const load = async () => {
-      // GET /api/doctype는 페이지네이션 없이 전체 List를 반환합니다.
       const res = await apiRequest("/api/doctype", { method: "GET" });
       const data = await res.json();
 
