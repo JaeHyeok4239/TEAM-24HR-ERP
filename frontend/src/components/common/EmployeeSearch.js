@@ -43,7 +43,7 @@ const getAvatarLabel = (name) => {
 };
 
 export default function EmployeeSearch({
-  employees,
+  employees = [],
   selectedEmployeeId,
   keyword,
   isLoading,

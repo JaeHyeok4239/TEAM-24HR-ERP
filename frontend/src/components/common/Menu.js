@@ -127,6 +127,11 @@ const NAV_ITEMS = [
         label: "대리 결재 관리",
         allowedRoles: DEFAULT_APR_ROLES,
       },
+      {
+        href: "/approval/document/type",
+        label: "문서 종류 관리",
+        allowedRoles: HR_MANAGE_ROLES,
+      },
     ],
   },
 ];

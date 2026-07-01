@@ -44,6 +44,15 @@ public class ApprovalManagementController {
 		return ResponseEntity.ok(ApprovalResponseDto.ApprovalLineDto.from(approvalLine));
 	}
 	
+	@PreAuthorize("hasAnyRole('ADMIN', 'HR_LEAD')")
+	@PatchMapping("/line/{lineId}")
+	public ResponseEntity<ApprovalResponseDto.ApprovalLineDto> updateApprover(
+	        @PathVariable("lineId") Long lineId,
+	        @RequestBody ApprovalManagementDto.ApproverUpdateDto requestDto) {
+	    ApprovalLine updated = approvalManagementService.updateApprover(lineId, requestDto.getApproverId());
+	    return ResponseEntity.ok(ApprovalResponseDto.ApprovalLineDto.from(updated));
+	}
+	
 	//대리 결재 조회
 	@GetMapping("/delegate")
 	public ResponseEntity<Page<ApprovalResponseDto.ApprovalDelegateDto>> listDelegates(
