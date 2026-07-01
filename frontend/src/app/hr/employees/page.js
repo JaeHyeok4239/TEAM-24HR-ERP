@@ -16,8 +16,6 @@ import EmployeeDepartmentTree from "@/components/hr/employees/EmployeeDepartment
 import EmployeeDetailPanel from "@/components/hr/employees/EmployeeDetailPanel";
 import EmployeeListPanel from "@/components/hr/employees/EmployeeListPanel";
 
-import { Button } from "@/components/ui/button";
-
 const EMPLOYMENT_TYPE = {
   REGULAR: "REGULAR",
   DAILY: "DAILY",
@@ -257,53 +255,46 @@ export default function HrEmployeesPage() {
       <Header title="직원 목록" />
 
       <main className="p-6">
-        <div className="mb-4 flex items-center justify-end">
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => setIsCreateDialogOpen(true)}
-          >
-            + 새 직원
-          </Button>
-        </div>
-
         {errorMessage && (
           <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {errorMessage}
           </div>
         )}
 
-        <div className="grid h-[calc(100vh-168px)] min-h-[680px] grid-cols-[280px_360px_minmax(0,1fr)] gap-4">
-          <EmployeeDepartmentTree
-            departmentTree={departmentTree}
-            selectedDepartmentId={selectedDepartmentId}
-            selectedEmploymentType={selectedEmploymentType}
-            isLoading={isDepartmentTreeLoading}
-            onSelectAllEmployees={handleSelectAllEmployees}
-            onSelectDepartment={handleSelectDepartment}
-            onSelectDailyEmployees={handleSelectDailyEmployees}
-          />
+        <div className="h-[calc(100vh-128px)] min-h-[680px] overflow-x-auto">
+          <div className="grid h-full min-w-[1240px] grid-cols-[280px_340px_minmax(560px,1fr)] gap-4">
+            <EmployeeDepartmentTree
+              departmentTree={departmentTree}
+              selectedDepartmentId={selectedDepartmentId}
+              selectedEmploymentType={selectedEmploymentType}
+              isLoading={isDepartmentTreeLoading}
+              onSelectAllEmployees={handleSelectAllEmployees}
+              onSelectDepartment={handleSelectDepartment}
+              onSelectDailyEmployees={handleSelectDailyEmployees}
+            />
 
-          <EmployeeListPanel
-            employees={employees}
-            selectedEmployeeId={selectedEmployee?.employeeId}
-            keyword={keyword}
-            isLoading={isEmployeesLoading}
-            onKeywordChange={setKeyword}
-            onKeywordKeyDown={handleKeywordKeyDown}
-            onSearch={handleSearch}
-            onSelectEmployee={handleSelectEmployee}
-          />
+            <EmployeeListPanel
+              employees={employees}
+              selectedEmployeeId={selectedEmployee?.employeeId}
+              keyword={keyword}
+              isLoading={isEmployeesLoading}
+              onKeywordChange={setKeyword}
+              onKeywordKeyDown={handleKeywordKeyDown}
+              onSearch={handleSearch}
+              onSelectEmployee={handleSelectEmployee}
+              onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
+            />
 
-          <EmployeeDetailPanel
-            employee={selectedEmployee}
-            isLoading={isEmployeeDetailLoading}
-            onEmployeeUpdated={handleEmployeeUpdated}
-            options={{
-              departments: departmentOptions,
-              positions: positionOptions,
-            }}
-          />
+            <EmployeeDetailPanel
+              employee={selectedEmployee}
+              isLoading={isEmployeeDetailLoading}
+              onEmployeeUpdated={handleEmployeeUpdated}
+              options={{
+                departments: departmentOptions,
+                positions: positionOptions,
+              }}
+            />
+          </div>
         </div>
 
         <EmployeeCreateDialog

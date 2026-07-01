@@ -28,7 +28,12 @@ export default function HistoryTab({ employee }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const employeeId = employee?.employeeId;
-  const visibleHistories = employeeId ? histories : [];
+  const visibleHistories = employeeId
+    ? [...histories].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+    : [];
 
   useEffect(() => {
     if (!employeeId) {
@@ -51,8 +56,6 @@ export default function HistoryTab({ employee }) {
           setHistories(data);
         }
       } catch (error) {
-        console.error(error);
-
         if (!ignore) {
           alert(error.message || "인사 이력 조회 중 오류가 발생했습니다.");
         }

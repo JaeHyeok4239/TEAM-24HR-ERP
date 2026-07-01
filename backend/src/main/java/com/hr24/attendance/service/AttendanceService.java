@@ -23,6 +23,7 @@ import com.hr24.attendance.dto.AttendanceCorrectionRecordDto;
 import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
+import com.hr24.attendance.dto.WorkplaceDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
 import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceLogsDaily;
@@ -31,14 +32,10 @@ import com.hr24.attendance.repository.AttendanceCorrectionRepository;
 import com.hr24.attendance.repository.AttendanceLogDailyRepository;
 import com.hr24.attendance.repository.AttendanceLogRepository;
 import com.hr24.attendance.repository.AttendanceResultRepository;
-import com.hr24.attendance.repository.AttendanceThresholdRepository;
-import com.hr24.attendance.repository.AttendanceTimePolicyRepository;
 import com.hr24.attendance.repository.WorkplaceRepository;
 import com.hr24.attendance.utils.TimeUtils;
 import com.hr24.document.entity.Document;
-import com.hr24.document.entity.Leave;
 import com.hr24.document.repository.LeaveDateRepository;
-import com.hr24.document.repository.LeaveRepository;
 import com.hr24.employee.dto.hr.EmployeeListResponseDto;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.enums.EmploymentType;
@@ -64,27 +61,35 @@ public class AttendanceService{
 	private final AttendanceResultRepository attendanceResultRepository;
 	private final WorkplaceRepository workplaceRepository;
 	private final UserRepository userRepository;
-	private final LeaveRepository leaveRepository;
 	private final LeaveDateRepository leaveDateRepository;
 	private final AttendanceLogDailyRepository attendanceLogDailyRepository;
-	private final AttendanceTimePolicyRepository attendanceTimePolicyRepository;
-	private final AttendanceThresholdRepository attendanceThresholdRepository;
 	private final AttendanceCorrectionRepository attendanceCorrectionRepository;
 	private final AttendanceCalculator attendanceCalculator;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
-	private final AttendanceLogDailyRepository attendanceLogDatilyrepository;
 	private final HolidayRepository holidayRepository;
-	
-	private static final String FIXED_WORKPLACE_NAME = "HQ";
 	
 	// 시간 관련 API 테스트용 메서드
 	private final boolean IS_TEST_MODE = false; 
 	public LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분
-	        return LocalDateTime.of(2026, 6, 25, 9, 0); 
+	        return LocalDateTime.of(2026, 6, 29, 9, 0); 
 	    }
 	    return LocalDateTime.now();
+	}
+	
+	// 모든 근무지 읽어오기
+	@Transactional(readOnly = true)
+	public List<WorkplaceDto> getWorkplaces() {
+	    List<Workplace> workplaceList = workplaceRepository.findAll();
+
+	    return workplaceList.stream()
+	            .map(wp -> WorkplaceDto.builder()
+	                    .name(wp.getWorkplaceCode())
+	                    .latitude(wp.getLatitude())
+	                    .longitude(wp.getLongitude())
+	                    .build())
+	            .collect(Collectors.toList());
 	}
 	
 	// 매일 밤 오후 11시 배치 프로그램
@@ -676,7 +681,12 @@ public class AttendanceService{
         
         // 응답 객체 생성 및 반환
         AttendanceResponse response = new AttendanceResponse();
-        response.setWorkCount(counts.getOrDefault(AttendanceStatus.WORK.name(), 0L).intValue());
+        
+        // work+out 둘 다 출근 처리
+        Long workCount = counts.getOrDefault(AttendanceStatus.WORK.name(), 0L);
+        Long outCount = counts.getOrDefault(AttendanceStatus.OUT.name(), 0L);
+        response.setWorkCount((int)(workCount + outCount));
+        
         response.setLateCount(counts.getOrDefault(AttendanceStatus.LATE.name(), 0L).intValue());
         response.setEarlyLeaveCount(counts.getOrDefault(AttendanceStatus.EARLY_LEAVE.name(), 0L).intValue());
         response.setAbsentCount(counts.getOrDefault(AttendanceStatus.ABSENT.name(), 0L).intValue());

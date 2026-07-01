@@ -1,5 +1,11 @@
 import { useAuthStore } from "@/store/authStore";
 
+// TODO(auth-refactor)(추후/나중에 수정)
+// 배포/환경 분리를 위해 나중에 수정할것
+// 예시:
+// const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+// .env.local
+// NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
 const BASE_URL = "http://localhost:8080";
 
 const clearAuthAndRedirect = async () => {
@@ -134,6 +140,12 @@ export const apiRequest = async (url, options = {}) => {
 
   return response;
 };
+
+
+//axios 코드는 추후 삭제 예정 (추후/나중에)
+// 1. 프로젝트 전체에서 `import api from "@/lib/api"` 사용 여부 검색
+// 2. axios 기반 호출이 남아 있으면 apiRequest 기반으로 교체
+// 3. 교체 완료 후 axios import 및 default export 제거
 
 import axios from "axios";
 

@@ -12,6 +12,9 @@ export const useAuthStore = create((set) => ({
   login: (accessToken) => {
     localStorage.setItem("accessToken", accessToken);
 
+    //(추후/나중에 삭제)
+    localStorage.removeItem("refreshToken");
+
     set({
       accessToken,
       isAuthLoading: true,
@@ -38,6 +41,9 @@ export const useAuthStore = create((set) => ({
   logout: () => {
     localStorage.removeItem("accessToken");
 
+    //(추후/나중에 삭제)
+    localStorage.removeItem("refreshToken");
+
     set({
       isLogin: false,
       isAuthLoading: false,
@@ -49,6 +55,9 @@ export const useAuthStore = create((set) => ({
   // 새로고침 시 accessToken 복구
   initializeAuth: () => {
     const accessToken = localStorage.getItem("accessToken");
+
+    //(추후/나중에 삭제)
+    localStorage.removeItem("refreshToken");
 
     if (!accessToken) {
       set({

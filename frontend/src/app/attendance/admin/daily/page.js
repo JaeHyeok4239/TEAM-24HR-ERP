@@ -1,12 +1,26 @@
 "use client";
 
+import { useRef } from "react";
+import { useDateNavigation } from "@/hooks/useDateNavigation";
 import PageHeader from '@/components/attendance/PageHeader';
+import AttendanceCalendar from "@/components/attendance/AdminCalendar";
 
 export default function AttendanceDailyPage() {
+    const calendarRef = useRef(null);
+    const { currentDate } = useDateNavigation();
+
     return (
         <main className="h-screen p-4">
-            <PageHeader title="일용직 근태 관리" />
+            {/* 헤더 */}
+            <PageHeader 
+                title="일용직 근태 관리" 
+                currentDate={currentDate}
+                onPrev={() => calendarRef.current?.getApi().prev()}
+                onNext={() => calendarRef.current?.getApi().next()}
+                onToday={() => calendarRef.current?.getApi().today()}
+            />
             
+            {/* body */}
             <div className="mt-4">
                 <p>일용직 근태 관리</p>
             </div>

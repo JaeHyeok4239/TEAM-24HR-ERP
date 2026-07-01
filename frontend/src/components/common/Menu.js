@@ -56,8 +56,16 @@ const NAV_ITEMS = [
     label: "근태 관리",
     children: [
       { href: "/attendance/my", label: "내 근태 현황" },
-      { href: "/attendance/regular", label: "정규직 근태 관리" },
-      { href: "/attendance/daily", label: "일용직 근태 관리" },
+      { 
+        href: "/attendance/admin/regular", 
+        label: "정규직 근태 관리",
+        allowedRoles: [ROLES.ADMIN, ROLES.ATTENDANCE]
+      },
+      { 
+        href: "/attendance/admin/daily", 
+        label: "일용직 근태 관리",
+        allowedRoles: [ROLES.ADMIN, ROLES.ATTENDANCE]
+      },
     ],
   },
   {
@@ -139,7 +147,7 @@ export default function MainMenu() {
     try {
       await logoutRequest();
     } catch (error) {
-      console.error("로그아웃 API 호출 실패", error);
+      // 로그아웃 API가 실패해도 프론트 인증 상태는 초기화한다.
     } finally {
       authLogout();
     }

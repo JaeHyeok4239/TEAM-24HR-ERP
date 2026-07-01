@@ -115,7 +115,6 @@ export default function ClientLayout({ children }) {
         setUserInfo(userInfo);
       } catch (error) {
         // 5. 사용자 정보 조회 실패 시 인증 정보 초기화
-        console.error("로그인 상태 복구 실패:", error);
         authLogout();
       }
     };

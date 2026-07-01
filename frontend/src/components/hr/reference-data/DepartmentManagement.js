@@ -134,8 +134,6 @@ export default function DepartmentManagement() {
         }
       })
       .catch((error) => {
-        console.error("부서 목록 조회 실패:", error);
-
         if (!cancelled) {
           setNotice({
             type: "error",
@@ -284,8 +282,6 @@ export default function DepartmentManagement() {
       setModalError("");
       setForm(createInitialForm());
     } catch (error) {
-      console.error("부서 저장 실패:", error);
-
       const message =
         DEPARTMENT_ERROR_MESSAGES[error.code] ||
         error.message ||
@@ -388,7 +384,10 @@ export default function DepartmentManagement() {
 
               <tbody className="divide-y divide-slate-100">
                 {isLoading && (
-                  <EmptyRow colSpan={3} message="부서 목록을 불러오는 중입니다." />
+                  <EmptyRow
+                    colSpan={3}
+                    message="부서 목록을 불러오는 중입니다."
+                  />
                 )}
 
                 {!isLoading && departments.length === 0 && (
@@ -460,7 +459,8 @@ export default function DepartmentManagement() {
           </div>
 
           <p className="mt-3 text-xs text-slate-400">
-            항목을 선택한 뒤 수정 버튼을 눌러 부서명, 상위 부서, 사용 여부를 변경할 수 있습니다.
+            항목을 선택한 뒤 수정 버튼을 눌러 부서명, 상위 부서, 사용 여부를
+            변경할 수 있습니다.
           </p>
         </div>
       </section>
