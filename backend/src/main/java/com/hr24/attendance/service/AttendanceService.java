@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,10 +17,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hr24.attendance.dto.AdminAttendanceDetailResponseDto;
+import com.hr24.attendance.dto.AttendanceCombinedSummaryDto;
 import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.AttendanceResultDto;
+import com.hr24.attendance.dto.AttendanceSummaryDto;
 import com.hr24.attendance.dto.AttendanceCorrectionRecordDto;
 import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
@@ -747,6 +751,50 @@ public class AttendanceService{
 	    return createGeneralResponse(monthList);
 	}
 	
+	// active 모든 직원 일별 통계
+	@Transactional(readOnly = true)
+	public AttendanceCombinedSummaryDto getDailyAttendanceSummary(LocalDate date) {
+	    // 정규직 근태 결과 조회
+	    List<AttendanceResult> regularResults = attendanceResultRepository.findAllByWorkDate(date);
+	    
+	    // 일용직 ID 리스트 조회
+	    List<Long> dailyEmployeeIds = hrEmployeeQueryService.findEmployees(null, UserStatus.ACTIVE, EmploymentType.DAILY, null)
+	            .stream()
+	            .map(EmployeeListResponseDto::getEmployeeId)
+	            .collect(Collectors.toList());
+	            
+	    // ID 리스트 사용해 일용직 근태 기록 조회
+	    List<AttendanceLogsDaily> dailyLogs = !dailyEmployeeIds.isEmpty() 
+	            ? attendanceLogDailyRepository.findByEmployeeIdAndWorkDate(dailyEmployeeIds, date)
+	            : Collections.emptyList();
 
+	    // 정규직 카운트 
+	    Map<AttendanceStatus, Long> regularCounts = regularResults.stream()
+	            .collect(Collectors.groupingBy(
+	                    AttendanceResult::getAttendanceStatus,
+	                    Collectors.counting()
+	            ));
+	    
+	    // 일용직 카운트
+	    long dailyWorkCount = dailyLogs.stream().filter(log -> "Y".equals(log.getIsAttended())).count();
+	    long dailyReadyCount = dailyEmployeeIds.size() - dailyWorkCount; // 전체 일용직 중 출근 안 한 인원
+	    
+	    Map<String, Object> response = new HashMap<>();
+
+	 // 통합 DTO 빌드
+	    return AttendanceCombinedSummaryDto.builder()
+	            .regular(AttendanceSummaryDto.builder()
+	                    .work(regularCounts.getOrDefault(AttendanceStatus.WORK, 0L) + regularCounts.getOrDefault(AttendanceStatus.OUT, 0L))
+	                    .late(regularCounts.getOrDefault(AttendanceStatus.LATE, 0L))
+	                    .absent(regularCounts.getOrDefault(AttendanceStatus.ABSENT, 0L))
+	                    .leave(regularCounts.getOrDefault(AttendanceStatus.LEAVE, 0L))
+	                    .ready(regularCounts.getOrDefault(AttendanceStatus.READY, 0L))
+	                    .build())
+	            .daily(AttendanceSummaryDto.builder()
+	                    .work(dailyWorkCount)
+	                    .ready(dailyReadyCount)
+	                    .build())
+	            .build();
+	}
 	
 }

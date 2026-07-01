@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hr24.attendance.dto.AttendanceCombinedSummaryDto;
 import com.hr24.attendance.dto.AttendanceCorrectionRequestDto;
 import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
@@ -103,9 +104,7 @@ public class AttendanceController {
 		return ResponseEntity.ok().build();
 	}
 
-//	 일별 근태 상세 조회
-//	 관리자는 모든 사용자 조회 가능
-//	 일반 사용자는 본인 것만 조회 가능
+//	 1명 일별 근태 상세 조회
 	@PreAuthorize("isAuthenticated()")
 	@Operation(summary = "일별 근태 상세 조회", description = "관리자(정규직, 일용직) 혹은 본인 것만 조회 가능")
 	@GetMapping("/{employeeId}")
@@ -118,6 +117,18 @@ public class AttendanceController {
 		String loginId = authentication.getName();
 
 		return ResponseEntity.ok(attendanceService.getAttendanceDetail(loginId, employeeId, date, isAdmin));
+	}
+	
+	// active 직원 일별 근태 조회
+	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
+	@Operation(summary = "모든 직원 일별 근태 조회", description = "type에 따라 active인 직원들 일별 근태 통계 조회 가능")
+	@GetMapping("/summary-daily")
+	public ResponseEntity<AttendanceCombinedSummaryDto> getDailyAttendanceSummary(
+	        @RequestParam(name = "date", required = false) @DateTimeFormat(pattern = "yyyy.MM.dd") LocalDate date) {
+	    // date가 null이면 오늘 날짜를 기본값으로 사용
+	    LocalDate targetDate = (date != null) ? date : LocalDate.now();
+	    
+	    return ResponseEntity.ok(attendanceService.getDailyAttendanceSummary(targetDate));
 	}
 
 	// 일용직 명단 조회
@@ -159,6 +170,7 @@ public class AttendanceController {
 		return ResponseEntity.ok("정상적으로 퇴근 처리되었습니다.");
 	}
 
+	// 1명 월별 근태 조회
 	@PreAuthorize("isAuthenticated()")
 	@Operation(summary = "월별 근태 횟수 조회", description = "본인 또는 관리자가 사원의 월별 근태 횟수를 조회합니다. 관리자는 targetEmployeeId를 입력해 조회 가능합니다.")
 	@GetMapping("/summary")
@@ -176,5 +188,6 @@ public class AttendanceController {
 
 		return ResponseEntity.ok(response);
 	}
+	
 
 }
