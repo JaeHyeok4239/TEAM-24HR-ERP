@@ -14,7 +14,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Plus } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import { hasAnyRole } from "@/lib/roles";
+import { hasAnyRole, HR_MANAGE_ROLES } from "@/lib/roles";
 import DocumentTypeFormModal from "./DocumentTypeFormModal";
 
 
