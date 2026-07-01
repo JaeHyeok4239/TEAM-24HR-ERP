@@ -27,6 +27,7 @@ import com.hr24.attendance.dto.AttendanceCorrectionRecordDto;
 import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
+import com.hr24.attendance.dto.MonthlyAttendanceListResponseDto;
 import com.hr24.attendance.dto.WorkplaceDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
 import com.hr24.attendance.entity.AttendanceLog;
@@ -77,7 +78,7 @@ public class AttendanceService{
 	public LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분
-	        return LocalDateTime.of(2026, 6, 29, 9, 0); 
+	        return LocalDateTime.of(2026, 6, 1, 9, 0); 
 	    }
 	    return LocalDateTime.now();
 	}
@@ -751,7 +752,71 @@ public class AttendanceService{
 	    return createGeneralResponse(monthList);
 	}
 	
-	// active 모든 직원 일별 통계
+	// active 모든 직원 monthly 통계
+	@Transactional(readOnly = true)
+	public MonthlyAttendanceListResponseDto getMonthlyAttendanceSummary(YearMonth yearMonth) {
+	    LocalDate start = yearMonth.atDay(1);
+	    LocalDate end = yearMonth.atEndOfMonth();
+
+	    // 전체 Active 직원 조회
+	    List<User> activeUsers = userRepository.findAll().stream()
+	            .filter(u -> UserStatus.ACTIVE.equals(u.getStatus()))
+	            .toList();
+
+	    // 정규직/일용직 조회 및 map 변환
+	    Map<Long, List<AttendanceResult>> regularMap = attendanceResultRepository
+	            .findAllWithEmployeeByWorkDateBetween(start, end)
+	            .stream()
+	            .collect(Collectors.groupingBy(r -> r.getEmployee().getEmployeeId()));
+	    Map<Long, List<AttendanceLogsDaily>> dailyMap = attendanceLogDailyRepository
+	            .findAllWithEmployeeByWorkDateBetween(start, end)
+	            .stream()
+	            .collect(Collectors.groupingBy(log -> log.getEmployee().getEmployeeId()));
+	    
+	    // DTO 빌드
+	    List<MonthlyAttendanceListResponseDto.EmployeeStats> statsList = activeUsers.stream()
+	            .map(user -> {
+	                if (user.getEmploymentType() == EmploymentType.DAILY) {
+	                    // 일용직 계산(Work count만 집계)
+	                    long workCount = dailyMap.getOrDefault(user.getEmployeeId(), Collections.emptyList()).stream()
+	                            .filter(l -> "Y".equals(l.getIsAttended())).count();
+	                    return buildStats(user, (int)workCount, 0, 0, 0);
+	                } else {
+	                    // 정규직 계산(기존 로직 재활용)
+	                    List<AttendanceResult> results = regularMap.getOrDefault(user.getEmployeeId(), Collections.emptyList());
+	                    Map<AttendanceStatus, Long> counts = results.stream()
+	                            .collect(Collectors.groupingBy(r -> r.getAttendanceStatus() != null ? r.getAttendanceStatus() : AttendanceStatus.READY, Collectors.counting()));
+	                    
+	                    return buildStats(user, 
+	                            (int)(counts.getOrDefault(AttendanceStatus.WORK, 0L) + counts.getOrDefault(AttendanceStatus.OUT, 0L)),
+	                            counts.getOrDefault(AttendanceStatus.LATE, 0L).intValue(),
+	                            counts.getOrDefault(AttendanceStatus.ABSENT, 0L).intValue(),
+	                            counts.getOrDefault(AttendanceStatus.LEAVE, 0L).intValue());
+	                }
+	            })
+	            .collect(Collectors.toList());
+
+	    return MonthlyAttendanceListResponseDto.builder()
+	            .yearMonth(yearMonth)
+	            .totalActiveEmployees(activeUsers.size())
+	            .employeeStatsList(statsList)
+	            .build();
+	}
+
+	// 빌더 코드 중복 방지용 헬퍼 메서드
+	private MonthlyAttendanceListResponseDto.EmployeeStats buildStats(User user, int work, int late, int absent, int leave) {
+	    return MonthlyAttendanceListResponseDto.EmployeeStats.builder()
+	            .employeeId(user.getEmployeeId())
+	            .name(user.getName())
+	            .departmentName(user.getDepartment() != null ? user.getDepartment().getDepartmentName() : "미정")
+	            .workCount(work)
+	            .lateCount(late)
+	            .absentCount(absent)
+	            .leaveCount(leave)
+	            .build();
+	}
+	
+	// active 모든 직원 day 통계
 	@Transactional(readOnly = true)
 	public AttendanceCombinedSummaryDto getDailyAttendanceSummary(LocalDate date) {
 	    // 정규직 근태 결과 조회

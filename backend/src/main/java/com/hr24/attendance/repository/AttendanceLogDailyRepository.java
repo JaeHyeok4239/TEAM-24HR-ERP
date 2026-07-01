@@ -24,4 +24,10 @@ public interface AttendanceLogDailyRepository extends JpaRepository<AttendanceLo
     Optional<AttendanceLogsDaily> findOneByEmployeeIdAndWorkDate(
             @Param("employeeId") Long employeeId, 
             @Param("workDate") LocalDate workDate);
+	
+	// 날짜 범위 리스트 조회
+	@Query("SELECT a FROM AttendanceLogsDaily a JOIN FETCH a.employee WHERE a.workDate BETWEEN :start AND :end")
+	List<AttendanceLogsDaily> findAllWithEmployeeByWorkDateBetween(
+	        @Param("start") LocalDate start, 
+	        @Param("end") LocalDate end);
 }
