@@ -1,31 +1,18 @@
-import MyDocument from '@/components/approval/DocumentList';
-import AttendancePage from '@/components/dashboard/AttendancePage';
+import MyDocument from "@/components/approval/DocumentList";
+import AttendancePage from "@/components/dashboard/AttendancePage";
 
 export default function MainPage() {
   return (
     <div className="p-4 flex flex-col gap-4 h-full">
-      {/* 상단 2열 */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 h-1/2">
-        <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col gap-3">
-        {/* 지도 영역 */}
-        <div className="w-full h-75">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-4">
           <AttendancePage />
         </div>
-      </div>
-        <div className="grid gap-4">
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <h1>상단 영역 2</h1>
-          </div>
-        </div>
-        
-      </div>
-
-      {/* 하단 2열 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-1/2">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <h1>하단 영역 1</h1>
+          {/* 일정 캘린더 */}
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        {/* MyDocument는 아래로 전체 폭 */}
+        <div className="lg:col-span-3 bg-white rounded-xl border border-slate-200 p-4">
           <MyDocument />
         </div>
       </div>

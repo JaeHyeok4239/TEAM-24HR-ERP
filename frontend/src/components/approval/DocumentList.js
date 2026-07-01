@@ -95,33 +95,9 @@ export default function MyDocument() {
     return <div className="p-5">로딩 중...</div>;
   }
 
-  if (documentList.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 p-20 text-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center gap-3 py-10">
-            <FileText size={48} className="text-gray-300" />
-            <h2 className="text-lg font-semibold text-[#1a2f4e]">
-              작성한 문서가 없습니다
-            </h2>
-            <p className="text-sm text-gray-400">
-              새 문서를 작성하려면 아래 버튼을 클릭하세요
-            </p>
-            <Link href="/approval/document/write">
-              <Button className="mt-2 bg-[#1a2f4e] hover:bg-[#2a4a6e] gap-1">
-                <Plus size={16} />
-                문서 작성하기
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="flex flex-col xl:flex-row gap-4 p-5">
+      <div className="flex flex-col xl:flex-row gap-4 p-5 max-w-full">
         {/* 왼쪽: 문서 목록 */}
         <div className="flex-1 h-full">
           <Card
@@ -141,8 +117,28 @@ export default function MyDocument() {
                   <TabsTrigger value="tmp">임시 저장함</TabsTrigger>
                 </TabsList>
                 <TabsContent value="my" className={"p-4"}>
-                  <div className="flex-1 bg-[#ffffffbd] rounded-lg border-[#94abcaa1] flex-1 flex flex-col p-4 overflow-hidden">
-                    <Table className={"flex-1 h-[550px]"}>
+                  {documentList.length === 0 && selectedTab === "my" ? (
+                    <div className="flex flex-col items-center justify-center gap-4 p-20 text-center">
+                      <Card className="w-full max-w-md">
+                        <CardContent className="flex flex-col items-center gap-3 py-10">
+                          <FileText size={48} className="text-gray-300" />
+                          <h2 className="text-lg font-semibold text-[#1a2f4e]">
+                            작성한 문서가 없습니다
+                          </h2>
+                          <p className="text-sm text-gray-400">
+                            새 문서를 작성하려면 아래 버튼을 클릭하세요
+                          </p>
+                          <Link href="/approval/document/write">
+                            <Button className="mt-2 bg-[#1a2f4e] hover:bg-[#2a4a6e] gap-1">
+                              <Plus size={16} />
+                              문서 작성하기
+                            </Button>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  ):(<div className="flex-1 bg-[#ffffffbd] rounded-lg border-[#94abcaa1] flex flex-col p-4 overflow-hidden">
+                    <Table className={"flex-1 h-[550px] max-w-full"}>
                       <TableHeader className="bg-[#94abcaa1] h-1/10">
                         <TableRow className="text-[#1a2f4e]">
                           <TableHead className="font-bold text-center">
@@ -187,15 +183,37 @@ export default function MyDocument() {
                         {...{ page, setPage, totalPages, pageNumbers }}
                       />
                     </div>
-                  </div>
+                  </div>)}
                 </TabsContent>
                 <TabsContent value="tmp" className={"p-4"}>
-                  <div className="flex-1 bg-[#ffffffbd] rounded-lg border-[#94abcaa1] flex-1 flex flex-col p-4 overflow-hidden">
-                    <Table className={"flex-1 h-[550px]"}>
-                      <TableHeader className="bg-[#94abcaa1] h-1/10">
-                        <TableRow className="text-[#1a2f4e]">
-                          <TableHead className="font-bold text-center">
-                            문서 번호
+                  {documentList.length === 0 && selectedTab === "tmp" && (
+                    <div className="flex flex-col items-center justify-center gap-4 p-20 text-center">
+                      <Card className="w-full max-w-md">
+                        <CardContent className="flex flex-col items-center gap-3 py-10">
+                          <FileText size={48} className="text-gray-300" />
+                          <h2 className="text-lg font-semibold text-[#1a2f4e]">
+                            작성한 문서가 없습니다
+                          </h2>
+                          <p className="text-sm text-gray-400">
+                            새 문서를 작성하려면 아래 버튼을 클릭하세요
+                          </p>
+                          <Link href="/approval/document/write">
+                            <Button className="mt-2 bg-[#1a2f4e] hover:bg-[#2a4a6e] gap-1">
+                              <Plus size={16} />
+                              문서 작성하기
+                            </Button>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                  {documentList.length > 0 && (
+                    <div className="bg-[#ffffffbd] rounded-lg border-[#94abcaa1] flex-1 flex flex-col p-4 overflow-hidden">
+                      <Table className={"flex-1 h-[550px] max-w-full"}>
+                        <TableHeader className="bg-[#94abcaa1] h-1/10">
+                          <TableRow className="text-[#1a2f4e]">
+                            <TableHead className="font-bold text-center">
+                              문서 번호
                           </TableHead>
                           <TableHead className="font-bold text-center">
                             문서 종류
@@ -250,7 +268,7 @@ export default function MyDocument() {
                         {...{ page, setPage, totalPages, pageNumbers }}
                       />
                     </div>
-                  </div>
+                  </div>)}
                 </TabsContent>
               </Tabs>
             </CardContent>

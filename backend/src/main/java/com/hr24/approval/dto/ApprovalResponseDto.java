@@ -2,6 +2,7 @@ package com.hr24.approval.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hr24.approval.entity.ApprovalDelegate;
@@ -96,21 +97,30 @@ public class ApprovalResponseDto {
 		private LocalDate endDate;
 		private String reason;
 		private Long approvalLineId;
+		private String documentTypeName;
+		private String departmentName;
 		private String isActive;
 		
 		public static ApprovalDelegateDto from(ApprovalDelegate approvalDelegate) {
+			
+			ApprovalLine approvalLine = approvalDelegate.getApprovalLine();
+			
 			return ApprovalDelegateDto.builder()
-					.approvalDelegateId(approvalDelegate.getApprovalDelegateId())
-					.approverId(approvalDelegate.getApprover().getEmployeeId())
-					.approverName(approvalDelegate.getApprover().getName())
-					.delegateId(approvalDelegate.getDelegate().getEmployeeId())
-					.delegateName(approvalDelegate.getDelegate().getName())
-					.startDate(approvalDelegate.getStartDate())
-					.endDate(approvalDelegate.getEndDate())
-					.reason(approvalDelegate.getReason())
-					.approvalLineId(approvalDelegate.getApprovalLine().getApprovalLineId())
-					.isActive(approvalDelegate.getIsActive())
-					.build();
+		            .approvalDelegateId(approvalDelegate.getApprovalDelegateId())
+		            .approverId(approvalDelegate.getApprover().getEmployeeId())
+		            .approverName(approvalDelegate.getApprover().getName())
+		            .delegateId(approvalDelegate.getDelegate().getEmployeeId())
+		            .delegateName(approvalDelegate.getDelegate().getName())
+		            .startDate(approvalDelegate.getStartDate())
+		            .endDate(approvalDelegate.getEndDate())
+		            .reason(approvalDelegate.getReason())
+		            .approvalLineId(approvalLine.getApprovalLineId())
+		            .documentTypeName(approvalLine.getDocumentType().getTypeName())
+		            .departmentName(approvalLine.getDepartment() != null
+		                    ? approvalLine.getDepartment().getDepartmentName()
+		                    : "공통")
+		            .isActive(approvalDelegate.getIsActive())
+		            .build();
 		}
 		
 	}
