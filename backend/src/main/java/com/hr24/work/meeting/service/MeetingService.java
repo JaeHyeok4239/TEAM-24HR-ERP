@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.hr24.employee.entity.Department;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.DepartmentRepository;
@@ -28,6 +29,8 @@ import com.hr24.work.meeting.repository.ReservationParticipantRepository;
 import com.hr24.work.meeting.repository.RoomReservationRepository;
 import com.hr24.work.notification.dto.NotificationMessage;
 import com.hr24.work.notification.service.NotificationService;
+import com.hr24.work.schedule.entity.Schedule;
+import com.hr24.work.schedule.repository.ScheduleRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -44,6 +47,7 @@ public class MeetingService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final NotificationService notificationService;
+    private final ScheduleRepository scheduleRepository;
 
     // 부서 전체 목록 반환 (회의 초대 대상 선택용)
     public List<DepartmentSimpleResponse> getAllDepartments() {
@@ -135,6 +139,9 @@ public class MeetingService {
 
         reservationRepository.save(reservation);
 
+        // 회의 유형에 맞는 일정을 자동 생성해 일정관리 달력에도 노출
+        syncScheduleFromReservation(reservation, user);
+
         // 참석자 저장 - 예약자 본인은 주최자(1), 나머지는 참석자(0)로 구분
         if (request.getParticipantIds() != null) {
             for (Long participantId : request.getParticipantIds()) {
@@ -224,6 +231,50 @@ public class MeetingService {
 
         reservation.setStatus("CANCELLED");
         reservationRepository.save(reservation);
+
+        // 연동된 일정도 함께 삭제
+        scheduleRepository.findByReservationId(reservationId)
+                .ifPresent(scheduleRepository::delete);
+    }
+
+    // 아직 일정으로 동기화되지 않은 과거 확정 예약을 찾아 일괄 동기화 (앱 기동 시 자동 백필용)
+    @Transactional
+    public void syncMissingSchedules() {
+        reservationRepository.findConfirmedWithoutSchedule()
+                .forEach(reservation -> syncScheduleFromReservation(reservation, reservation.getUser()));
+    }
+
+    // 회의 유형(DEPT/MANAGER/COMPANY)에 따라 일정 유형을 매핑해 자동으로 일정을 생성
+    // DEPT → 예약자 부서 일정, MANAGER → 예약자 개인 일정, COMPANY → 전사 일정
+    private void syncScheduleFromReservation(RoomReservation reservation, User organizer) {
+        String scheduleType;
+        Department department = null;
+
+        if ("DEPT".equals(reservation.getMeetingType())) {
+            scheduleType = "DEPT";
+            department = organizer.getDepartment();
+        } else if ("COMPANY".equals(reservation.getMeetingType())) {
+            scheduleType = "COMPANY";
+        } else {
+            scheduleType = "PERSONAL";
+        }
+
+        Schedule schedule = Schedule.builder()
+                .user(organizer)
+                .department(department)
+                .title("[회의] " + reservation.getTitle())
+                .scheduleType(scheduleType)
+                .startDt(reservation.getRsvDate())
+                .endDt(reservation.getRsvDate())
+                .startTime(reservation.getStartTime())
+                .endTime(reservation.getEndTime())
+                .location(reservation.getMeetingRoom().getRoomName())
+                .memo(reservation.getPurpose())
+                .createdAt(LocalDateTime.now())
+                .reservationId(reservation.getReservationId())
+                .build();
+
+        scheduleRepository.save(schedule);
     }
 
     // 예약에 대한 참석자 목록을 ParticipantResponse로 변환하는 공통 메서드
