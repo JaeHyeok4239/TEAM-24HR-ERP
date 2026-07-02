@@ -6,7 +6,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
-const Calendar = forwardRef(({ onDatesSet }, ref) => {
+const Calendar = forwardRef(({ onDatesSet, events }, ref) => {
     return(
         <div className="h-full w-full bg-white rounded-lg shadow-sm overflow-hidden">
             <FullCalendar
@@ -15,6 +15,7 @@ const Calendar = forwardRef(({ onDatesSet }, ref) => {
                 headerToolbar={false} // 툴바 없애고 page에서 헤더에 버튼 추가
                 initialView="dayGridMonth"
                 datesSet={onDatesSet}
+                events={events}
 
                 height="100%" // 높이 자동 조절
                 expandRows={true}

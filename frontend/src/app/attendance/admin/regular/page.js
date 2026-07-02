@@ -8,6 +8,7 @@ import PageHeader from '@/components/attendance/PageHeader';
 import SummaryDaily from "@/components/attendance/admin/SummaryDaily";
 import AttendanceEmployeeList from "@/components/attendance/admin/AttendanceEmployeeList";
 import AdminCalendar from "@/components/attendance/admin/AdminCalendar";
+import { getMonthlyAttendanceStats, getMonthlyCalendarEvents, getStatusLabel, getStatusColor } from "@/services/attendanceService";
 
 export default function AttendanceRegularPage() {
     const [employees, setEmployees] = useState([]);
@@ -15,6 +16,8 @@ export default function AttendanceRegularPage() {
     const calendarRef = useRef(null);
     const { currentDate } = useDateNavigation(calendarRef);
     const [selectedEmployee, setSelectedEmployee] = useState(null); // 직원 선택
+    const [events, setEvents] = useState([]); // events 상태 추가
+    const [selectedStats, setSelectedStats] = useState(null);
 
     // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
@@ -51,6 +54,41 @@ export default function AttendanceRegularPage() {
         fetchData();
     }, [currentDate]);
 
+    // 달력 뱃지
+    useEffect(() => {
+        const fetchSelectedEmployeeData = async () => {
+            // 직원 선택이 해제되었을 때 초기화
+            if (!selectedEmployee || !currentDate) {
+                setEvents([]);
+                setSelectedStats(null);
+                return;
+            }
+
+            try {
+                const [y, m] = currentDate.split('.');
+                const formattedDate = `${y}-${m.padStart(2, '0')}`;
+                
+                const stats = await getMonthlyAttendanceStats(formattedDate, selectedEmployee.employeeId);
+                setSelectedStats(stats);
+
+                const calendarData = await getMonthlyCalendarEvents(formattedDate, selectedEmployee.employeeId);
+
+                const formattedEvents = (calendarData || []).map(item => ({
+                    title: getStatusLabel(item.status),
+                    start: item.date,
+                    backgroundColor: getStatusColor(item.status),
+                    borderColor: getStatusColor(item.status),
+                    classNames: ['attendance-badge']
+                }));
+
+                setEvents(formattedEvents);
+            } catch (error) {
+                console.error("데이터 로딩 실패:", error);
+            }
+        };
+        fetchSelectedEmployeeData();
+    }, [selectedEmployee, currentDate]);
+
     return (
         <main className="h-screen p-4">
             {/* 헤더 */}
@@ -81,6 +119,8 @@ export default function AttendanceRegularPage() {
                     selectedEmployee={selectedEmployee}
                     currentDate={currentDate}
                     type="regular"
+                    events={events}
+                    stats={selectedStats}
                 />
             </div>
         </main>

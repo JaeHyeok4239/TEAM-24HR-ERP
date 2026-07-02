@@ -23,6 +23,7 @@ import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.AttendanceResultDto;
 import com.hr24.attendance.dto.AttendanceSummaryDto;
+import com.hr24.attendance.dto.CalendarBadgeDto;
 import com.hr24.attendance.dto.AttendanceCorrectionRecordDto;
 import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
@@ -871,4 +872,17 @@ public class AttendanceService{
 	            .build();
 	}
 	
+	// 근태 상태와 달력 뱃지 연결용
+	public List<CalendarBadgeDto> getMonthlyCalendar(Long employeeId, YearMonth yearMonth) {
+        String formattedMonth = yearMonth.toString();
+        
+        List<AttendanceResult> results = attendanceResultRepository.findByEmployeeIdAndMonth(employeeId, formattedMonth);
+
+        return results.stream()
+            .map(result -> CalendarBadgeDto.builder()
+                .date(result.getWorkDate().toString())
+                .status(result.getAttendanceStatus().name())
+                .build())
+            .collect(Collectors.toList());
+    }
 }

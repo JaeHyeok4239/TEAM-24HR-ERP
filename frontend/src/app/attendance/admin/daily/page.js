@@ -8,6 +8,7 @@ import PageHeader from '@/components/attendance/PageHeader';
 import SummaryDaily from "@/components/attendance/admin/SummaryDaily";
 import AttendanceEmployeeList from "@/components/attendance/admin/AttendanceEmployeeList";
 import AdminCalendar from "@/components/attendance/admin/AdminCalendar";
+import {getMonthlyCalendarEvents } from "@/services/attendanceService";
 
 export default function AttendanceDailyPage() {
     const [employees, setEmployees] = useState([]);
@@ -15,6 +16,8 @@ export default function AttendanceDailyPage() {
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const calendarRef = useRef(null);
     const { currentDate } = useDateNavigation();
+    const [events, setEvents] = useState([]);
+    const [selectedStats, setSelectedStats] = useState(null);
 
     // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
@@ -48,6 +51,41 @@ export default function AttendanceDailyPage() {
         fetchData();
     }, [currentDate]);
 
+    // 달력 뱃지
+    useEffect(() => {
+        const fetchSelectedEmployeeData = async () => {
+            // 직원 선택이 해제되었을 때 초기화
+            if (!selectedEmployee || !currentDate) {
+                setEvents([]);
+                setSelectedStats(null);
+                return;
+            }
+
+            try {
+                const [y, m] = currentDate.split('.');
+                const formattedDate = `${y}-${m.padStart(2, '0')}`;
+
+                const calendarData = await getMonthlyCalendarEvents(formattedDate, selectedEmployee.employeeId);
+                console.log("서버에서 받은 원본 데이터:", calendarData);
+
+                const formattedEvents = (calendarData || [])
+                    .filter(item => item.status === 'WORK' || item.status === 'OUT')
+                    .map(item => ({
+                        title: '출근',
+                        start: item.date,
+                        backgroundColor: '#10b981',
+                        borderColor: '#10b981',
+                        classNames: ['attendance-badge']
+                    }));
+                console.log("최종 전달할 events 데이터:", formattedEvents);
+                setEvents(formattedEvents);
+            } catch (error) {
+                console.error("데이터 로딩 실패:", error);
+            }
+        };
+        fetchSelectedEmployeeData();
+    }, [selectedEmployee, currentDate]);
+
     return (
         <main className="h-screen p-4">
             {/* 헤더 */}
@@ -78,6 +116,8 @@ export default function AttendanceDailyPage() {
                     selectedEmployee={selectedEmployee}
                     currentDate={currentDate}
                     type="daily"
+                    events={events}
+                    stats={selectedStats}
                 />
             </div>
         </main>

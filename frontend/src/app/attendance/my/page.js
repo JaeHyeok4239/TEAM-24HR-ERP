@@ -5,17 +5,20 @@ import { useDateNavigation } from "@/hooks/useDateNavigation";
 import Calendar from '@/components/attendance/Calendar';
 import PageHeader from '@/components/attendance/PageHeader';
 import { apiRequest } from "@/lib/api";
+import { getStatusLabel, getStatusColor } from "@/services/attendanceService";
 
 export default function AttendanceUserPage(){
     const calendarRef = useRef(null);
     const [stats, setStats] = useState(null); // 월별 근태 조회
+    const [events, setEvents] = useState([]); // 달력 이벤트 상태 추가
+
     // stats 없을 시 0
     const displayStats = stats || { workCount: 0, lateCount: 0, absenceCount: 0, vacationCount: 0 };
 
     // hook 사용
     const { currentDate, handlePrev, handleNext, handleToday, handleDatesSet } = useDateNavigation(calendarRef);
 
-    // 날짜가 바뀔 때마다 실행
+    // 월별 통계 및 달력 뱃지 데이터 가져오기
     useEffect(() => {
         if (!currentDate) return;
 
@@ -25,10 +28,25 @@ export default function AttendanceUserPage(){
                 const [y, m] = currentDate.split('.'); 
                 const formattedDate = `${y}-${m.padStart(2, '0')}`;
                 
-                const response = await apiRequest(`/api/attendance/monthly/summary?yearMonth=${formattedDate}`);
-                const data = await response.json();
+                // 월별 통계 데이터
+                const statsResponse = await apiRequest(`/api/attendance/monthly/summary?yearMonth=${formattedDate}`);
+                const statsData = await statsResponse.json();
+                setStats(statsData);
+
+                // 달력 뱃지 데이터 
+                const calendarResponse = await apiRequest(`/api/attendance/monthly/calendar/me?yearMonth=${formattedDate}`);
+                const calendarData = await calendarResponse.json();
+
+                // 풀캘린더 형식에 맞게 데이터 변환
+                const formattedEvents = calendarData.map(item => ({
+                    title: getStatusLabel(item.status),
+                    start: item.date,
+                    backgroundColor: getStatusColor(item.status),
+                    borderColor: getStatusColor(item.status),
+                    classNames: ['attendance-badge']
+                }));
                 
-                setStats(data);
+                setEvents(formattedEvents);
             } catch (error) {
                 console.error("통계 조회 실패:", error);
             }
@@ -57,7 +75,11 @@ export default function AttendanceUserPage(){
 
             {/* 달력 */}
             <div className="flex-1 w-full overflow-hidden rounded-lg shadow-sm">
-                <Calendar ref={calendarRef} onDatesSet={handleDatesSet} />
+                <Calendar 
+                ref={calendarRef} 
+                onDatesSet={handleDatesSet}
+                events={events}
+                />
             </div>
         </main>
     )

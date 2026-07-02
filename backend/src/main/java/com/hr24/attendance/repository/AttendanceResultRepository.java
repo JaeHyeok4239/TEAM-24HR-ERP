@@ -87,5 +87,12 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 
 
 	List<AttendanceResult> findAllByWorkDate(LocalDate todayDate);
+	
+	// 특정 직원의 특정 월 근태 기록 뽑아오기
+	@Query("SELECT a FROM AttendanceResult a " +
+		       "WHERE a.employee.employeeId = :employeeId " +
+		       "AND FUNCTION('TO_CHAR', a.workDate, 'YYYY-MM') = :yearMonth")
+		List<AttendanceResult> findByEmployeeIdAndMonth(@Param("employeeId") Long employeeId, 
+		                                                @Param("yearMonth") String yearMonth);
 }
 
