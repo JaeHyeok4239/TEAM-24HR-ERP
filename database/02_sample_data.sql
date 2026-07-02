@@ -627,62 +627,10 @@ INSERT INTO payroll_details (payroll_details_id, payroll_id, item_type, item_id,
 VALUES (payroll_details_seq.NEXTVAL, 1, '공제', 8, '소득세', 199380, CURRENT_TIMESTAMP);
 
 
--- 3. 급여명세서 테이블 샘플 데이터 삽입
-INSERT INTO payslips (payslip_id, payroll_id, file_name, file_path, file_type, created_at)
-VALUES (payslips_seq.NEXTVAL, 1, '급여명세서_2026년5월.pdf', 'C:\Users\user\Desktop\downloads', 'PDF', CURRENT_TIMESTAMP);
 
-
---4. 기본급 정보 테이블 샘플 데이터 삽입
+--3. 기본급 정보 테이블 샘플 데이터 삽입
 INSERT INTO salary (salary_id, employee_id, base_salary, created_at)
 VALUES (salary_seq.NEXTVAL, 1, 6646000, CURRENT_TIMESTAMP);
 
-
---5. 수당 항목 테이블 샘플 데이터 삽입
-INSERT INTO allowance_items (allowance_item_id, item_name, amount)
-VALUES (2, '식대', 100000);
-
-INSERT INTO allowance_items (allowance_item_id, item_name, amount)
-VALUES (3, '교통비', 100000);
-
-
---6. 직원 수당 정보 테이블 샘플 데이터 삽입
-INSERT INTO employee_allowance (employee_allowance_id, employee_id, allowance_item_id, amount)
-VALUES (employee_allowance_seq.NEXTVAL, 1, 2, 100000);
-
-INSERT INTO employee_allowance (employee_allowance_id, employee_id, allowance_item_id, amount)
-VALUES (employee_allowance_seq.NEXTVAL, 1, 3, 100000);
-
-
---7. 공제 항목 테이블 샘플 데이터 삽입
-INSERT INTO deduction_items (deduction_item_id, item_name, ratio)
-VALUES (5, '국민연금', 0.045);
-
-INSERT INTO deduction_items (deduction_item_id, item_name, ratio)
-VALUES (6, '건강보험', 0.03545);
-
-INSERT INTO deduction_items (deduction_item_id, item_name, ratio)
-VALUES (7, '고용보험', 0.009);
-
-INSERT INTO deduction_items (deduction_item_id, item_name, ratio)
-VALUES (8, '소득세', 0.07);
-
-
---8. 직원 공제 정보 테이블 샘플 데이터 삽입
-INSERT INTO employee_deduction (employee_deduction_id, employee_id, deduction_item_id, amount)
-VALUES (employee_deduction_seq.NEXTVAL, 1, 5, 265500);
-
-INSERT INTO employee_deduction (employee_deduction_id, employee_id, deduction_item_id, amount)
-VALUES (employee_deduction_seq.NEXTVAL, 1, 6, 235601);
-
-INSERT INTO employee_deduction (employee_deduction_id, employee_id, deduction_item_id, amount)
-VALUES (employee_deduction_seq.NEXTVAL, 1, 7, 59814);
-
-INSERT INTO employee_deduction (employee_deduction_id, employee_id, deduction_item_id, amount)
-VALUES (employee_deduction_seq.NEXTVAL, 1, 8, 199380);
-
-
---9. 부양가족 / 원천징수 테이블 샘플 데이터 삽입
-INSERT INTO employee_tax_info (tax_info_id, employee_id, dependents, children, withholding_rate, created_at)
-VALUES (employee_tax_info_seq.NEXTVAL, 1, 1, 0, 1, CURRENT_TIMESTAMP);
 
 COMMIT;

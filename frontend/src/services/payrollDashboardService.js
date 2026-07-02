@@ -9,9 +9,9 @@ export async function getMonthlyCost() {
   return response.json();
 }
 
-export async function getDepartmentCost() {
+export async function getDepartmentCost(month) {
 
-  const response = await apiRequest(`/api/dashboard/department-cost`);
+  const response = await apiRequest(`/api/dashboard/department-cost?month=${month}`);
 
   if (!response.ok) throw new Error("부서별 급여 통계 조회 실패");
 

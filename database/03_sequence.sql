@@ -163,40 +163,12 @@ CREATE SEQUENCE payroll_details_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 급여명세서 테이블 시퀀스
-CREATE SEQUENCE payslips_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
 -- 기본급 정보 테이블 시퀀스
 CREATE SEQUENCE salary_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
--- 수당 항목 테이블 시퀀스
-CREATE SEQUENCE allowance_items_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
--- 직원 수당 정보 테이블 시퀀스
-CREATE SEQUENCE employee_allowance_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
--- 공제 항목 테이블 시퀀스
-CREATE SEQUENCE deduction_items_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
--- 직원 공제 정보 테이블 시퀀스
-CREATE SEQUENCE employee_deduction_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
--- 부양가족 / 원천징수 테이블 시퀀스
-CREATE SEQUENCE employee_tax_info_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+    
 
 -- 알림 시퀀스
 CREATE SEQUENCE work_notification_seq START

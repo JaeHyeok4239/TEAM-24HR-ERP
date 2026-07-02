@@ -7,9 +7,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class DepartmentCostDto {
-
-    private Long departmentId;
+public class DepartmentCostDto {    
 
     private String departmentName;
 

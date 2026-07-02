@@ -22,8 +22,8 @@ public class DashboardService {
     }
     
     
-    public List<DepartmentCostDto> getDepartmentCost() {
+    public List<DepartmentCostDto> getDepartmentCost(String month) {
 
-        return payrollRepository.getDepartmentCost();
+        return payrollRepository.getDepartmentCost(month);
     }
 }

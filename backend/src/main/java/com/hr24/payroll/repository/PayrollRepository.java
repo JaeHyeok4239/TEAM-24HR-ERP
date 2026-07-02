@@ -67,19 +67,16 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     
     
     @Query("""
-    	    SELECT new com.hr24.payroll.dto.DepartmentCostDto(
-    	        d.departmentId,
+    	    SELECT new com.hr24.payroll.dto.DepartmentCostDto(    	        
     	        d.departmentName,
     	        SUM(p.totalPay)
     	    )
     	    FROM Payroll p
     	    JOIN p.user u
     	    JOIN u.department d
-    	    GROUP BY
-    	        d.departmentId,
-    	        d.departmentName
-    	    ORDER BY
-    	        SUM(p.totalPay) DESC
+    	    WHERE p.payMonth = :month
+    	    GROUP BY d.departmentName
+    	    ORDER BY SUM(p.totalPay) DESC
     	""")
-    	List<DepartmentCostDto> getDepartmentCost();
+    	List<DepartmentCostDto> getDepartmentCost(@Param("month") String month);
 }
