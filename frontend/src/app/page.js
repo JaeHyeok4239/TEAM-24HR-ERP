@@ -9,7 +9,7 @@ export default function MainPage() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 h-1/2">
         <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col gap-3">
         {/* 지도 및 출퇴근 */}
-        <div className="w-full h-75">
+        <div className="w-full h-100">
           <AttendancePage />
         </div>
         </div>
