@@ -18,7 +18,14 @@ export default function AttendanceUserPage(){
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedData, setSelectedData] = useState({});
 
+    const { currentDate, handlePrev, handleNext, handleToday, handleDatesSet, updateDate } = useDateNavigation(calendarRef);
+
+    const handleDateChange = (newDate) => {
+        calendarRef.current?.getApi().gotoDate(newDate);
+    };
+
     const handleDateClick = (info) => {
+        updateDate(info.dateStr);
         setSelectedData({
             status: '출근',
             time: '09:00 - 18:00',
@@ -32,9 +39,6 @@ export default function AttendanceUserPage(){
 
     // stats 없을 시 0
     const displayStats = stats || { workCount: 0, lateCount: 0, absenceCount: 0, vacationCount: 0 };
-
-    // hook 사용
-    const { currentDate, handlePrev, handleNext, handleToday, handleDatesSet } = useDateNavigation(calendarRef);
 
     // 월별 통계 및 달력 뱃지 데이터 가져오기
     useEffect(() => {
@@ -81,6 +85,7 @@ export default function AttendanceUserPage(){
                 onPrev={handlePrev}
                 onNext={handleNext}
                 onToday={handleToday}
+                onDateChange={(date) => updateDate(date)}
             />
 
             {/* 월별 통계 */}

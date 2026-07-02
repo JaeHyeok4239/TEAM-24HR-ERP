@@ -16,17 +16,18 @@ export default function AttendanceDailyPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const calendarRef = useRef(null);
-    const { currentDate } = useDateNavigation();
+    const { currentDate, handlePrev, handleNext, handleToday, handleDatesSet, updateDate } = useDateNavigation(calendarRef);
     const [events, setEvents] = useState([]);
     const [selectedStats, setSelectedStats] = useState(null);
     const [isInputOpen, setIsInputOpen] = useState(false);
 
-    const dummyEmployees = [
-        { id: 1, name: "김철수" },
-        { id: 2, name: "이영희" },
-        { id: 3, name: "박지성" },
-        { id: 4, name: "최민수" },
-    ];
+    const handleDateChange = (newDate) => {
+        calendarRef.current?.getApi().gotoDate(newDate);
+    };
+
+    const handleDateClick = (info) => {
+        updateDate(info.dateStr); 
+    };
     
     // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
@@ -101,9 +102,10 @@ export default function AttendanceDailyPage() {
             <PageHeader 
                 title="일용직 근태 관리" 
                 currentDate={currentDate}
-                onPrev={() => calendarRef.current?.getApi().prev()}
-                onNext={() => calendarRef.current?.getApi().next()}
-                onToday={() => calendarRef.current?.getApi().today()}
+                onPrev={handlePrev}
+                onNext={handleNext}
+                onToday={handleToday}
+                onDateChange={(date) => updateDate(date)}
             />
 
             <button 
@@ -134,6 +136,7 @@ export default function AttendanceDailyPage() {
                     type="daily"
                     events={events}
                     stats={selectedStats}
+                    dateClick={handleDateClick}
                 />
             </div>
 

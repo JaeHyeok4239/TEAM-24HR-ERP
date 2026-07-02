@@ -80,7 +80,7 @@ public class AttendanceService{
 	public LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분
-	        return LocalDateTime.of(2026, 6, 1, 9, 0); 
+	        return LocalDateTime.of(2026, 7, 2, 9, 0); 
 	    }
 	    return LocalDateTime.now();
 	}

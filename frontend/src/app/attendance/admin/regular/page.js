@@ -14,10 +14,10 @@ export default function AttendanceRegularPage() {
     const [employees, setEmployees] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const calendarRef = useRef(null);
-    const { currentDate } = useDateNavigation(calendarRef);
     const [selectedEmployee, setSelectedEmployee] = useState(null); // 직원 선택
     const [events, setEvents] = useState([]); // events 상태 추가
     const [selectedStats, setSelectedStats] = useState(null);
+    const { currentDate, handlePrev, handleNext, handleToday, handleDatesSet, updateDate } = useDateNavigation(calendarRef);
 
     // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
@@ -89,15 +89,21 @@ export default function AttendanceRegularPage() {
         fetchSelectedEmployeeData();
     }, [selectedEmployee, currentDate]);
 
+    // 날짜 변경 시 호출할 함수
+    const handleDateChange = (newDate) => {
+        calendarRef.current?.getApi().gotoDate(newDate);
+    };
+
     return (
         <main className="h-screen p-4">
             {/* 헤더 */}
             <PageHeader 
                 title="정규직 근태 관리" 
                 currentDate={currentDate}
-                onPrev={() => calendarRef.current?.getApi().prev()}
-                onNext={() => calendarRef.current?.getApi().next()}
-                onToday={() => calendarRef.current?.getApi().today()}
+                onPrev={handlePrev}
+                onNext={handleNext}
+                onToday={handleToday}
+                onDateChange={(date) => updateDate(date.replaceAll('-', '.'))}
             />
             
             {/* 일별 근태 조회 */}
@@ -121,6 +127,8 @@ export default function AttendanceRegularPage() {
                     type="regular"
                     events={events}
                     stats={selectedStats}
+                    onDatesSet={handleDatesSet}
+                    onDateSelect={(date) => updateDate(date.replaceAll('-', '.'))}
                 />
             </div>
         </main>
