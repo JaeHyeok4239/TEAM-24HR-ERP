@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class AttendanceResultDto {
+public class AttendanceResultDto extends AttendanceDetailResponseDto{
     private Long attendanceResultId;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
     private LocalDateTime checkInTime;

@@ -18,19 +18,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hr24.attendance.dto.AttendanceCombinedSummaryDto;
 import com.hr24.attendance.dto.AttendanceCorrectionRequestDto;
 import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
+import com.hr24.attendance.dto.CalendarBadgeDto;
 import com.hr24.attendance.dto.CheckInOutRequestDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
+import com.hr24.attendance.dto.MonthlyAttendanceListResponseDto;
 import com.hr24.attendance.dto.WorkplaceDto;
 import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.attendance.service.AttendanceCorrectionService;
 import com.hr24.attendance.service.AttendanceService;
 import com.hr24.employee.dto.hr.EmployeeListResponseDto;
 import com.hr24.employee.enums.EmploymentType;
+import com.hr24.employee.repository.UserRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -44,6 +48,7 @@ import lombok.RequiredArgsConstructor;
 public class AttendanceController {
 	private final AttendanceService attendanceService;
 	private final AttendanceCorrectionService attendanceCorrectionService;
+	private final UserRepository userRepository;
 	
 	// DB에 있는 근무지를 리스트로 반환
 	@GetMapping("/workplaces")
@@ -103,12 +108,10 @@ public class AttendanceController {
 		return ResponseEntity.ok().build();
 	}
 
-//	 일별 근태 상세 조회
-//	 관리자는 모든 사용자 조회 가능
-//	 일반 사용자는 본인 것만 조회 가능
+//	 1명 일별 근태 상세 조회
 	@PreAuthorize("isAuthenticated()")
 	@Operation(summary = "일별 근태 상세 조회", description = "관리자(정규직, 일용직) 혹은 본인 것만 조회 가능")
-	@GetMapping("/{employeeId}")
+	@GetMapping("/daily/{employeeId}")
 	public ResponseEntity<AttendanceDetailResponseDto> getAttendanceDetail(
 			@Parameter(description = "조회 대상 사번") @PathVariable("employeeId") Long employeeId,
 			@Parameter(description = "조회하려는 날짜(yyyy-MM-dd)") @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -118,6 +121,18 @@ public class AttendanceController {
 		String loginId = authentication.getName();
 
 		return ResponseEntity.ok(attendanceService.getAttendanceDetail(loginId, employeeId, date, isAdmin));
+	}
+	
+	// active 직원 일별 근태 조회
+	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
+	@Operation(summary = "모든 직원 일별 근태 조회", description = "type에 따라 active인 직원들 일별 근태 통계 조회 가능")
+	@GetMapping("/summary-daily-all")
+	public ResponseEntity<AttendanceCombinedSummaryDto> getDailyAttendanceSummary(
+	        @RequestParam(name = "date", required = false) @DateTimeFormat(pattern = "yyyy.MM.dd") LocalDate date) {
+	    // date가 null이면 오늘 날짜를 기본값으로 사용
+	    LocalDate targetDate = (date != null) ? date : LocalDate.now();
+	    
+	    return ResponseEntity.ok(attendanceService.getDailyAttendanceSummary(targetDate));
 	}
 
 	// 일용직 명단 조회
@@ -159,9 +174,10 @@ public class AttendanceController {
 		return ResponseEntity.ok("정상적으로 퇴근 처리되었습니다.");
 	}
 
+	// 1명 월별 근태 조회
 	@PreAuthorize("isAuthenticated()")
 	@Operation(summary = "월별 근태 횟수 조회", description = "본인 또는 관리자가 사원의 월별 근태 횟수를 조회합니다. 관리자는 targetEmployeeId를 입력해 조회 가능합니다.")
-	@GetMapping("/summary")
+	@GetMapping("/monthly/summary")
 	public ResponseEntity<AttendanceResponse> getMonthlyAttendanceStats(Authentication authentication,
 			@RequestParam(name = "yearMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth,
 			@RequestParam(name = "targetEmployeeId", required = false) Long targetEmployeeId) {
@@ -176,5 +192,39 @@ public class AttendanceController {
 
 		return ResponseEntity.ok(response);
 	}
+	
+	// active monthly 근태 조회
+	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
+	@Operation(summary = "모든 직원 월별 근태 통계 조회", description = "Active 상태인 전체 직원의 월별 근태 횟수를 조회합니다.")
+	@GetMapping("/summary-monthly-all")
+	public ResponseEntity<MonthlyAttendanceListResponseDto> getMonthlyAttendanceSummary(
+	        @RequestParam(name = "yearMonth") @DateTimeFormat(pattern = "yyyy.MM") YearMonth yearMonth) {
+	    
+	    return ResponseEntity.ok(attendanceService.getMonthlyAttendanceSummary(yearMonth));
+	}
+	
+	// 특정 직원의 특정 월 근태 기록 뽑아오기
+	@PreAuthorize("isAuthenticated()")
+	@GetMapping("/monthly/calendar/{employeeId}")
+	public ResponseEntity<List<CalendarBadgeDto>> getMonthlyCalendar(
+	        @PathVariable("employeeId") Long employeeId,
+	        @RequestParam("yearMonth") @DateTimeFormat(pattern = "yyyy-MM-dd") YearMonth yearMonth) {
+	    return ResponseEntity.ok(attendanceService.getMonthlyCalendar(employeeId, yearMonth));
+	}
+	
+	// 특정 직원(본인)의 특정 달 근태 조회
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/monthly/calendar/me")
+    public ResponseEntity<List<CalendarBadgeDto>> getMyMonthlyCalendar(
+            Authentication authentication,
+            @RequestParam("yearMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth) {
 
+        String loginId = authentication.getName(); // 로그인한 유저의 ID
+        
+        Long myEmployeeId = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."))
+                .getEmployeeId(); 
+        
+        return ResponseEntity.ok(attendanceService.getMonthlyCalendar(myEmployeeId, yearMonth));
+    }
 }
