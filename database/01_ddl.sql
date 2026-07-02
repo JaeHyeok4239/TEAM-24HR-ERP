@@ -634,20 +634,7 @@ CREATE TABLE payroll_details (
 );
 
 
--- 3. 급여명세서 테이블 생성
-CREATE TABLE payslips (
-	payslip_id NUMBER NOT NULL,
-	payroll_id NUMBER,
-	file_name VARCHAR2(100) NOT NULL,
-	file_path VARCHAR2(300) NOT NULL,
-	file_type VARCHAR2(10) NOT NULL,
-	created_at TIMESTAMP NOT NULL,
-	CONSTRAINT pk_payslips PRIMARY KEY (payslip_id),
-	CONSTRAINT fk_payslips FOREIGN KEY(payroll_id)
-	REFERENCES payrolls(payroll_id)
-);
-
--- 4. 기본급 정보 테이블 생성
+-- 3. 기본급 정보 테이블 생성
 CREATE TABLE salary (
 	salary_id NUMBER NOT NULL,
 	employee_id NUMBER,
@@ -660,66 +647,6 @@ CREATE TABLE salary (
     CONSTRAINT uk_salary_employee UNIQUE (employee_id)
 );
 
-
--- 5. 수당 항목 테이블 생성
-CREATE TABLE allowance_items (
-	allowance_item_id NUMBER NOT NULL,
-	item_name VARCHAR2(50) NOT NULL,
-	amount NUMBER NOT NULL,
-	CONSTRAINT pk_allowance_items PRIMARY KEY (allowance_item_id)
-);
-
-
--- 6. 직원 수당 정보 테이블 생성
-CREATE TABLE employee_allowance (
-	employee_allowance_id NUMBER NOT NULL,
-	employee_id NUMBER,
-	allowance_item_id NUMBER,
-	amount NUMBER NOT NULL,
-	CONSTRAINT pk_employee_allowance PRIMARY KEY (employee_allowance_id),
-	CONSTRAINT fk_employee_allowance_employee_id FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id),
-	CONSTRAINT fk_employee_allowance_allowance_item_id FOREIGN KEY(allowance_item_id)
-	REFERENCES allowance_items(allowance_item_id)
-);
-
-
--- 7. 공제 항목 테이블 생성
-CREATE TABLE deduction_items (
-	deduction_item_id NUMBER NOT NULL,
-	item_name VARCHAR2(50) NOT NULL,
-	ratio NUMBER NOT NULL,
-	CONSTRAINT pk_deduction_items PRIMARY KEY(deduction_item_id)
-);
-
-
--- 8. 직원 공제 정보 테이블 생성
-CREATE TABLE employee_deduction (
-	employee_deduction_id NUMBER NOT NULL,
-	employee_id NUMBER,
-	deduction_item_id NUMBER,
-	amount NUMBER NOT NULL,
-	CONSTRAINT pk_employee_deduction PRIMARY KEY (employee_deduction_id),
-	CONSTRAINT fk_employee_deduction_employee_id FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id),
-	CONSTRAINT fk_employee_deduction_deduction_item_id FOREIGN KEY(deduction_item_id)
-	REFERENCES deduction_items(deduction_item_id)
-);
-
-
--- 9. 부양가족 / 원천징수 테이블 생성
-CREATE TABLE employee_tax_info (
-	tax_info_id NUMBER NOT NULL,
-	employee_id NUMBER,
-	dependents NUMBER NOT NULL,
-	children NUMBER NOT NULL,
-	withholding_rate NUMBER NOT NULL,
-	created_at TIMESTAMP NOT NULL,
-	updated_at TIMESTAMP NULL,
-	CONSTRAINT pk_employee_tax_info PRIMARY KEY (tax_info_id),
-	CONSTRAINT fk_employee_tax_info FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id)
-);
 
 
 -- 알림 테이블
