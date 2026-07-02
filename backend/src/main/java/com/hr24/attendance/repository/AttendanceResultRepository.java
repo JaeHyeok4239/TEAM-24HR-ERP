@@ -33,9 +33,7 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	List<AttendanceResult> findByWorkDateAndAttendanceStatus(
 	    @Param("workDate") LocalDate workDate, 
 	    @Param("status") AttendanceStatus status
-	);
-	
-	List<AttendanceResult> findByEmployeeEmployeeId(Long employeeId);
+	);	
 
 	// 특정 직원의 특정 날짜 근태 정보+그 직원의 상세 정보
 	@Query("select ar from AttendanceResult ar join fetch ar.employee " +
@@ -94,5 +92,12 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 		       "AND FUNCTION('TO_CHAR', a.workDate, 'YYYY-MM') = :yearMonth")
 		List<AttendanceResult> findByEmployeeIdAndMonth(@Param("employeeId") Long employeeId, 
 		                                                @Param("yearMonth") String yearMonth);
+	
+	// 시작일과 종료일 사이의 근태 조회 
+	List<AttendanceResult> findByEmployeeEmployeeIdAndWorkDateBetween(
+            Long employeeId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
 }
 

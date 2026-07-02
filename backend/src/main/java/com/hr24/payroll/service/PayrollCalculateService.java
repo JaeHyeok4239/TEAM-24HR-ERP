@@ -2,7 +2,9 @@ package com.hr24.payroll.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -64,7 +66,10 @@ public class PayrollCalculateService {
 
 	    // 초과근무수당
 
-	    BigDecimal overtimePay = calculateOvertimePay(request.getEmployeeId());
+	    BigDecimal overtimePay = calculateOvertimePay(
+						    		request.getEmployeeId(),
+						    		request.getPayMonth()
+					    		 );
 
 	    // 총지급액
 
@@ -255,21 +260,31 @@ public class PayrollCalculateService {
 	}
 	
 	
-	private BigDecimal calculateOvertimePay(Long employeeId) {
+	private BigDecimal calculateOvertimePay(Long employeeId, String payMonth) {
+
+	    YearMonth yearMonth = YearMonth.parse(payMonth);
+
+	    LocalDate startDate = yearMonth.atDay(1);
+
+	    LocalDate endDate = yearMonth.atEndOfMonth();
 
 	    List<AttendanceResult> results = attendanceResultRepository
-	    		.findByEmployeeEmployeeId(employeeId);
+	                    .findByEmployeeEmployeeIdAndWorkDateBetween(
+	                            employeeId,
+	                            startDate,
+	                            endDate
+	                    );
 
-	    long totalMinutes = results
-	    			   .stream()
-	                   .mapToLong(AttendanceResult::getOvertimeMinutes)
-	                   .sum();
+	    long totalMinutes = results.stream()
+	            .mapToLong(AttendanceResult::getOvertimeMinutes)
+	            .sum();
 
 	    BigDecimal overtimeHours = BigDecimal.valueOf(totalMinutes)
-	                    .divide(new BigDecimal("60"), 2, RoundingMode.HALF_UP);
+	            .divide(new BigDecimal("60"), 2, RoundingMode.HALF_UP);
 
-	    return overtimeHours.multiply(new BigDecimal("15000"))
-	    		            .setScale(0, RoundingMode.HALF_UP);
+	    return overtimeHours
+	            .multiply(new BigDecimal("15000"))
+	            .setScale(0, RoundingMode.HALF_UP);
 	}
 	
 	

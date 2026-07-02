@@ -13,10 +13,11 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
-import { Search, Trash2, Pencil } from "lucide-react";
+import { Search, Plus, Pencil } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { hasAnyRole, HR_MANAGE_ROLES } from "@/lib/roles";
 import { CommonPagination } from "../common/CommonPagination";
+import ApprovalLineFormModal from "./ApprovalLineFormModal";
 
 export default function ApprovalLineList() {
   const userInfo = useAuthStore((state) => state.userInfo);
@@ -29,6 +30,10 @@ export default function ApprovalLineList() {
   const [totalPages, setTotalPages] = useState(0);
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i);
 
+  const [formOpen, setFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState("create"); // "create" | "edit"
+  const [selectedLine, setSelectedLine] = useState(null);
+
   useEffect(() => {
     const load = async () => {
       const params = new URLSearchParams({ page, size: 10 });
@@ -38,8 +43,6 @@ export default function ApprovalLineList() {
       });
       const data = await res.json();
 
-      console.log(keyword);
-      console.log(data);
       setLineList(data.content ?? []);
       setTotalPages(data.totalPages ?? 0);
     };
@@ -51,9 +54,20 @@ export default function ApprovalLineList() {
     setSearchTrigger((prev) => prev + 1);
   };
 
-  const handleDelete = async (lineId) => {
-    if (!confirm("삭제하시겠습니까?")) return;
-    await apiRequest(`/api/approval/line/${lineId}`, { method: "DELETE" });
+  const handleCreateClick = () => {
+    setFormMode("create");
+    setSelectedLine(null);
+    setFormOpen(true);
+  };
+
+  const handleEditClick = (line) => {
+    setFormMode("edit");
+    setSelectedLine(line);
+    setFormOpen(true);
+  };
+
+  const handleFormSuccess = () => {
+    setFormOpen(false);
     setSearchTrigger((prev) => prev + 1);
   };
 
@@ -94,6 +108,16 @@ export default function ApprovalLineList() {
                 검색
               </Button>
             </div>
+
+            {isAdmin && (
+              <Button
+                onClick={handleCreateClick}
+                className="bg-[#1a2f4e] hover:bg-[#2a4a6e] gap-1"
+              >
+                <Plus size={16} />
+                결재선 생성
+              </Button>
+            )}
           </div>
 
           <div className="bg-[#ffffffbd] rounded-lg border-[#94abcaa1] overflow-hidden">
@@ -105,25 +129,13 @@ export default function ApprovalLineList() {
               <Table>
                 <TableHeader className="bg-[#94abcaa1]">
                   <TableRow className="text-[#1a2f4e]">
-                    <TableHead className="font-bold text-center">
-                      부서
-                    </TableHead>
-                    <TableHead className="font-bold text-center">
-                      문서 유형
-                    </TableHead>
-                    <TableHead className="font-bold text-center">
-                      단계
-                    </TableHead>
-                    <TableHead className="font-bold text-center">
-                      결재자
-                    </TableHead>
-                    <TableHead className="font-bold text-center">
-                      직급
-                    </TableHead>
+                    <TableHead className="font-bold text-center">부서</TableHead>
+                    <TableHead className="font-bold text-center">문서 유형</TableHead>
+                    <TableHead className="font-bold text-center">단계</TableHead>
+                    <TableHead className="font-bold text-center">결재자</TableHead>
+                    <TableHead className="font-bold text-center">직급</TableHead>
                     {isAdmin && (
-                      <TableHead className="font-bold text-center">
-                        관리
-                      </TableHead>
+                      <TableHead className="font-bold text-center">관리</TableHead>
                     )}
                   </TableRow>
                 </TableHeader>
@@ -134,7 +146,6 @@ export default function ApprovalLineList() {
                         key={line.approvalLineId}
                         className="text-center text-[#1a2f4e]"
                       >
-                        {/* 첫 행에만 부서/문서유형 렌더링, rowSpan으로 합치기 */}
                         {idx === 0 && (
                           <>
                             <TableCell
@@ -160,17 +171,9 @@ export default function ApprovalLineList() {
                               <Button
                                 size="sm"
                                 className="bg-[#ffc23f8c] hover:bg-[#ffae00]"
+                                onClick={() => handleEditClick(line)}
                               >
                                 <Pencil size={14} />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() =>
-                                  handleDelete(line.approvalLineId)
-                                }
-                              >
-                                <Trash2 size={14} />
                               </Button>
                             </div>
                           </TableCell>
@@ -185,6 +188,14 @@ export default function ApprovalLineList() {
           <CommonPagination {...{ page, setPage, totalPages, pageNumbers }} />
         </CardContent>
       </Card>
+
+      <ApprovalLineFormModal
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        mode={formMode}
+        initialData={selectedLine}
+        onSuccess={handleFormSuccess}
+      />
     </div>
   );
 }

@@ -349,7 +349,7 @@ CREATE TABLE approval_line (
     CONSTRAINT line_fk_department FOREIGN KEY (department_id) REFERENCES departments(department_id),
     CONSTRAINT line_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT line_fk_approver FOREIGN KEY (default_approver) REFERENCES users(employee_id),
-    CONSTRAINT line_uq_step UNIQUE (document_type, step_order) -- 유형별 단계 중복 방지
+    CONSTRAINT line_uq_step UNIQUE (document_type, department_id, step_order) -- 부서/유형별 단계 중복 방지
 );
 
 -- 문서 처리 부서 (문서유형별 처리 가능 부서 및 권한 설정)

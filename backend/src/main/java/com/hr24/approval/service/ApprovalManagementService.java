@@ -65,6 +65,20 @@ public class ApprovalManagementService {
 		return approvalLine;
 	}
 	
+	@Transactional
+	public ApprovalLine updateApprover(Long lineId, Long approverId) {
+
+	    ApprovalLine approvalLine = approvalLineRepository.findById(lineId)
+	            .orElseThrow(() -> new IllegalArgumentException("결재선을 찾을 수 없습니다. id=" + lineId));
+
+	    User newApprover = userRepository.findById(approverId)
+	            .orElseThrow(() -> new IllegalArgumentException("결재자를 찾을 수 없습니다. id=" + approverId));
+
+	    approvalLine.setApprover(newApprover);
+
+	    return approvalLine;
+	}
+	
 	@Transactional(readOnly = true)
 	public Page<ApprovalResponseDto.ApprovalDelegateDto> listDelegates(
 	        String loginId, boolean isAdmin, String keyword, Pageable pageable) {

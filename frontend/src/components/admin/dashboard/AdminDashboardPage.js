@@ -1,5 +1,7 @@
 import EmptyDashboardSlot from "./EmptyDashboardSlot";
 import HrEmployeeFlowCard from "./HrEmployeeFlowCard";
+import MonthlyCost from "../../payroll/dashboard/MonthlyCost";
+import DepartmentCost from "../../payroll/dashboard/DepartmentCost";
 
 export default function AdminDashboardPage() {
   return (
@@ -11,8 +13,8 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="grid min-h-0 grid-cols-1 gap-4 md:grid-cols-2">
-          <EmptyDashboardSlot title="하단 영역 1" />
-          <EmptyDashboardSlot title="하단 영역 2" />
+          <MonthlyCost />
+          <DepartmentCost />
         </div>
       </div>
     </div>
