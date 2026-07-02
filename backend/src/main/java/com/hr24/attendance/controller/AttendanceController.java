@@ -23,6 +23,7 @@ import com.hr24.attendance.dto.AttendanceCorrectionRequestDto;
 import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceRequest;
 import com.hr24.attendance.dto.AttendanceResponse;
+import com.hr24.attendance.dto.CalendarBadgeDto;
 import com.hr24.attendance.dto.CheckInOutRequestDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
@@ -33,6 +34,7 @@ import com.hr24.attendance.service.AttendanceCorrectionService;
 import com.hr24.attendance.service.AttendanceService;
 import com.hr24.employee.dto.hr.EmployeeListResponseDto;
 import com.hr24.employee.enums.EmploymentType;
+import com.hr24.employee.repository.UserRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -46,6 +48,7 @@ import lombok.RequiredArgsConstructor;
 public class AttendanceController {
 	private final AttendanceService attendanceService;
 	private final AttendanceCorrectionService attendanceCorrectionService;
+	private final UserRepository userRepository;
 	
 	// DB에 있는 근무지를 리스트로 반환
 	@GetMapping("/workplaces")
@@ -200,5 +203,28 @@ public class AttendanceController {
 	    return ResponseEntity.ok(attendanceService.getMonthlyAttendanceSummary(yearMonth));
 	}
 	
+	// 특정 직원의 특정 월 근태 기록 뽑아오기
+	@PreAuthorize("isAuthenticated()")
+	@GetMapping("/monthly/calendar/{employeeId}")
+	public ResponseEntity<List<CalendarBadgeDto>> getMonthlyCalendar(
+	        @PathVariable("employeeId") Long employeeId,
+	        @RequestParam("yearMonth") @DateTimeFormat(pattern = "yyyy-MM-dd") YearMonth yearMonth) {
+	    return ResponseEntity.ok(attendanceService.getMonthlyCalendar(employeeId, yearMonth));
+	}
+	
+	// 특정 직원(본인)의 특정 달 근태 조회
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/monthly/calendar/me")
+    public ResponseEntity<List<CalendarBadgeDto>> getMyMonthlyCalendar(
+            Authentication authentication,
+            @RequestParam("yearMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth) {
 
+        String loginId = authentication.getName(); // 로그인한 유저의 ID
+        
+        Long myEmployeeId = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."))
+                .getEmployeeId(); 
+        
+        return ResponseEntity.ok(attendanceService.getMonthlyCalendar(myEmployeeId, yearMonth));
+    }
 }
