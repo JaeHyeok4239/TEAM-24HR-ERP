@@ -120,24 +120,34 @@ export default function PayrollPage() {
 
       {/* 페이징 */}
 
-      <div className="flex justify-center gap-3 mt-5">
+      <div className="flex justify-center items-center gap-2 mt-5">
 
         <button
           disabled={page === 0}
           onClick={() => setPage(prev => prev - 1)}
-          className="border px-3 py-1 disabled:opacity-50"
+          className="border px-3 py-1 rounded disabled:opacity-50"
         >
           이전
         </button>
 
-        <span>
-          {page + 1}
-        </span>
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index}
+            onClick={() => setPage(index)}
+            className={
+              page === index
+                ? "bg-blue-600 text-white px-3 py-1 rounded"
+                : "border px-3 py-1 rounded"
+            }
+          >
+            {index + 1}
+          </button>
+        ))}
 
         <button
           disabled={page + 1 >= totalPages}
           onClick={() => setPage(prev => prev + 1)}
-          className="border px-3 py-1 disabled:opacity-50"
+          className="border px-3 py-1 rounded disabled:opacity-50"
         >
           다음
         </button>
