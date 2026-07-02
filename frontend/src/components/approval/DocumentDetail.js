@@ -30,6 +30,7 @@ export default function DocumentDetail({ documentId }) {
   const currentUserId = userInfo?.employeeId;
   const [comment, setComment] = useState("");
   const isOwner = document?.requesterId === currentUserId;
+  const [fileId, setFileId] = useState("");
 
   useEffect(() => {
     const loadData = async () => {
@@ -75,6 +76,30 @@ export default function DocumentDetail({ documentId }) {
       router.push("/approval/pending");
     }
   }, [documentId, comment]);
+
+  const handleDownload = useCallback(async (attachmentId, fileName) => {
+    try {
+      const response = await apiRequest(
+        `/api/attachment/${attachmentId}/download`,
+        {
+          method: "GET",
+        },
+      );
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = window.document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      window.document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      Swal.fire("다운로드 실패", "파일을 다운로드할 수 없습니다", "error");
+    }
+  }, []);
 
   const handleReject = useCallback(async () => {
     const rejectComment = prompt("반려 사유를 입력하세요");
@@ -169,7 +194,13 @@ export default function DocumentDetail({ documentId }) {
                   ) : (
                     <ul className="space-y-1">
                       {document.documentFileList.map((file, i) => (
-                        <li key={i} className="text-sm">
+                        <li
+                          key={i}
+                          className="text-sm hover:opacity-70 cursor-pointer"
+                          onClick={() =>
+                            handleDownload(file.attachmentId, file.fileName)
+                          }
+                        >
                           {file.fileName}
                         </li>
                       ))}
@@ -252,15 +283,17 @@ export default function DocumentDetail({ documentId }) {
                     <p className="text-gray-600">
                       반려 사유 : {document.rejectReason}
                     </p>
-                    <Button
-                      size="sm"
-                      className="mt-1  bg-[#ffc23f8c] hover:bg-[#ffae00]"
-                      onClick={() =>
-                        router.push(`/approval/document/${documentId}/edit`)
-                      }
-                    >
-                      수정
-                    </Button>
+                    {isOwner && (
+                      <Button
+                        size="sm"
+                        className="mt-1  bg-[#ffc23f8c] hover:bg-[#ffae00]"
+                        onClick={() =>
+                          router.push(`/approval/document/${documentId}/edit`)
+                        }
+                      >
+                        수정
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
