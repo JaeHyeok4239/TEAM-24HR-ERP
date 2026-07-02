@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { apiRequest } from "@/lib/api";
 import {
   Dialog,
@@ -20,19 +20,33 @@ import {
   SelectItem,
 } from "../ui/select";
 
+const INITIAL_FORM = {
+  typeName: "",
+  detailTable: "",
+  requiredProcessing: "N",
+};
+
 export default function DocumentTypeFormModal({ open, onOpenChange, onSuccess }) {
-  const [typeName, setTypeName] = useState("");
-  const [detailTable, setDetailTable] = useState("");
-  const [requiredProcessing, setRequiredProcessing] = useState("N");
+  const [typeName, setTypeName] = useState(INITIAL_FORM.typeName);
+  const [detailTable, setDetailTable] = useState(INITIAL_FORM.detailTable);
+  const [requiredProcessing, setRequiredProcessing] = useState(
+    INITIAL_FORM.requiredProcessing,
+  );
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
+  const resetForm = () => {
+    setTypeName(INITIAL_FORM.typeName);
+    setDetailTable(INITIAL_FORM.detailTable);
+    setRequiredProcessing(INITIAL_FORM.requiredProcessing);
+  };
 
-    setTypeName("");
-    setDetailTable("");
-    setRequiredProcessing("N");
-  }, [open]);
+  // Dialog가 닫히는 시점(open -> false)을 가로채서 리셋
+  const handleOpenChange = (next) => {
+    if (!next) {
+      resetForm();
+    }
+    onOpenChange(next);
+  };
 
   const handleSubmit = async () => {
     if (!typeName.trim()) {
@@ -51,6 +65,7 @@ export default function DocumentTypeFormModal({ open, onOpenChange, onSuccess })
         }),
       });
       onSuccess?.();
+      handleOpenChange(false); // 성공 시 닫으면서 자동 리셋
     } catch (err) {
       console.error(err);
       alert("문서 종류 생성에 실패했습니다.");
@@ -60,7 +75,7 @@ export default function DocumentTypeFormModal({ open, onOpenChange, onSuccess })
   };
 
   return (
-    <Dialog className="relative" open={open} onOpenChange={onOpenChange}>
+    <Dialog className="relative" open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>문서 종류 생성</DialogTitle>
@@ -100,7 +115,7 @@ export default function DocumentTypeFormModal({ open, onOpenChange, onSuccess })
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
             취소
           </Button>
           <Button

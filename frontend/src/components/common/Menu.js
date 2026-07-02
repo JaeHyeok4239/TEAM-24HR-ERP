@@ -130,7 +130,7 @@ const NAV_ITEMS = [
       {
         href: "/approval/document/type",
         label: "문서 종류 관리",
-        allowedRoles: HR_MANAGE_ROLES,
+        allowedRoles: [ROLES.ADMIN],
       },
     ],
   },
