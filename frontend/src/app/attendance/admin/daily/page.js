@@ -9,6 +9,7 @@ import SummaryDaily from "@/components/attendance/admin/SummaryDaily";
 import AttendanceEmployeeList from "@/components/attendance/admin/AttendanceEmployeeList";
 import AdminCalendar from "@/components/attendance/admin/AdminCalendar";
 import {getMonthlyCalendarEvents } from "@/services/attendanceService";
+import AttendanceDailyInputPanel from "@/components/attendance/AttendanceDailyInputPanel";
 
 export default function AttendanceDailyPage() {
     const [employees, setEmployees] = useState([]);
@@ -18,7 +19,15 @@ export default function AttendanceDailyPage() {
     const { currentDate } = useDateNavigation();
     const [events, setEvents] = useState([]);
     const [selectedStats, setSelectedStats] = useState(null);
+    const [isInputOpen, setIsInputOpen] = useState(false);
 
+    const dummyEmployees = [
+        { id: 1, name: "김철수" },
+        { id: 2, name: "이영희" },
+        { id: 3, name: "박지성" },
+        { id: 4, name: "최민수" },
+    ];
+    
     // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
         const fetchData = async () => {
@@ -96,6 +105,13 @@ export default function AttendanceDailyPage() {
                 onNext={() => calendarRef.current?.getApi().next()}
                 onToday={() => calendarRef.current?.getApi().today()}
             />
+
+            <button 
+                onClick={() => setIsInputOpen(true)} 
+                className="bg-blue-600 text-white px-5 py-2 rounded-lg font-bold"
+            >
+                근태 기록 관리
+            </button>
             
             {/* 일별 근태 조회 */}
             <div className="mt-4">
@@ -120,6 +136,11 @@ export default function AttendanceDailyPage() {
                     stats={selectedStats}
                 />
             </div>
+
+            <AttendanceDailyInputPanel 
+                isOpen={isInputOpen} 
+                onClose={() => setIsInputOpen(false)} 
+            />
         </main>
     );
 }

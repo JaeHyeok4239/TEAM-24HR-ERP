@@ -6,11 +6,29 @@ import Calendar from '@/components/attendance/Calendar';
 import PageHeader from '@/components/attendance/PageHeader';
 import { apiRequest } from "@/lib/api";
 import { getStatusLabel, getStatusColor } from "@/services/attendanceService";
+import DetailPanel from "@/components/attendance/DetailPanel";
 
 export default function AttendanceUserPage(){
     const calendarRef = useRef(null);
     const [stats, setStats] = useState(null); // 월별 근태 조회
     const [events, setEvents] = useState([]); // 달력 이벤트 상태 추가
+
+    // 패널용
+    const [panelOpen, setPanelOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedData, setSelectedData] = useState({});
+
+    const handleDateClick = (info) => {
+        setSelectedData({
+            status: '출근',
+            time: '09:00 - 18:00',
+            baseTime: '8시간',
+            overTime: '1시간',
+            totalTime: '9시간',
+        });
+        setSelectedDate(info.dateStr);
+        setPanelOpen(true);
+    };
 
     // stats 없을 시 0
     const displayStats = stats || { workCount: 0, lateCount: 0, absenceCount: 0, vacationCount: 0 };
@@ -79,8 +97,17 @@ export default function AttendanceUserPage(){
                 ref={calendarRef} 
                 onDatesSet={handleDatesSet}
                 events={events}
+                dateClick={handleDateClick}
                 />
             </div>
+
+            <DetailPanel 
+                isOpen={panelOpen}
+                onClose={() => setPanelOpen(false)}
+                date={selectedDate}
+                userType="regular"
+                data={selectedData}
+            />
         </main>
     )
 }

@@ -1,6 +1,20 @@
 import Calendar from '@/components/attendance/Calendar'; // 기존 Calendar 컴포넌트 재사용
+import DetailPanel from '../DetailPanel';
+import { useState } from 'react';
 
 export default function AttendanceCalendar({ selectedEmployee, currentDate, calendarRef, onDatesSet, type, events, stats }) {
+    const [panelOpen, setPanelOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedData, setSelectedData] = useState({});
+    
+    const handleDateClick = (info) => {
+        setSelectedData({
+            note: '까먹고 너무 늦게 눌렀다고 함'
+        });
+        setSelectedDate(info.dateStr);
+        setPanelOpen(true);
+    };
+    
     // 직원 선택 하지 않았을 때
     if (!selectedEmployee) {
         return (
@@ -42,8 +56,17 @@ export default function AttendanceCalendar({ selectedEmployee, currentDate, cale
                     ref={calendarRef} 
                     onDatesSet={onDatesSet}
                     events={events} 
+                    dateClick={handleDateClick}
                 />
             </div>
+
+            <DetailPanel 
+                isOpen={panelOpen}
+                onClose={() => setPanelOpen(false)}
+                date={selectedDate}
+                userType={type}
+                data={selectedData}
+            />
         </div>
     );
 }
