@@ -182,3 +182,18 @@ a {
   height: 2px;
   background-color: var(--foreground);
 }
+
+/* 근태 뱃지 디자인 */
+.attendance-badge {
+    cursor: default !important;
+    border-radius: 10px;
+    padding: 3px 0 3px 0;
+}
+
+.attendance-badge:hover {
+    cursor: default !important;
+}
+
+.attendance-badge .fc-event-main {
+    text-align: center;
+}
