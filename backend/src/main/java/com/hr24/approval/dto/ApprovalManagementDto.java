@@ -28,4 +28,9 @@ public class ApprovalManagementDto {
 		private LocalDate endDate;
 		private Long approvalLineId;
 	}
+	
+	@Getter
+	public static class ApproverUpdateDto {
+		private Long approverId;
+	}
 }
