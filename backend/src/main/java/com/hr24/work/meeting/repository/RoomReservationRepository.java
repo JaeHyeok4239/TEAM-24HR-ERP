@@ -16,6 +16,14 @@ import com.hr24.work.meeting.entity.RoomReservation;
 
 public interface RoomReservationRepository extends JpaRepository<RoomReservation, Long> {
 
+    // 확정된 예약 중 아직 일정으로 동기화되지 않은 건 조회 (앱 기동 시 자동 백필용)
+    @Query("""
+        SELECT r FROM RoomReservation r
+        WHERE r.status = 'CONFIRMED'
+        AND NOT EXISTS (SELECT 1 FROM Schedule s WHERE s.reservationId = r.reservationId)
+    """)
+    List<RoomReservation> findConfirmedWithoutSchedule();
+
     // 특정 회의실 + 날짜의 취소되지 않은 예약 조회 (시간 중복 체크용)
     @Query("SELECT r FROM RoomReservation r WHERE r.meetingRoom = :room AND r.rsvDate = :date AND r.status != 'CANCELLED'")
     List<RoomReservation> findConfirmedByRoomAndDate(@Param("room") MeetingRoom room, @Param("date") LocalDate date);

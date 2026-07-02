@@ -143,21 +143,6 @@ CREATE SEQUENCE reservation_participant_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 사내메일 시퀀스
-CREATE SEQUENCE mail_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
--- 메일 수신자 시퀀스
-CREATE SEQUENCE mail_receiver_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
--- 첨부파일 시퀀스
-CREATE SEQUENCE mail_attachment_seq START
-WITH
-    1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
 -- 일정 시퀀스
 CREATE SEQUENCE schedule_seq START
 WITH

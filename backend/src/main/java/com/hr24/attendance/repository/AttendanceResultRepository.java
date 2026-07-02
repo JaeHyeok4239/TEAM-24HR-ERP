@@ -20,6 +20,9 @@ import com.hr24.employee.enums.UserStatus;
 
 public interface AttendanceResultRepository extends JpaRepository<AttendanceResult, Long>{
 	
+	// 스케줄러
+	boolean existsByWorkDate(LocalDate workDate);
+	
 	// 한 명 조회
 	Optional<AttendanceResult> findByEmployeeAndWorkDate(User employee, LocalDate workDate);
 	
@@ -30,9 +33,7 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	List<AttendanceResult> findByWorkDateAndAttendanceStatus(
 	    @Param("workDate") LocalDate workDate, 
 	    @Param("status") AttendanceStatus status
-	);
-	
-	List<AttendanceResult> findByEmployeeEmployeeId(Long employeeId);
+	);	
 
 	// 특정 직원의 특정 날짜 근태 정보+그 직원의 상세 정보
 	@Query("select ar from AttendanceResult ar join fetch ar.employee " +
@@ -84,5 +85,13 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 
 
 	List<AttendanceResult> findAllByWorkDate(LocalDate todayDate);
+	
+	
+	// 시작일과 종료일 사이의 근태 조회 
+	List<AttendanceResult> findByEmployeeEmployeeIdAndWorkDateBetween(
+            Long employeeId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
 }
 
