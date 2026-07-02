@@ -103,8 +103,8 @@ export default function ApprovalBox() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-5">
-      <Card className="xl:h-[calc(100vh-140px)] overflow-y-auto transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <div className="h-full flex flex-col gap-4 p-5">
+      <Card className="xl:h-full overflow-y-auto transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
         <CardContent className="flex-1 flex flex-col p-0">
           <Tabs
             value={selectedTab}
