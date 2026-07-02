@@ -56,6 +56,7 @@ public class AttendanceController {
 	    return ResponseEntity.ok(attendanceService.getWorkplaces());
 	}
 
+	// 오후 배치 프로그램(마감 및 MISSING 처리)
 	@PreAuthorize("hasRole('ADMIN')")
 	@Operation(summary = "오후 배치 프로그램", description = "오후 11시에 실행되는 프로그램입니다. 오후 11시~오전6시 출퇴근 불가 및 미퇴근자 Missing 처리")
 	@PostMapping("/batch/closing-batch")
@@ -65,6 +66,7 @@ public class AttendanceController {
 		return ResponseEntity.ok("오후 배치 프로그램이 실행되었습니다.");
 	}
 
+	// 오전 배치 프로그램(LEAVE 제외 RESULT 생성)
 	@PreAuthorize("hasRole('ADMIN')")
 	@Operation(summary = "오전 배치 프로그램", description = "오전 6시에 실행되는 프로그램입니다. 휴가자 제외 active 직원 ready 상태로 result 생성")
 	@PostMapping("/batch/open-batch")
@@ -74,6 +76,7 @@ public class AttendanceController {
 		return ResponseEntity.ok("오전 배치 프로그램이 실행되었습니다.");
 	}
 
+	// 직원 타입(REGULAR/DAILY)에 따른 직원(ACTIVE) 목록 조회
 	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
 	@Operation(summary = "직원 타입에 따른 직원 목록 조회", description = "정규직/일용직 직원 목록 조회")
 	@GetMapping("/employees")
@@ -86,7 +89,7 @@ public class AttendanceController {
 		return attendanceService.findEmployeesWithFilters(type, departmentId, keyword, status, date);
 	}
 
-	// (관리자)일용직 근태 기록 수정
+	// 일용직 근태 기록 수정
 	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
 	@PatchMapping("/daily/{logId}")
 	@Operation(summary = "일용직 근태 기록 수정", description = "관리자가 일용직 근태 기록을 직접 수정합니다. 출퇴근 한번에 수정 가능")
@@ -97,7 +100,7 @@ public class AttendanceController {
 		return ResponseEntity.ok().build();
 	}
 
-	// (관리자)정규직 근태 기록 정정
+	// 정규직 근태 기록 정정
 	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
 	@Operation(summary = "정규직 근태 기록 수정", description = "정규직 근태 기록이 정정됩니다.")
 	@PostMapping("/regular/{logId}/correction")
@@ -108,7 +111,7 @@ public class AttendanceController {
 		return ResponseEntity.ok().build();
 	}
 
-//	 1명 일별 근태 상세 조회
+	// 1명 일별 RESULT 조회
 	@PreAuthorize("isAuthenticated()")
 	@Operation(summary = "일별 근태 상세 조회", description = "관리자(정규직, 일용직) 혹은 본인 것만 조회 가능")
 	@GetMapping("/daily/{employeeId}")
@@ -123,9 +126,9 @@ public class AttendanceController {
 		return ResponseEntity.ok(attendanceService.getAttendanceDetail(loginId, employeeId, date, isAdmin));
 	}
 	
-	// active 직원 일별 근태 조회
+	// 모든 직원(ACTIVE) 일별 근태 횟수 조회
 	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
-	@Operation(summary = "모든 직원 일별 근태 조회", description = "type에 따라 active인 직원들 일별 근태 통계 조회 가능")
+	@Operation(summary = "모든 직원 일별 근태 조회", description = "type에 따라 active인 직원들 일별 근태 횟수 조회 가능")
 	@GetMapping("/summary-daily-all")
 	public ResponseEntity<AttendanceCombinedSummaryDto> getDailyAttendanceSummary(
 	        @RequestParam(name = "date", required = false) @DateTimeFormat(pattern = "yyyy.MM.dd") LocalDate date) {
@@ -153,6 +156,7 @@ public class AttendanceController {
 		return ResponseEntity.ok(resultMessage);
 	}
 
+	// 출근
 	@PreAuthorize("isAuthenticated()")
 	@Operation(summary = "출근", description = "출근할 수 있습니다.")
 	@PostMapping("/check-in")
@@ -165,6 +169,7 @@ public class AttendanceController {
 		return ResponseEntity.ok("정상적으로 출근 처리되었습니다.");
 	}
 
+	// 퇴근
 	@PreAuthorize("isAuthenticated()")
 	@Operation(summary = "퇴근", description = "퇴근할 수 있습니다.")
 	@PostMapping("/check-out")
@@ -174,7 +179,7 @@ public class AttendanceController {
 		return ResponseEntity.ok("정상적으로 퇴근 처리되었습니다.");
 	}
 
-	// 1명 월별 근태 조회
+	// 1명 월별 근태 횟수 조회
 	@PreAuthorize("isAuthenticated()")
 	@Operation(summary = "월별 근태 횟수 조회", description = "본인 또는 관리자가 사원의 월별 근태 횟수를 조회합니다. 관리자는 targetEmployeeId를 입력해 조회 가능합니다.")
 	@GetMapping("/monthly/summary")
@@ -193,7 +198,7 @@ public class AttendanceController {
 		return ResponseEntity.ok(response);
 	}
 	
-	// active monthly 근태 조회
+	// 모든 직원(ACTIVE) 월별 근태 횟수 조회
 	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
 	@Operation(summary = "모든 직원 월별 근태 통계 조회", description = "Active 상태인 전체 직원의 월별 근태 횟수를 조회합니다.")
 	@GetMapping("/summary-monthly-all")
