@@ -97,12 +97,12 @@ export default function MyDocument() {
 
   return (
     <>
-      <div className="flex flex-col xl:flex-row gap-4 p-5 max-w-full">
+      <div className="h-full flex flex-col xl:flex-row gap-4 p-5 max-w-full">
         {/* 왼쪽: 문서 목록 */}
         <div className="flex-1 h-full">
           <Card
             className={
-              "xl:h-[calc(100vh-140px)] overflow-y-auto transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
+              "xl:h-full overflow-y-auto transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
             }
           >
             <CardContent className={"flex-1 flex flex-col p-0"}>

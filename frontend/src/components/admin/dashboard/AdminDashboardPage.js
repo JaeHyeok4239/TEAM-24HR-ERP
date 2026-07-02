@@ -6,14 +6,15 @@ import DepartmentCost from "../../payroll/dashboard/DepartmentCost";
 export default function AdminDashboardPage() {
   return (
     <div className="flex h-full min-h-0 flex-col p-4">
-      <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-4">
-        <div className="grid min-h-0 grid-cols-1 gap-4 xl:grid-cols-2">
-          <HrEmployeeFlowCard />
-          <EmptyDashboardSlot title="상단 영역 2" />
+      <div className="grid min-h-0 flex-1 gap-4">
+        <div className="grid min-h-0 grid-cols-1 gap-4">
+          <MonthlyCost />
         </div>
 
-        <div className="grid min-h-0 grid-cols-1 gap-4 md:grid-cols-2">
-          <MonthlyCost />
+        <div className="grid min-h-0 grid-cols-2 gap-4 md:grid-cols-2">
+          <div className="flex-1 p-6">
+            <HrEmployeeFlowCard />
+          </div>
           <DepartmentCost />
         </div>
       </div>
