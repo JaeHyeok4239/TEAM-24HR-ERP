@@ -2,12 +2,16 @@ import Calendar from '@/components/attendance/Calendar'; // 기존 Calendar 컴�
 import DetailPanel from '../DetailPanel';
 import { useState } from 'react';
 
-export default function AttendanceCalendar({ selectedEmployee, currentDate, calendarRef, onDatesSet, type, events, stats }) {
+export default function AttendanceCalendar({ selectedEmployee, currentDate, calendarRef, onDatesSet, type, events, stats, onDateSelect }) {
     const [panelOpen, setPanelOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedData, setSelectedData] = useState({});
     
     const handleDateClick = (info) => {
+        if (onDateSelect) {
+            onDateSelect(info.dateStr);
+        }
+
         setSelectedData({
             note: '까먹고 너무 늦게 눌렀다고 함'
         });
@@ -52,7 +56,7 @@ export default function AttendanceCalendar({ selectedEmployee, currentDate, cale
             {/* 달력 */}
             <div className="flex-1 overflow-hidden">
                 <Calendar 
-                    key={`${selectedEmployee.employeeId}-${currentDate}`}
+                    key={`${selectedEmployee.employeeId}`}
                     ref={calendarRef} 
                     onDatesSet={onDatesSet}
                     events={events} 
