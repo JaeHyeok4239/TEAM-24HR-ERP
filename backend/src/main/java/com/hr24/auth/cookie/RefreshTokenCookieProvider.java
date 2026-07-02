@@ -2,6 +2,7 @@ package com.hr24.auth.cookie;
 
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
@@ -13,15 +14,21 @@ public class RefreshTokenCookieProvider {
     private static final Duration REFRESH_TOKEN_MAX_AGE = Duration.ofDays(7);
     private static final String COOKIE_PATH = "/";
 
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
     public ResponseCookie createRefreshTokenCookie(String refreshToken) {
 
         return ResponseCookie
                 .from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
                 .httpOnly(true)
-                .secure(false) // localhost 개발 환경
+                .secure(cookieSecure)
                 .path(COOKIE_PATH)
                 .maxAge(REFRESH_TOKEN_MAX_AGE)
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build();
     }
 
@@ -30,12 +37,10 @@ public class RefreshTokenCookieProvider {
         return ResponseCookie
                 .from(REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(false) // localhost 개발 환경
+                .secure(cookieSecure)
                 .path(COOKIE_PATH)
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build();
     }
-    
-    //나중에 수정 해야함
 }

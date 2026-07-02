@@ -8,6 +8,10 @@ import { useAuthStore } from "@/store/authStore";
 // 알림 고유 키 생성 (title + message 조합)
 const notifKey = (n) => `${n.title}||${n.message}`;
 
+const API_ORIGIN =
+  process.env.NEXT_PUBLIC_API_ORIGIN ??
+  (process.env.NODE_ENV === "production" ? "" : "http://localhost:8080");
+
 export function useNotification() {
   const [notifications, setNotifications] = useState([]);
   const clientRef = useRef(null);
@@ -38,7 +42,7 @@ export function useNotification() {
   useEffect(() => {
     if (!userInfo || !accessToken) return;
 
-    fetch("http://localhost:8080/api/notifications", {
+    fetch(`${API_ORIGIN}/api/notifications`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
       .then((r) => (r.ok ? r.json() : []))
@@ -51,7 +55,7 @@ export function useNotification() {
     if (!userInfo || !accessToken) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      webSocketFactory: () => new SockJS(`${API_ORIGIN}/ws`),
       connectHeaders: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -93,7 +97,7 @@ export function useNotification() {
 
     // 개인 알림 읽음 처리 (DB 정리용)
     if (accessToken) {
-      fetch("http://localhost:8080/api/notifications/read", {
+      fetch(`${API_ORIGIN}/api/notifications/read`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${accessToken}` },
       }).catch(() => {});
@@ -109,7 +113,7 @@ export function useNotification() {
     setNotifications([]);
 
     if (accessToken) {
-      fetch("http://localhost:8080/api/notifications/read", {
+      fetch(`${API_ORIGIN}/api/notifications/read`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${accessToken}` },
       }).catch(() => {});
