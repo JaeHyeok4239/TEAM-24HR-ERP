@@ -46,3 +46,5 @@ yarn-error.log*
 
 # 개인 발표자료 (공유 저장소에 올리지 않음)
 docs/work-package-presentation.md
+.env.prod
+docker-compose.prod.yml.bak

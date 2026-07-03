@@ -263,7 +263,7 @@ create table attendance_correction(
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NULL,
 
-    CONSTRAINT correction_fk_correction_daily_log FOREIGN KEY (correction_daily_log) REFERENCES attendance_logs(attendance_log_id),
+    CONSTRAINT correction_fk_correction_daily_log FOREIGN KEY (correction_daily_log) REFERENCES attendance_logs_daily(attendance_logs_daily_id),
 	CONSTRAINT correction_fk_correction_target FOREIGN KEY (correction_target) REFERENCES attendance_results(attendance_result_id),
     CONSTRAINT correction_fk_processed_by FOREIGN KEY (processed_by) REFERENCES users(employee_id),
 	CONSTRAINT correction_fk_doc_id FOREIGN KEY (document_id) REFERENCES document(document_id),

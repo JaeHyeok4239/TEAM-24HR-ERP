@@ -74,6 +74,18 @@ services:
       - backend
     restart: unless-stopped
 
+  apache:
+    image: httpd:2.4
+    container_name: hr24-apache
+    ports:
+      - "80:80"
+    volumes:
+      - ./infra/apache/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+
 volumes:
   oracle-data:
   redis-data:
