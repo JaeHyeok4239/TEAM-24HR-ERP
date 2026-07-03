@@ -17,12 +17,19 @@ jobs:
 
           cd /home/sykim/apps/TEAM-24HR-ERP
 
-          echo "현재 브랜치 확인"
+          echo "배포 전 서버 브랜치 확인"
           git branch --show-current
+          git status --short
 
-          echo "main 최신 코드 반영"
+          echo "main 브랜치로 전환 및 최신 코드 반영"
           git fetch origin main
+          git switch main
           git reset --hard origin/main
+
+          echo "배포 대상 커밋 확인"
+          git branch --show-current
+          git log --oneline --decorate -3
+          git status
 
           echo "Docker Compose 설정 확인"
           docker compose --env-file .env.prod -f docker-compose.prod.yml config > /tmp/hr24-compose-check.yml
@@ -31,4 +38,4 @@ jobs:
           docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 
           echo "배포 상태 확인"
-          docker ps
+          docker compose --env-file .env.prod -f docker-compose.prod.yml ps
