@@ -52,8 +52,8 @@ jobs:
           docker compose --env-file .env.prod -f docker-compose.prod.yml build backend frontend
 
           echo "k3s containerd로 이미지 import"
-          docker save hr24-backend:prod | sudo k3s ctr images import -
-          docker save hr24-frontend:prod | sudo k3s ctr images import -
+          docker save hr24-backend:prod | sudo -n /usr/local/bin/k3s ctr images import -
+          docker save hr24-frontend:prod | sudo -n /usr/local/bin/k3s ctr images import -
 
           echo "Kubernetes namespace 적용"
           kubectl create namespace hr24 --dry-run=client -o yaml | kubectl apply -f -
