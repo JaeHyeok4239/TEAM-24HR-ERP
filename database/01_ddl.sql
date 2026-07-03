@@ -138,6 +138,103 @@ CREATE TABLE annual_leave_balances (
     CONSTRAINT chk_annual_leave_remaining_total CHECK (remaining_days <= total_days)
 );
 
+----------------------------------------------------------------------------------------
+-- 인사평가
+
+-- 평가기간
+CREATE TABLE evaluation_periods (
+    evaluation_period_id NUMBER PRIMARY KEY,
+    evaluation_year NUMBER(4) NOT NULL,
+    half_type VARCHAR2(20) NOT NULL,
+    period_name VARCHAR2(100) NOT NULL,
+    target_start_date DATE NOT NULL,
+    target_end_date DATE NOT NULL,
+    input_start_date DATE NOT NULL,
+    input_end_date DATE NOT NULL,
+    status VARCHAR2(20) DEFAULT 'DRAFT' NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    CONSTRAINT uk_evaluation_period_year_half UNIQUE (evaluation_year, half_type),
+    CONSTRAINT chk_evaluation_period_half_type CHECK (half_type IN ('H1', 'H2')),
+    CONSTRAINT chk_evaluation_period_status CHECK (status IN ('DRAFT', 'OPEN', 'CLOSED'))
+);
+
+-- 평가문항
+CREATE TABLE evaluation_questions (
+    evaluation_question_id NUMBER PRIMARY KEY,
+    question_content VARCHAR2(500) NOT NULL,
+    max_score NUMBER(2) DEFAULT 5 NOT NULL,
+    sort_order NUMBER NOT NULL,
+    is_active VARCHAR2(1) DEFAULT 'Y' NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    CONSTRAINT chk_evaluation_question_active CHECK (is_active IN ('Y', 'N'))
+);
+
+-- 직원별 평가
+CREATE TABLE employee_evaluations (
+    employee_evaluation_id NUMBER PRIMARY KEY,
+    evaluation_period_id NUMBER NOT NULL,
+    employee_id NUMBER NOT NULL,
+    evaluator_id NUMBER,
+    department_id NUMBER,
+    position_id NUMBER,
+    total_score NUMBER(3),
+    grade VARCHAR2(5),
+    status VARCHAR2(20) DEFAULT 'PENDING' NOT NULL,
+    comments VARCHAR2(1000),
+    evaluated_at TIMESTAMP,
+    confirmed_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    CONSTRAINT uk_employee_evaluation_period_employee UNIQUE (evaluation_period_id, employee_id),
+    CONSTRAINT fk_employee_eval_period FOREIGN KEY (evaluation_period_id)
+        REFERENCES evaluation_periods (evaluation_period_id),
+    CONSTRAINT fk_employee_eval_employee FOREIGN KEY (employee_id)
+        REFERENCES users (employee_id),
+    CONSTRAINT fk_employee_eval_evaluator FOREIGN KEY (evaluator_id)
+        REFERENCES users (employee_id),
+    CONSTRAINT fk_employee_eval_department FOREIGN KEY (department_id)
+        REFERENCES departments (department_id),
+    CONSTRAINT fk_employee_eval_position FOREIGN KEY (position_id)
+        REFERENCES positions (position_id),
+    CONSTRAINT chk_employee_eval_status CHECK (status IN ('PENDING', 'SAVED', 'CONFIRMED'))
+);
+
+-- 직원 평가 문항별 답변
+CREATE TABLE employee_evaluation_answers (
+    evaluation_answer_id NUMBER PRIMARY KEY,
+    employee_evaluation_id NUMBER NOT NULL,
+    evaluation_question_id NUMBER NOT NULL,
+    score NUMBER(1) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    CONSTRAINT uk_employee_eval_answer_question UNIQUE (employee_evaluation_id, evaluation_question_id),
+    CONSTRAINT fk_eval_answer_employee_eval FOREIGN KEY (employee_evaluation_id)
+        REFERENCES employee_evaluations (employee_evaluation_id),
+    CONSTRAINT fk_eval_answer_question FOREIGN KEY (evaluation_question_id)
+        REFERENCES evaluation_questions (evaluation_question_id),
+    CONSTRAINT chk_eval_answer_score CHECK (score BETWEEN 1 AND 5)
+);
+
+-- 승진 기준
+CREATE TABLE promotion_rules (
+    promotion_rule_id NUMBER PRIMARY KEY,
+    from_position_id NUMBER NOT NULL,
+    to_position_id NUMBER NOT NULL,
+    required_score NUMBER(4) NOT NULL,
+    min_evaluation_count NUMBER(2) DEFAULT 2 NOT NULL,
+    is_active VARCHAR2(1) DEFAULT 'Y' NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    CONSTRAINT fk_promotion_rule_from_position FOREIGN KEY (from_position_id)
+        REFERENCES positions (position_id),
+    CONSTRAINT fk_promotion_rule_to_position FOREIGN KEY (to_position_id)
+        REFERENCES positions (position_id),
+    CONSTRAINT chk_promotion_rule_active CHECK (is_active IN ('Y', 'N'))
+);
+
+
 
 
 
@@ -238,10 +335,8 @@ CREATE TABLE
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
         CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE', 'OUT')),
         CONSTRAINT fk_att_workplace_id FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
-        CONSTRAINT fk_att_leave_id FOREIGN KEY (leave_id) REFERENCES leave(leave_id),
         CONSTRAINT fk_att_attendance_threshold_id FOREIGN KEY (attendance_threshold_id) REFERENCES attendance_thresholds (attendance_threshold_id),
         CONSTRAINT fk_att_employee_id FOREIGN KEY (employee_id) REFERENCES users (employee_id),
-        CONSTRAINT fk_att_holiday_id FOREIGN KEY (holiday_id) REFERENCES holidays (holiday_id),
         CONSTRAINT uq_att_attendance_results UNIQUE (employee_id, work_date)
     );
 
@@ -254,22 +349,19 @@ create table attendance_correction(
 
     correction_daily_log number, -- FK 일용직 근태 정정 로그
 
-	correction_type varchar2(3char) not null, -- (IN/OUT) 출근/퇴근 정정 종류
+	correction_type VARCHAR2(3 CHAR) not null, -- (IN/OUT) 출근/퇴근 정정 종류
 	is_processed CHAR(1) DEFAULT 'N' not null, -- (Y/N) results 테이블 수정해서 근태 정정 처리 되었는지 나타냄
 	processed_by NUMBER NOT NULL, -- 담당자 FK USERS
-    correction_reason varchar2(300char) NOT NULL, -- 정정 사유
+    correction_reason VARCHAR2(300 CHAR) NOT NULL, -- 정정 사유
     before_time TIMESTAMP, -- 수정 전 시간(누락일 경우 있으므로 null 허용)
     after_time TIMESTAMP NOT NULL, -- 수정 후 시간
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NULL,
 
-    CONSTRAINT correction_fk_correction_daily_log FOREIGN KEY (correction_daily_log) REFERENCES attendance_logs_daily(attendance_logs_daily_id),
-	CONSTRAINT correction_fk_correction_target FOREIGN KEY (correction_target) REFERENCES attendance_results(attendance_result_id),
     CONSTRAINT correction_fk_processed_by FOREIGN KEY (processed_by) REFERENCES users(employee_id),
-	CONSTRAINT correction_fk_doc_id FOREIGN KEY (document_id) REFERENCES document(document_id),
 	CONSTRAINT correction_ck_type CHECK (correction_type IN ('IN', 'OUT')),
 	CONSTRAINT correction_ck_is_processed CHECK (is_processed IN ('Y', 'N'))
-)
+);
 
 -- 일용직 근로자 출퇴근 기록 테이블
 CREATE TABLE attendance_logs_daily(
@@ -311,8 +403,7 @@ CREATE TABLE
         type_id NUMBER PRIMARY KEY, -- 문서유형 ID (document_type_seq)
         type_name VARCHAR2 (100 CHAR) NOT NULL, -- 문서유형명
         detail_table VARCHAR2(50), -- 'leave', 'expenditure', 'purchase' 등
-        required_processing CHAR(1) -- Y면 업무처리함으로, N이면 승인 시 자동 처리
-    
+        required_processing CHAR(1), -- Y면 업무처리함으로, N이면 승인 시 자동 처리
         CONSTRAINT type_ck_req CHECK (required_processing IN ('Y', 'N'))
     );
 
@@ -679,17 +770,27 @@ COMMENT ON COLUMN work_notifications.message         IS '알림 내용';
 COMMENT ON COLUMN work_notifications.is_read         IS 'Y=읽음, N=미읽음 (PERSONAL만 사용)';
 COMMENT ON COLUMN work_notifications.created_at      IS '발송일시';
 
--- 인사평가 등급 컬럼 추가
-ALTER TABLE employee_evaluations ADD grade VARCHAR2(5);
+----------------------------------------------------------------------------------------
+-- 생성 순서 때문에 뒤에서 추가하는 FK 제약조건
 
--- 기존 확정 평가 데이터 등급 백필
-UPDATE employee_evaluations
-SET grade = CASE
-    WHEN total_score >= 43 THEN 'S'
-    WHEN total_score >= 38 THEN 'A'
-    WHEN total_score >= 33 THEN 'B'
-    WHEN total_score >= 28 THEN 'C'
-    ELSE 'D'
-END
-WHERE status = 'CONFIRMED' AND total_score IS NOT NULL;
+ALTER TABLE attendance_results
+ADD CONSTRAINT fk_att_leave_id
+FOREIGN KEY (leave_id) REFERENCES leave(leave_id);
+
+ALTER TABLE attendance_results
+ADD CONSTRAINT fk_att_holiday_id
+FOREIGN KEY (holiday_id) REFERENCES holidays(holiday_id);
+
+ALTER TABLE attendance_correction
+ADD CONSTRAINT correction_fk_correction_daily_log
+FOREIGN KEY (correction_daily_log) REFERENCES attendance_logs_daily(attendance_logs_daily_id);
+
+ALTER TABLE attendance_correction
+ADD CONSTRAINT correction_fk_correction_target
+FOREIGN KEY (correction_target) REFERENCES attendance_results(attendance_result_id);
+
+ALTER TABLE attendance_correction
+ADD CONSTRAINT correction_fk_doc_id
+FOREIGN KEY (document_id) REFERENCES document(document_id);
+
 COMMIT;

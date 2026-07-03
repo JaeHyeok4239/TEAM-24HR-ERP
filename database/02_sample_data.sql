@@ -9,32 +9,31 @@ DELETE FROM departments;
 -- 1. 부서 테이블 샘플 데이터
 
 INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
-VALUES ( 1, 'CEO', '대표이사', NULL, '회사 최고 경영자' );
+VALUES ( department_seq.NEXTVAL, 'CEO', '대표이사', NULL, '회사 최고 경영자' );
 
 INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
-VALUES ( 2, 'MGMT', '경영지원본부', 1, '경영지원 업무 총괄' );
+VALUES ( department_seq.NEXTVAL, 'MGMT', '경영지원본부', ( SELECT department_id FROM departments WHERE department_code = 'CEO' ), '경영지원 업무 총괄' );
 
 INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
-VALUES ( 3, 'FIELD', '현장관리본부', 1, '현장 운영 및 공사 관리 총괄' );
+VALUES ( department_seq.NEXTVAL, 'FIELD', '현장관리본부', ( SELECT department_id FROM departments WHERE department_code = 'CEO' ), '현장 운영 및 공사 관리 총괄' );
 
 INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
-VALUES ( 4, 'HR', '인사팀', 2, '인사 및 채용 담당' );
+VALUES ( department_seq.NEXTVAL, 'HR', '인사팀', ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), '인사 및 채용 담당' );
 
 INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
-VALUES ( 5, 'FIN', '재무회계팀', 2, '재무 및 회계 담당' );
+VALUES ( department_seq.NEXTVAL, 'FIN', '재무회계팀', ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), '재무 및 회계 담당' );
 
 INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
-VALUES ( 6, 'PUR', '구매팀', 2, '자재 구매 및 협력업체 관리' );
+VALUES ( department_seq.NEXTVAL, 'PUR', '구매팀', ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), '자재 구매 및 협력업체 관리' );
 
 INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
-VALUES ( 7, 'DEV', '개발팀', 2, '사내 시스템 개발 및 유지보수 담당' );
+VALUES ( department_seq.NEXTVAL, 'DEV', '개발팀', ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), '사내 시스템 개발 및 유지보수 담당' );
 
 INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
-VALUES ( 8, 'CONST', '공사관리팀', 3, '공사 일정 및 현장 관리' );
+VALUES ( department_seq.NEXTVAL, 'CONST', '공사관리팀', ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), '공사 일정 및 현장 관리' );
 
 INSERT INTO departments ( department_id, department_code, department_name, parent_department_id, description )
-VALUES ( 9, 'SAFE', '안전관리팀', 3, '산업안전 및 현장 안전관리' );
-
+VALUES ( department_seq.NEXTVAL, 'SAFE', '안전관리팀', ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), '산업안전 및 현장 안전관리' );
 
 -- 2. 직급 테이블 샘플 데이터
 
@@ -86,136 +85,347 @@ VALUES ( role_seq.NEXTVAL, 'PAYROLL', '급여', '급여관리 메뉴 접근 권�
 
 -- 4. 사용자 테이블 샘플 데이터
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP001', 'ceo', '1234', '대표이사', 1, 8, 'REGULAR', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210001', 'kimminjun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '김민준', '010-9001-0001', 'kimminjun@24hr.example.com', '04524', '서울특별시 중구 세종대로 110', '24HR타워 1층', '하나은행', NULL, '김민준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CEO' ), ( SELECT position_id FROM positions WHERE position_code = 'CEO' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-01-08 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP002', 'hr_lead', '1234', '인사팀장', 2, 6, 'REGULAR', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210002', 'leeseyeon', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '이서연', '010-9002-0002', 'leeseyeon@24hr.example.com', '06236', '서울특별시 강남구 테헤란로 152', '업무동 2층', '하나은행', NULL, '이서연', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-02-15 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP003', 'hr', '1234', '인사실무자', 2, 3, 'REGULAR', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210003', 'parkjihoon', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '박지훈', '010-9003-0003', 'parkjihoon@24hr.example.com', '03186', '서울특별시 종로구 종로 51', '본관 3층', '하나은행', NULL, '박지훈', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-03-22 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP004', 'attendance', '1234', '근태담당자', 2, 3, 'REGULAR', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210004', 'choiyujin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '최유진', '010-9004-0004', 'choiyujin@24hr.example.com', '07242', '서울특별시 영등포구 은행로 30', '사무동 4층', '하나은행', NULL, '최유진', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-04-05 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP005', 'payroll', '1234', '급여담당자', 3, 3, 'REGULAR', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210005', 'junghaneul', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '정하늘', '010-9005-0005', 'junghaneul@24hr.example.com', '16514', '경기도 수원시 영통구 광교로 156', '현장사무소 5층', '하나은행', NULL, '정하늘', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-05-12 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP006', 'purchase_manager', '1234', '구매팀장', 4, 6, 'REGULAR', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210006', 'kangdoyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '강도윤', '010-9006-0006', 'kangdoyun@24hr.example.com', '13529', '경기도 성남시 분당구 판교역로 235', '분당오피스 6층', '하나은행', NULL, '강도윤', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-06-19 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP007', 'construction_manager', '1234', '공사관리팀장', 5, 6, 'REGULAR', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210007', 'josubin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '조수빈', '010-9007-0007', 'josubin@24hr.example.com', '48059', '부산광역시 해운대구 센텀중앙로 90', '부산지사 7층', '하나은행', NULL, '조수빈', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-07-02 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP008', 'safety_manager', '1234', '안전관리팀장', 6, 6, 'REGULAR', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210008', 'yoonjiho', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '윤지호', '010-9008-0008', 'yoonjiho@24hr.example.com', '35209', '대전광역시 서구 둔산대로 100', '대전지사 8층', '하나은행', NULL, '윤지호', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-08-09 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP009', 'employee01', '1234', '일반직원1', 5, 1, 'REGULAR', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210009', 'jangseojun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '장서준', '010-9009-0009', 'jangseojun@24hr.example.com', '41911', '대구광역시 중구 국채보상로 586', '대구지사 9층', '하나은행', NULL, '장서준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-09-16 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP010', 'employee02', '1234', '일반직원2', 4, 1, 'REGULAR', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210010', 'imnayeon', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '임나연', '010-9000-0010', 'imnayeon@24hr.example.com', '61945', '광주광역시 서구 상무중앙로 7', '광주지사 10층', '하나은행', NULL, '임나연', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-10-23 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP011', 'daily01', '1234', '일용직1', 5, 1, 'DAILY', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210011', 'hanjimin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '한지민', '010-9001-0011', 'hanjimin@24hr.example.com', '04524', '서울특별시 중구 세종대로 110', '24HR타워 11층', '하나은행', NULL, '한지민', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-11-06 09:00:00', NULL );
 
-INSERT INTO users ( employee_id, employee_no, login_id, password, name, department_id, position_id, employment_type, hire_date )
-VALUES ( employee_seq.NEXTVAL, 'EMP012', 'daily02', '1234', '일용직2', 5, 1, 'DAILY', CURRENT_TIMESTAMP );
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210012', 'ohhyunwoo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '오현우', '010-9002-0012', 'ohhyunwoo@24hr.example.com', '06236', '서울특별시 강남구 테헤란로 152', '업무동 12층', '하나은행', NULL, '오현우', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-12-13 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220001', 'seominjae', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '서민재', '010-9003-0013', 'seominjae@24hr.example.com', '03186', '서울특별시 종로구 종로 51', '본관 13층', '하나은행', NULL, '서민재', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-01-20 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220002', 'shinyeeun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '신예은', '010-9004-0014', 'shinyeeun@24hr.example.com', '07242', '서울특별시 영등포구 은행로 30', '사무동 14층', '하나은행', NULL, '신예은', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-02-03 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220003', 'kwontaehyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '권태현', '010-9005-0015', 'kwontaehyun@24hr.example.com', '16514', '경기도 수원시 영통구 광교로 156', '현장사무소 15층', '하나은행', NULL, '권태현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-03-10 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220004', 'hwangseoa', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '황서아', '010-9006-0016', 'hwangseoa@24hr.example.com', '13529', '경기도 성남시 분당구 판교역로 235', '분당오피스 16층', '하나은행', NULL, '황서아', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-04-17 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220005', 'anjiwoo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '안지우', '010-9007-0017', 'anjiwoo@24hr.example.com', '48059', '부산광역시 해운대구 센텀중앙로 90', '부산지사 17층', '하나은행', NULL, '안지우', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-05-24 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220006', 'songjunho', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '송준호', '010-9008-0018', 'songjunho@24hr.example.com', '35209', '대전광역시 서구 둔산대로 100', '대전지사 18층', '하나은행', NULL, '송준호', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-06-07 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220007', 'ryuharin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '류하린', '010-9009-0019', 'ryuharin@24hr.example.com', '41911', '대구광역시 중구 국채보상로 586', '대구지사 19층', '하나은행', NULL, '류하린', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-07-14 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220008', 'hongminseo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '홍민서', '010-9000-0020', 'hongminseo@24hr.example.com', '61945', '광주광역시 서구 상무중앙로 7', '광주지사 20층', '하나은행', NULL, '홍민서', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-08-21 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220009', 'baesungmin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '배성민', '010-9001-0021', 'baesungmin@24hr.example.com', '04524', '서울특별시 중구 세종대로 110', '24HR타워 1층', '하나은행', NULL, '배성민', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-09-04 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220010', 'moonchaewon', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '문채원', '010-9002-0022', 'moonchaewon@24hr.example.com', '06236', '서울특별시 강남구 테헤란로 152', '업무동 2층', '하나은행', NULL, '문채원', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-10-11 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220011', 'baekdohyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '백도현', '010-9003-0023', 'baekdohyun@24hr.example.com', '03186', '서울특별시 종로구 종로 51', '본관 3층', '하나은행', NULL, '백도현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-11-18 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220012', 'namgaeun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '남가은', '010-9004-0024', 'namgaeun@24hr.example.com', '07242', '서울특별시 영등포구 은행로 30', '사무동 4층', '하나은행', NULL, '남가은', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-12-01 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230001', 'simyuchan', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '심유찬', '010-9005-0025', 'simyuchan@24hr.example.com', '16514', '경기도 수원시 영통구 광교로 156', '현장사무소 5층', '하나은행', NULL, '심유찬', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-01-08 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230002', 'yangseoyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '양서윤', '010-9006-0026', 'yangseoyun@24hr.example.com', '13529', '경기도 성남시 분당구 판교역로 235', '분당오피스 6층', '하나은행', NULL, '양서윤', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-02-15 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230003', 'nohyunseo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '노현서', '010-9007-0027', 'nohyunseo@24hr.example.com', '48059', '부산광역시 해운대구 센텀중앙로 90', '부산지사 7층', '하나은행', NULL, '노현서', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-03-22 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230004', 'hajunyoung', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '하준영', '010-9008-0028', 'hajunyoung@24hr.example.com', '35209', '대전광역시 서구 둔산대로 100', '대전지사 8층', '하나은행', NULL, '하준영', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-04-05 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230005', 'jeondaeun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '전다은', '010-9009-0029', 'jeondaeun@24hr.example.com', '41911', '대구광역시 중구 국채보상로 586', '대구지사 9층', '하나은행', NULL, '전다은', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-05-12 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230006', 'yoosiwoo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '유시우', '010-9000-0030', 'yoosiwoo@24hr.example.com', '61945', '광주광역시 서구 상무중앙로 7', '광주지사 10층', '하나은행', NULL, '유시우', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-06-19 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230007', 'gooyerin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '구예린', '010-9001-0031', 'gooyerin@24hr.example.com', '04524', '서울특별시 중구 세종대로 110', '24HR타워 11층', '하나은행', NULL, '구예린', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'DIRECTOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-07-02 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230008', 'minjaehyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '민재현', '010-9002-0032', 'minjaehyun@24hr.example.com', '06236', '서울특별시 강남구 테헤란로 152', '업무동 12층', '하나은행', NULL, '민재현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'DIRECTOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-08-09 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230009', 'jinseojin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '진서진', '010-9003-0033', 'jinseojin@24hr.example.com', '03186', '서울특별시 종로구 종로 51', '본관 13층', '하나은행', NULL, '진서진', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-09-16 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230010', 'juarin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '주아린', '010-9004-0034', 'juarin@24hr.example.com', '07242', '서울특별시 영등포구 은행로 30', '사무동 14층', '하나은행', NULL, '주아린', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-10-23 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230011', 'pyojiho', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '표지호', '010-9005-0035', 'pyojiho@24hr.example.com', '16514', '경기도 수원시 영통구 광교로 156', '현장사무소 15층', '하나은행', NULL, '표지호', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-11-06 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230012', 'giseojun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '기서준', '010-9006-0036', 'giseojun@24hr.example.com', '13529', '경기도 성남시 분당구 판교역로 235', '분당오피스 16층', '하나은행', NULL, '기서준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-12-13 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240001', 'raeunchae', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '라은채', '010-9007-0037', 'raeunchae@24hr.example.com', '48059', '부산광역시 해운대구 센텀중앙로 90', '부산지사 17층', '하나은행', NULL, '라은채', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-01-20 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240002', 'madohyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '마도현', '010-9008-0038', 'madohyun@24hr.example.com', '35209', '대전광역시 서구 둔산대로 100', '대전지사 18층', '하나은행', NULL, '마도현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-02-03 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240003', 'chaseowoo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '차서우', '010-9009-0039', 'chaseowoo@24hr.example.com', '41911', '대구광역시 중구 국채보상로 586', '대구지사 19층', '하나은행', NULL, '차서우', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-03-10 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240004', 'wonjian', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '원지안', '010-9000-0040', 'wonjian@24hr.example.com', '61945', '광주광역시 서구 상무중앙로 7', '광주지사 20층', '하나은행', NULL, '원지안', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-04-17 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240005', 'kimhajun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '김하준', '010-9001-0041', 'kimhajun@24hr.example.com', '04524', '서울특별시 중구 세종대로 110', '24HR타워 1층', '하나은행', NULL, '김하준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-05-24 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240006', 'leedohyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '이도현', '010-9002-0042', 'leedohyun@24hr.example.com', '06236', '서울특별시 강남구 테헤란로 152', '업무동 2층', '하나은행', NULL, '이도현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-06-07 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240007', 'parkseoa', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '박서아', '010-9003-0043', 'parkseoa@24hr.example.com', '03186', '서울특별시 종로구 종로 51', '본관 3층', '하나은행', NULL, '박서아', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-07-14 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240008', 'choijunseo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '최준서', '010-9004-0044', 'choijunseo@24hr.example.com', '07242', '서울특별시 영등포구 은행로 30', '사무동 4층', '하나은행', NULL, '최준서', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-08-21 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240009', 'jungdahyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '정다현', '010-9005-0045', 'jungdahyun@24hr.example.com', '16514', '경기도 수원시 영통구 광교로 156', '현장사무소 5층', '하나은행', NULL, '정다현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-09-04 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240010', 'kangminseok', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '강민석', '010-9006-0046', 'kangminseok@24hr.example.com', '13529', '경기도 성남시 분당구 판교역로 235', '분당오피스 6층', '하나은행', NULL, '강민석', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-10-11 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240011', 'joyejin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '조예진', '010-9007-0047', 'joyejin@24hr.example.com', '48059', '부산광역시 해운대구 센텀중앙로 90', '부산지사 7층', '하나은행', NULL, '조예진', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-11-18 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20240012', 'yoonseohyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '윤서현', '010-9008-0048', 'yoonseohyun@24hr.example.com', '35209', '대전광역시 서구 둔산대로 100', '대전지사 8층', '하나은행', NULL, '윤서현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2024-12-01 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250001', 'jangyuna', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '장유나', '010-9009-0049', 'jangyuna@24hr.example.com', '41911', '대구광역시 중구 국채보상로 586', '대구지사 9층', '하나은행', NULL, '장유나', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-01-08 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250002', 'imjihwan', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '임지환', '010-9000-0050', 'imjihwan@24hr.example.com', '61945', '광주광역시 서구 상무중앙로 7', '광주지사 10층', '하나은행', NULL, '임지환', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-02-15 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250003', 'hanseojun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '한서준', '010-9001-0051', 'hanseojun@24hr.example.com', '04524', '서울특별시 중구 세종대로 110', '24HR타워 11층', '하나은행', NULL, '한서준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-03-22 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250004', 'ohjimin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '오지민', '010-9002-0052', 'ohjimin@24hr.example.com', '06236', '서울특별시 강남구 테헤란로 152', '업무동 12층', '하나은행', NULL, '오지민', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-04-05 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250005', 'seodoyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '서도윤', '010-9003-0053', 'seodoyun@24hr.example.com', '03186', '서울특별시 종로구 종로 51', '본관 13층', '하나은행', NULL, '서도윤', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-05-12 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250006', 'shinhayoung', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '신하영', '010-9004-0054', 'shinhayoung@24hr.example.com', '07242', '서울특별시 영등포구 은행로 30', '사무동 14층', '하나은행', NULL, '신하영', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-06-19 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250007', 'kwonyujin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '권유진', '010-9005-0055', 'kwonyujin@24hr.example.com', '16514', '경기도 수원시 영통구 광교로 156', '현장사무소 15층', '하나은행', NULL, '권유진', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-07-02 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250008', 'hwangmingyu', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '황민규', '010-9006-0056', 'hwangmingyu@24hr.example.com', '13529', '경기도 성남시 분당구 판교역로 235', '분당오피스 16층', '하나은행', NULL, '황민규', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-08-09 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250009', 'anseohyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '안서현', '010-9007-0057', 'anseohyun@24hr.example.com', '48059', '부산광역시 해운대구 센텀중앙로 90', '부산지사 17층', '하나은행', NULL, '안서현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-09-16 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250010', 'songdain', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '송다인', '010-9008-0058', 'songdain@24hr.example.com', '35209', '대전광역시 서구 둔산대로 100', '대전지사 18층', '하나은행', NULL, '송다인', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-10-23 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250011', 'ryujunseo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '류준서', '010-9009-0059', 'ryujunseo@24hr.example.com', '41911', '대구광역시 중구 국채보상로 586', '대구지사 19층', '하나은행', NULL, '류준서', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-11-06 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20250012', 'hongjia', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '홍지아', '010-9000-0060', 'hongjia@24hr.example.com', '61945', '광주광역시 서구 상무중앙로 7', '광주지사 20층', '하나은행', NULL, '홍지아', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2025-12-13 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20260001', 'baeyuchan', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '배유찬', '010-9001-0061', 'baeyuchan@24hr.example.com', '04524', '서울특별시 중구 세종대로 110', '24HR타워 1층', '하나은행', NULL, '배유찬', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2026-01-20 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20260002', 'moonseoyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '문서윤', '010-9002-0062', 'moonseoyun@24hr.example.com', '06236', '서울특별시 강남구 테헤란로 152', '업무동 2층', '하나은행', NULL, '문서윤', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2026-02-03 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20260003', 'baeksihyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '백시현', '010-9003-0063', 'baeksihyun@24hr.example.com', '03186', '서울특별시 종로구 종로 51', '본관 3층', '하나은행', NULL, '백시현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'DIRECTOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2026-03-10 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20260004', 'namjunho', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '남준호', '010-9004-0064', 'namjunho@24hr.example.com', '07242', '서울특별시 영등포구 은행로 30', '사무동 4층', '하나은행', NULL, '남준호', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'DIRECTOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2026-04-17 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20260005', 'simgaon', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '심가온', '010-9005-0065', 'simgaon@24hr.example.com', '16514', '경기도 수원시 영통구 광교로 156', '현장사무소 5층', '하나은행', NULL, '심가온', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2026-05-24 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20260006', 'yangjiyu', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '양지유', '010-9006-0066', 'yangjiyu@24hr.example.com', '13529', '경기도 성남시 분당구 판교역로 235', '분당오피스 6층', '하나은행', NULL, '양지유', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2026-06-07 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210013', 'nominjae', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '노민재', '010-9007-0067', 'nominjae@24hr.example.com', '48059', '부산광역시 해운대구 센텀중앙로 90', '부산지사 7층', '하나은행', NULL, '노민재', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-01-14 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210014', 'haseoyeon', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '하서연', '010-9008-0068', 'haseoyeon@24hr.example.com', '35209', '대전광역시 서구 둔산대로 100', '대전지사 8층', '하나은행', NULL, '하서연', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-02-21 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210015', 'jeonharam', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '전하람', '010-9009-0069', 'jeonharam@24hr.example.com', '41911', '대구광역시 중구 국채보상로 586', '대구지사 9층', '하나은행', NULL, '전하람', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-03-04 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210016', 'yoodoyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '유도윤', '010-9000-0070', 'yoodoyun@24hr.example.com', '61945', '광주광역시 서구 상무중앙로 7', '광주지사 10층', '하나은행', NULL, '유도윤', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-04-11 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210017', 'gooseojin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '구서진', '010-9001-0071', 'gooseojin@24hr.example.com', '04524', '서울특별시 중구 세종대로 110', '24HR타워 11층', '하나은행', NULL, '구서진', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-05-18 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210018', 'minhaeun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '민하은', '010-9002-0072', 'minhaeun@24hr.example.com', '06236', '서울특별시 강남구 테헤란로 152', '업무동 12층', '하나은행', NULL, '민하은', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-06-01 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210019', 'jintaeo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '진태오', '010-9003-0073', 'jintaeo@24hr.example.com', '03186', '서울특별시 종로구 종로 51', '본관 13층', '하나은행', NULL, '진태오', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-07-08 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210020', 'juseoa', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '주서아', '010-9004-0074', 'juseoa@24hr.example.com', '07242', '서울특별시 영등포구 은행로 30', '사무동 14층', '하나은행', NULL, '주서아', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-08-15 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210021', 'pyohyunjoon', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '표현준', '010-9005-0075', 'pyohyunjoon@24hr.example.com', '16514', '경기도 수원시 영통구 광교로 156', '현장사무소 15층', '하나은행', NULL, '표현준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-09-22 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210022', 'giminseo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '기민서', '010-9006-0076', 'giminseo@24hr.example.com', '13529', '경기도 성남시 분당구 판교역로 235', '분당오피스 16층', '하나은행', NULL, '기민서', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-10-05 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210023', 'rasiwoo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '라시우', '010-9007-0077', 'rasiwoo@24hr.example.com', '48059', '부산광역시 해운대구 센텀중앙로 90', '부산지사 17층', '하나은행', NULL, '라시우', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-11-12 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20210024', 'mayujin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '마유진', '010-9008-0078', 'mayujin@24hr.example.com', '35209', '대전광역시 서구 둔산대로 100', '대전지사 18층', '하나은행', NULL, '마유진', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2021-12-19 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220013', 'chadoyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '차도윤', '010-9009-0079', 'chadoyun@24hr.example.com', '41911', '대구광역시 중구 국채보상로 586', '대구지사 19층', '하나은행', NULL, '차도윤', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-01-02 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220014', 'wonseojun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '원서준', '010-9000-0080', 'wonseojun@24hr.example.com', '61945', '광주광역시 서구 상무중앙로 7', '광주지사 20층', '하나은행', NULL, '원서준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-02-09 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220015', 'kimyejun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '김예준', '010-9001-0081', 'kimyejun@24hr.example.com', '04524', '서울특별시 중구 세종대로 110', '24HR타워 1층', '하나은행', NULL, '김예준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'DEPUTY_GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-03-16 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220016', 'leeharin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '이하린', '010-9002-0082', 'leeharin@24hr.example.com', '06236', '서울특별시 강남구 테헤란로 152', '업무동 2층', '하나은행', NULL, '이하린', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-04-23 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220017', 'parkminseo', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '박민서', '010-9003-0083', 'parkminseo@24hr.example.com', '03186', '서울특별시 종로구 종로 51', '본관 3층', '하나은행', NULL, '박민서', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-05-06 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220018', 'choidohyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '최도현', '010-9004-0084', 'choidohyun@24hr.example.com', '07242', '서울특별시 영등포구 은행로 30', '사무동 4층', '하나은행', NULL, '최도현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-06-13 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220019', 'jungyuna', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '정유나', '010-9005-0085', 'jungyuna@24hr.example.com', '16514', '경기도 수원시 영통구 광교로 156', '현장사무소 5층', '하나은행', NULL, '정유나', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-07-20 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220020', 'kangseojun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '강서준', '010-9006-0086', 'kangseojun@24hr.example.com', '13529', '경기도 성남시 분당구 판교역로 235', '분당오피스 6층', '하나은행', NULL, '강서준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-08-03 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220021', 'johaeun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '조하은', '010-9007-0087', 'johaeun@24hr.example.com', '48059', '부산광역시 해운대구 센텀중앙로 90', '부산지사 7층', '하나은행', NULL, '조하은', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-09-10 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220022', 'yoonmingyu', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '윤민규', '010-9008-0088', 'yoonmingyu@24hr.example.com', '35209', '대전광역시 서구 둔산대로 100', '대전지사 8층', '하나은행', NULL, '윤민규', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-10-17 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220023', 'jangharin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '장하린', '010-9009-0089', 'jangharin@24hr.example.com', '41911', '대구광역시 중구 국채보상로 586', '대구지사 9층', '하나은행', NULL, '장하린', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'GENERAL_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-11-24 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20220024', 'imseoyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '임서윤', '010-9000-0090', 'imseoyun@24hr.example.com', '61945', '광주광역시 서구 상무중앙로 7', '광주지사 10층', '하나은행', NULL, '임서윤', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2022-12-07 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230013', 'handoyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '한도윤', '010-9001-0091', 'handoyun@24hr.example.com', '04524', '서울특별시 중구 세종대로 110', '24HR타워 11층', '하나은행', NULL, '한도윤', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-01-14 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230014', 'ohseojun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '오서준', '010-9002-0092', 'ohseojun@24hr.example.com', '06236', '서울특별시 강남구 테헤란로 152', '업무동 12층', '하나은행', NULL, '오서준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-02-21 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230015', 'seohaneul', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '서하늘', '010-9003-0093', 'seohaneul@24hr.example.com', '03186', '서울특별시 종로구 종로 51', '본관 13층', '하나은행', NULL, '서하늘', NULL, ( SELECT department_id FROM departments WHERE department_code = 'CONST' ), ( SELECT position_id FROM positions WHERE position_code = 'SENIOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-03-04 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230016', 'shinminjun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '신민준', '010-9004-0094', 'shinminjun@24hr.example.com', '07242', '서울특별시 영등포구 은행로 30', '사무동 14층', '하나은행', NULL, '신민준', NULL, ( SELECT department_id FROM departments WHERE department_code = 'SAFE' ), ( SELECT position_id FROM positions WHERE position_code = 'MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-04-11 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230017', 'kwonseoa', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '권서아', '010-9005-0095', 'kwonseoa@24hr.example.com', '16514', '경기도 수원시 영통구 광교로 156', '현장사무소 15층', '하나은행', NULL, '권서아', NULL, ( SELECT department_id FROM departments WHERE department_code = 'MGMT' ), ( SELECT position_id FROM positions WHERE position_code = 'DIRECTOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-05-18 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230018', 'hwangdohyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '황도현', '010-9006-0096', 'hwangdohyun@24hr.example.com', '13529', '경기도 성남시 분당구 판교역로 235', '분당오피스 16층', '하나은행', NULL, '황도현', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIELD' ), ( SELECT position_id FROM positions WHERE position_code = 'DIRECTOR' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-06-01 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230019', 'anyujin', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '안유진', '010-9007-0097', 'anyujin@24hr.example.com', '48059', '부산광역시 해운대구 센텀중앙로 90', '부산지사 17층', '하나은행', NULL, '안유진', NULL, ( SELECT department_id FROM departments WHERE department_code = 'HR' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-07-08 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230020', 'songminjae', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '송민재', '010-9008-0098', 'songminjae@24hr.example.com', '35209', '대전광역시 서구 둔산대로 100', '대전지사 18층', '하나은행', NULL, '송민재', NULL, ( SELECT department_id FROM departments WHERE department_code = 'FIN' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-08-15 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230021', 'ryuseoyeon', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '류서연', '010-9009-0099', 'ryuseoyeon@24hr.example.com', '41911', '대구광역시 중구 국채보상로 586', '대구지사 19층', '하나은행', NULL, '류서연', NULL, ( SELECT department_id FROM departments WHERE department_code = 'PUR' ), ( SELECT position_id FROM positions WHERE position_code = 'STAFF' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-09-22 09:00:00', NULL );
+
+INSERT INTO users ( employee_id, employee_no, login_id, password, name, phone, email, zipcode, address, address_detail, bank_name, account_number, account_holder, rrn, department_id, position_id, employment_type, status, is_first_login, last_login_at, hire_date, resignation_date )
+VALUES ( employee_seq.NEXTVAL, 'EMP20230022', 'hongdoyun', '$2y$10$qQTjZ.aOLoBavK45/.gNresi4PRWjsyEpec7TBj4/kiV8Uil8WkfC', '홍도윤', '010-9000-0100', 'hongdoyun@24hr.example.com', '61945', '광주광역시 서구 상무중앙로 7', '광주지사 20층', '하나은행', NULL, '홍도윤', NULL, ( SELECT department_id FROM departments WHERE department_code = 'DEV' ), ( SELECT position_id FROM positions WHERE position_code = 'ASSISTANT_MANAGER' ), 'REGULAR', 'ACTIVE', 'N', NULL, TIMESTAMP '2023-10-05 09:00:00', NULL );
 
 
 -- 5. 사용자 역할 매핑 테이블 샘플 데이터
 
 INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 1, 1 ); -- 대표이사 ADMIN
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 1, 2 ); -- 대표이사 USER
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 1, 3 ); -- 대표이사 
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 1, 4 ); -- 대표이사
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 1, 5 ); -- 대표이사 
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 1, 6 ); -- 대표이사 
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 2, 2 ); -- 인사팀장 USER
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 2, 3 ); -- 인사팀장 
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 2, 4 ); -- 인사팀장 
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 3, 2 ); -- 인사실무자 USER
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 3, 3 ); -- 인사실무자 
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 4, 2 ); -- 근태담당자 USER
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 4, 5 ); -- 근태담당자 
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 5, 2 ); -- 급여담당자 USER
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 5, 6 ); -- 급여담당자 
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 6, 2 ); -- 구매팀장 USER
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 7, 2 ); -- 공사관리팀장 USER
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 8, 2 ); -- 안전관리팀장 USER
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 9, 2 ); -- 일반직원1 USER
-
-INSERT INTO user_roles ( user_roles_id, employee_id, role_id )
-VALUES ( user_role_seq.NEXTVAL, 10, 2 ); -- 일반직원2 USER
+SELECT user_role_seq.NEXTVAL, u.employee_id, r.role_id
+FROM users u
+JOIN roles r ON r.role_code = 'USER'
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM user_roles ur
+    WHERE ur.employee_id = u.employee_id
+      AND ur.role_id = r.role_id
+);
 
 -- 직원별 연차 잔액 샘플 데이터
--- 정규직 employee_id 1~10만 등록
-INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
-VALUES ( annual_leave_balance_seq.NEXTVAL, 1, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
-
-INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
-VALUES ( annual_leave_balance_seq.NEXTVAL, 2, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
-
-INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
-VALUES ( annual_leave_balance_seq.NEXTVAL, 3, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
-
-INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
-VALUES ( annual_leave_balance_seq.NEXTVAL, 4, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
-
-INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
-VALUES ( annual_leave_balance_seq.NEXTVAL, 5, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
-
-INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
-VALUES ( annual_leave_balance_seq.NEXTVAL, 6, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
-
-INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
-VALUES ( annual_leave_balance_seq.NEXTVAL, 7, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
-
-INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
-VALUES ( annual_leave_balance_seq.NEXTVAL, 8, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
-
-INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
-VALUES ( annual_leave_balance_seq.NEXTVAL, 9, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
-
-INSERT INTO annual_leave_balances ( annual_leave_balance_id, employee_id, leave_year, total_days, remaining_days, granted_at, expires_at )
-VALUES ( annual_leave_balance_seq.NEXTVAL, 10, EXTRACT(YEAR FROM SYSDATE), 15.00, 15.00, SYSTIMESTAMP, ADD_MONTHS(SYSTIMESTAMP, 12) );
+INSERT INTO annual_leave_balances (
+    annual_leave_balance_id,
+    employee_id,
+    leave_year,
+    total_days,
+    remaining_days,
+    granted_at,
+    expires_at
+)
+SELECT
+    annual_leave_balance_seq.NEXTVAL,
+    u.employee_id,
+    EXTRACT(YEAR FROM SYSDATE),
+    15.00,
+    15.00,
+    SYSTIMESTAMP,
+    ADD_MONTHS(SYSTIMESTAMP, 12)
+FROM users u
+WHERE u.employment_type = 'REGULAR'
+  AND u.status = 'ACTIVE'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM annual_leave_balances alb
+      WHERE alb.employee_id = u.employee_id
+        AND alb.leave_year = EXTRACT(YEAR FROM SYSDATE)
+  );
 
 -- 테이블 삭제
 DELETE FROM attendance_logs;
