@@ -35,6 +35,9 @@ Thumbs.db
 .env.production.local
 .env.test.local
 
+# Docker compose env
+.env.app.local
+
 # Logs
 *.log
 npm-debug.log*
