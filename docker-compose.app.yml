@@ -8,28 +8,28 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_PROFILES_ACTIVE: "${SPRING_PROFILES_ACTIVE}"
 
-      DB_URL: jdbc:oracle:thin:@192.168.0.237:1522/XEPDB1
-      DB_USERNAME: hr24
-      DB_PASSWORD: hr24
+      DB_URL: "${DB_URL}"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
 
-      REDIS_HOST: 192.168.0.237
-      REDIS_PORT: 6379
+      REDIS_HOST: "${REDIS_HOST}"
+      REDIS_PORT: "${REDIS_PORT}"
 
-      MAIL_ENABLED: false
-      MAIL_USERNAME: dummy
-      MAIL_PASSWORD: dummy
+      MAIL_ENABLED: "${MAIL_ENABLED}"
+      MAIL_USERNAME: "${MAIL_USERNAME}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD}"
 
-      JWT_SECRET: hr24-jwt-secret-key-hr24-jwt-secret-key-hr24
-      HR24_CRYPTO_SECRET_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+      JWT_SECRET: "${JWT_SECRET}"
+      HR24_CRYPTO_SECRET_KEY: "${HR24_CRYPTO_SECRET_KEY}"
 
-      CORS_ALLOWED_ORIGINS: http://localhost:3000
-      COOKIE_SECURE: false
-      COOKIE_SAME_SITE: Lax
+      CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS}"
+      COOKIE_SECURE: "${COOKIE_SECURE}"
+      COOKIE_SAME_SITE: "${COOKIE_SAME_SITE}"
 
-      FILE_UPLOAD_PATH: /app/uploads
-      SPRINGDOC_ENABLED: true
+      FILE_UPLOAD_PATH: "${FILE_UPLOAD_PATH}"
+      SPRINGDOC_ENABLED: "${SPRINGDOC_ENABLED}"
     volumes:
       - backend-uploads:/app/uploads
 
@@ -38,7 +38,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_ORIGIN: http://localhost:8080
+        NEXT_PUBLIC_API_ORIGIN: "${NEXT_PUBLIC_API_ORIGIN}"
     image: hr24-frontend:local
     container_name: hr24-frontend
     ports:
