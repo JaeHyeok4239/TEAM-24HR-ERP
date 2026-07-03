@@ -60,7 +60,7 @@ CREATE TABLE
         address VARCHAR2 (255),
         address_detail VARCHAR2 (255),
         bank_name VARCHAR2 (50),
-        account_number VARCHAR2 (50),
+        account_number VARCHAR2 (255),
         account_holder VARCHAR2 (50),
         rrn VARCHAR2 (255),
         department_id NUMBER,
@@ -103,6 +103,42 @@ CREATE TABLE
         CONSTRAINT uk_user_roles_user_role UNIQUE (employee_id, role_id)
     );
 
+-- 6. 인사 이력 테이블
+CREATE TABLE employee_histories (
+    employee_history_id NUMBER PRIMARY KEY,
+    employee_id NUMBER NOT NULL,
+    changed_by_employee_id NUMBER,
+    change_item VARCHAR2(50) NOT NULL,
+    before_value VARCHAR2(500),
+    after_value VARCHAR2(500),
+    change_reason VARCHAR2(500) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    CONSTRAINT fk_employee_histories_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
+    CONSTRAINT fk_employee_histories_changed_by FOREIGN KEY (changed_by_employee_id) REFERENCES users (employee_id)
+);
+
+-- 직원별 연차 잔액
+CREATE TABLE annual_leave_balances (
+    annual_leave_balance_id NUMBER NOT NULL,
+    employee_id NUMBER NOT NULL,
+    leave_year NUMBER(4) NOT NULL,
+    total_days NUMBER(5, 2) DEFAULT 0 NOT NULL,
+    remaining_days NUMBER(5, 2) DEFAULT 0 NOT NULL,
+    granted_at TIMESTAMP NULL,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NULL,
+
+    CONSTRAINT pk_annual_leave_balances PRIMARY KEY (annual_leave_balance_id),
+    CONSTRAINT fk_annual_leave_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
+    CONSTRAINT uk_annual_leave_employee_year UNIQUE (employee_id, leave_year),
+    CONSTRAINT chk_annual_leave_total_days CHECK (total_days >= 0),
+    CONSTRAINT chk_annual_leave_remaining_days CHECK (remaining_days >= 0),
+    CONSTRAINT chk_annual_leave_remaining_total CHECK (remaining_days <= total_days)
+);
+
+
 
 
 
@@ -112,8 +148,7 @@ CREATE TABLE
     attendance_time_policies (
         attendance_time_policy_id NUMBER NOT NULL,
         employment_type VARCHAR2 (20) NOT NULL, -- 직원 구분(REGULAR/DAILY)
-        policy_type VARCHAR2 (20) NOT NULL, -- 규칙 타입(WORK/BREAK/HALF_AM/HALF_PM)
-        day_of_week VARCHAR2 (10) NOT NULL, -- 요일 코드(MON~SUN)
+        policy_type VARCHAR2 (20) NOT NULL, -- 규칙 타입(WORK/BREAK)
         start_time NUMBER (4) NOT NULL, -- 규칙 시작 시간(HHMM)
         end_time NUMBER (4) NOT NULL, -- 규칙 종료 시간(HHMM) ex. 오전 9시는 0900
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -123,6 +158,7 @@ CREATE TABLE
         CONSTRAINT chk_att_time_end_range CHECK (end_time BETWEEN 0 AND 2359),
         CONSTRAINT chk_att_time_start_minute CHECK (MOD(start_time, 100) < 60),
         CONSTRAINT chk_att_time_end_minute CHECK (MOD(end_time, 100) < 60),
+        CONSTRAINT chk_att_policy_type CHECK (policy_type IN ('WORK', 'BREAK')),
         CONSTRAINT chk_att_time_emp_type CHECK (employment_type IN ('REGULAR', 'DAILY'))
     );
 
@@ -143,7 +179,7 @@ CREATE TABLE
 -- 근태관리: 근무지
 CREATE TABLE
     workplaces (
-        workplace_id NUMBER NOT NULL,
+        workplace_id NUMBER NOT NULL, -- 1 본사(정규직) 2 근무지1(일용직) 3 근무지2(일용직)
         workplace_code VARCHAR2 (30) NOT NULL,
         workplace_name VARCHAR2 (100) NOT NULL,
         workplace_address VARCHAR2 (255) NULL,
@@ -167,97 +203,101 @@ CREATE TABLE
         is_location_valid CHAR(1) DEFAULT 'N' NOT NULL, -- 위치 인증 여부(Y/N)
         workplace_id NUMBER NULL, -- 근무지
         work_date DATE NOT NULL, -- 근무 날짜
-        memo VARCHAR2 (255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
         CONSTRAINT pk_attendance_logs PRIMARY KEY (attendance_log_id),
         CONSTRAINT fk_att_logs_employee FOREIGN KEY (employee_id) REFERENCES users (employee_id),
-        CONSTRAINT fk_att_logs_workplace FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id)
+        CONSTRAINT fk_att_logs_workplace FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
         CONSTRAINT uk_att_logs UNIQUE (employee_id, work_date, log_type)
     );
 
 -- 근태관리: 근태 결과
 CREATE TABLE
     attendance_results (
-        attendance_result_id NUMBER NOT NULL,
-        attendance_status_id NUMBER NOT NULL,
-        attendance_threshold_id NUMBER NOT NULL,
-        approval_status_id NUMBER NOT NULL,
-        half_day_type_id NUMBER NULL,
-        holiday_id NUMBER NULL,
-        correction_type_id NUMBER NOT NULL,
-        correction_reason_type_id NUMBER NOT NULL, 
-        employee_id NUMBER NOT NULL, 
+        attendance_result_id NUMBER NOT NULL, -- PK
+        attendance_threshold_id NUMBER NULL, -- FK 근태 판정 기준
+        holiday_id NUMBER NULL, -- FK 공휴일
+        employee_id NUMBER NOT NULL, -- FK 유저 테이블
+        attendance_correction_id NUMBER NULL, -- 정정 이력 테이블(FK는 정정 이력 쪽에서만 단방향 연결)
+        leave_id NUMBER NULL, -- FK 연차/반차/조퇴 등 휴가 신청 데이터 테이블
+        workplace_id NUMBER NULL, -- FK 근무지
+
         work_date DATE NOT NULL, -- 근무 기준 날짜
         check_in_time TIMESTAMP NULL, -- 출근 시간
         check_out_time TIMESTAMP NULL, -- 퇴근 시간
-        total_work_minutes NUMBER NULL, -- 총 근무 시간(분)
-        actual_work_minutes NUMBER NULL, -- 휴게 제외 실 근무 시간(분)
+        total_work_minutes NUMBER NULL, -- 총 출근 시간(휴게 포함)
+        actual_work_minutes NUMBER NULL, -- 기본 근무 시간(휴게, 초과 근무 제외)
         overtime_minutes NUMBER NULL, -- 초과 근무 시간(분)
+        attendance_status VARCHAR2(20) NOT NULL, -- 근태 상태(대기/근무/지각/조퇴/결근/휴가)
         is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
         is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
-        is_correction_required CHAR(1) DEFAULT 'N' NOT NULL, -- 정정 필요 여부(Y/N)
-        processing_status VARCHAR2 (30) DEFAULT 'NORMAL' NOT NULL, -- 처리 상태(NORMAL/CORRECTION_REQUIRED/CORRECTED)
-        correction_reason VARCHAR2 (255) NULL, -- 근태 정정 사유
+        is_fixed CHAR(1) DEFAULT 'N' NOT NULL, --(Y/N) 정정 여부
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
+
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
-        CONSTRAINT fk_att_attendance_status_id FOREIGN KEY (attendance_status_id) REFERENCES attendance_statuses (attendance_status_id),
+        CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE', 'OUT')),
+        CONSTRAINT fk_att_workplace_id FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
+        CONSTRAINT fk_att_leave_id FOREIGN KEY (leave_id) REFERENCES leave(leave_id),
         CONSTRAINT fk_att_attendance_threshold_id FOREIGN KEY (attendance_threshold_id) REFERENCES attendance_thresholds (attendance_threshold_id),
         CONSTRAINT fk_att_employee_id FOREIGN KEY (employee_id) REFERENCES users (employee_id),
-        CONSTRAINT fk_att_half_day_type_id FOREIGN KEY (half_day_type_id) REFERENCES half_day_types (half_day_type_id),
-        CONSTRAINT fk_att_correction_type_id FOREIGN KEY (correction_type_id) REFERENCES correction_types (correction_type_id),
-        CONSTRAINT fk_att_correction_reason_type_id FOREIGN KEY (correction_reason_type_id) REFERENCES correction_reason_types (correction_reason_type_id),
-        CONSTRAINT fk_att_approval_status_id FOREIGN KEY (approval_status_id) REFERENCES approval_statuses (approval_status_id),
         CONSTRAINT fk_att_holiday_id FOREIGN KEY (holiday_id) REFERENCES holidays (holiday_id),
         CONSTRAINT uq_att_attendance_results UNIQUE (employee_id, work_date)
     );
 
--- 근태관리: 정정 종류(출근 정정/퇴근 정정/근태 상태 정정)
-CREATE TABLE
-    correction_types (
-        correction_type_id NUMBER NOT NULL,
-        type_code VARCHAR2 (10) NOT NULL, -- 타입 코드(IN/OUT/STATUS)
-        type_name VARCHAR2 (30) NOT NULL, -- 타입 이름(출근 정정/퇴근 정정/근태 상태 정정)
-        CONSTRAINT pk_correction_types PRIMARY KEY (correction_type_id)
-    );
+-- 근태관리: 정정 이력 테이블(정정 종류/정정 사유/결재 상태)
+create table attendance_correction(
+	attendance_correction_id number primary key,
 
--- 근태관리: 정정 사유 구분(단순 입력 오류/증빙 지연 제출/기타 사유)
-CREATE TABLE
-    correction_reason_types (
-        correction_reason_type_id NUMBER NOT NULL,
-        reason_code VARCHAR2 (30) NOT NULL, -- 사유 코드(SIMPLE/DELAY_DOCUMENT/ETC)
-        reason_name VARCHAR2 (50) NOT NULL, -- 사유 이름(단순 입력 오류/증빙 지연 제출/기타 사유)
-        CONSTRAINT pk_correction_reason_types PRIMARY KEY (correction_reason_type_id)
-    );
+	correction_target number NULL, -- FK 근태 결과(수정 대상)
+    document_id number NULL, -- FK Document(일용직의 경우 결재 없이 직접 수정이므로 null 허용)
 
--- 근태관리: 결재 상태(승인 대기/승인 완료/반려)
-CREATE TABLE
-    approval_statuses (
-        approval_status_id NUMBER NOT NULL,
-        status_code VARCHAR2 (30) NOT NULL, -- 상태 코드(PENDING/APPROVED/REJECTED)
-        status_name VARCHAR2 (30) NOT NULL, -- 상태 이름(승인 대기/승인 완료/반려)
-        CONSTRAINT pk_approval_statuses PRIMARY KEY (approval_status_id)
-    );
+    correction_daily_log number, -- FK 일용직 근태 정정 로그
 
--- 근태관리: 근태 상태(근무/지각/조퇴/결근/휴가/미퇴근)
-CREATE TABLE
-    attendance_statuses (
-        attendance_status_id NUMBER NOT NULL,
-        status_code VARCHAR2 (30) NOT NULL, -- 상태 코드(WORK/LATE/EARLY_LEAVE/ABSENT/LEAVE/MISSING_CHECKOUT)
-        status_name VARCHAR2 (50) NOT NULL, -- 상태 이름(근무/지각/조퇴/결근/휴가/미퇴근)
-        status_priority NUMBER NOT NULL, -- 상태 판정 우선순위(휴가(연차>반차)>결근>반차>조퇴>지각>근무)
-        CONSTRAINT pk_attendance_statues PRIMARY KEY (attendance_status_id)
-    );
+	correction_type varchar2(3char) not null, -- (IN/OUT) 출근/퇴근 정정 종류
+	is_processed CHAR(1) DEFAULT 'N' not null, -- (Y/N) results 테이블 수정해서 근태 정정 처리 되었는지 나타냄
+	processed_by NUMBER NOT NULL, -- 담당자 FK USERS
+    correction_reason varchar2(300char) NOT NULL, -- 정정 사유
+    before_time TIMESTAMP, -- 수정 전 시간(누락일 경우 있으므로 null 허용)
+    after_time TIMESTAMP NOT NULL, -- 수정 후 시간
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NULL,
 
--- 근태관리: 반차 종류(연차/반차)
-CREATE TABLE
-    half_day_types (
-        half_day_type_id NUMBER NOT NULL,
-        type_code VARCHAR2 (10) NOT NULL, -- 타입 코드(NONE/AM/PM)
-        type_name VARCHAR2 (30) NOT NULL, -- 타입 이름(미사용/오전 반차/오후 반차)
-        CONSTRAINT pk_half_day_types PRIMARY KEY (half_day_type_id)
-    );
+    CONSTRAINT correction_fk_correction_daily_log FOREIGN KEY (correction_daily_log) REFERENCES attendance_logs(attendance_log_id),
+	CONSTRAINT correction_fk_correction_target FOREIGN KEY (correction_target) REFERENCES attendance_results(attendance_result_id),
+    CONSTRAINT correction_fk_processed_by FOREIGN KEY (processed_by) REFERENCES users(employee_id),
+	CONSTRAINT correction_fk_doc_id FOREIGN KEY (document_id) REFERENCES document(document_id),
+	CONSTRAINT correction_ck_type CHECK (correction_type IN ('IN', 'OUT')),
+	CONSTRAINT correction_ck_is_processed CHECK (is_processed IN ('Y', 'N'))
+)
+
+-- 일용직 근로자 출퇴근 기록 테이블
+CREATE TABLE attendance_logs_daily(
+    attendance_logs_daily_id NUMBER PRIMARY KEY,
+    employee_id NUMBER NOT NULL, -- FK users(department_id 사용 목적)해서 동명이인 이슈 차단
+    work_date DATE NOT NULL, -- 근무 기준 날짜
+    workplace_id NUMBER NOT NULL, -- FK 근무지 ID
+    check_in_time TIMESTAMP NULL, -- 출근 시간
+    check_out_time TIMESTAMP NULL, -- 퇴근 시간
+    is_attended CHAR(1) DEFAULT 'N' NOT NULL, -- 출근 여부(Y/N)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_attendance_logs_daily_user FOREIGN KEY (employee_id) REFERENCES users(employee_id),
+    CONSTRAINT fk_attendance_logs_daily_workplace FOREIGN KEY (workplace_id) REFERENCES workplaces(workplace_id),
+    CONSTRAINT ck_attendance_logs_daily_is_attended CHECK (is_attended IN ('Y', 'N')),
+    CONSTRAINT uq_attendance_logs_daily UNIQUE (employee_id, work_date, workplace_id)
+);
+
+-- 관리자의 특정 날짜별/부서별/전체 직원 조회용
+CREATE INDEX idx_att_results_date ON attendance_results(work_date);
+
+-- 일용직 특정 사원 기간 조회용
+CREATE INDEX idx_att_daily_emp_date ON attendance_logs_daily(employee_id, work_date);
+
+-- 관리자 대시보드 조회용
+CREATE INDEX idx_att_daily_work_date ON attendance_logs_daily(work_date);
+
 
 
 
@@ -270,8 +310,25 @@ CREATE TABLE
     document_type (
         type_id NUMBER PRIMARY KEY, -- 문서유형 ID (document_type_seq)
         type_name VARCHAR2 (100 CHAR) NOT NULL, -- 문서유형명
-        detail_table VARCHAR2(50) -- 'leave', 'expenditure', 'purchase' 등
+        detail_table VARCHAR2(50), -- 'leave', 'expenditure', 'purchase' 등
+        required_processing CHAR(1) -- Y면 업무처리함으로, N이면 승인 시 자동 처리
+    
+        CONSTRAINT type_ck_req CHECK (required_processing IN ('Y', 'N'))
     );
+
+-- 필드 데이터 검증을 위한 스키마
+CREATE TABLE document_type_schema (
+    schema_id NUMBER PRIMARY KEY,
+    schema_json JSON NOT NULL, -- json 타입으로 저장(request dto와 맞출것)
+    document_type NUMBER NOT NULL,
+    created_at TIMESTAMP DEFAULT SYSTIMESTAMP,
+    updated_at TIMESTAMP,
+
+    CONSTRAINT doc_schema_fk_type
+        FOREIGN KEY (document_type)
+        REFERENCES document_type(type_id)
+        ON DELETE CASCADE
+);
 
 -- 휴가 유형 (연차, 반차, 조퇴 등)
 CREATE TABLE
@@ -288,9 +345,11 @@ CREATE TABLE approval_line (
     document_type    NUMBER NOT NULL,       -- 문서유형 ID (FK → document_type)
     step_order       NUMBER NOT NULL,       -- 결재 단계
     default_approver NUMBER NOT NULL,       -- 기본 결재자 (FK → users)
+    department_id NUMBER NULL, -- 결재자 부서 (FK → departments)
+    CONSTRAINT line_fk_department FOREIGN KEY (department_id) REFERENCES departments(department_id),
     CONSTRAINT line_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT line_fk_approver FOREIGN KEY (default_approver) REFERENCES users(employee_id),
-    CONSTRAINT line_uq_step UNIQUE (document_type, step_order) -- 유형별 단계 중복 방지
+    CONSTRAINT line_uq_step UNIQUE (document_type, department_id, step_order) -- 부서/유형별 단계 중복 방지
 );
 
 -- 문서 처리 부서 (문서유형별 처리 가능 부서 및 권한 설정)
@@ -299,10 +358,8 @@ CREATE TABLE
         process_id NUMBER PRIMARY KEY, -- 처리 ID (document_process_seq)
         document_type NUMBER NOT NULL, -- 문서유형 ID (FK → document_type)
         process_department NUMBER NOT NULL, -- 처리 부서 ID (FK → departments)
-        processing_role VARCHAR2 (5 CHAR), -- 처리 가능 역할 (ALL: 전체, ADMIN: 관리자)
         CONSTRAINT process_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type (type_id),
-        CONSTRAINT process_fk_department FOREIGN KEY (process_department) REFERENCES departments (department_id),
-        CONSTRAINT process_ck_role CHECK (processing_role IN ('ALL', 'ADMIN'))
+        CONSTRAINT process_fk_department FOREIGN KEY (process_department) REFERENCES departments (department_id)
     );
 
 -- 결재 문서 (기안서 본문 및 상태 관리)
@@ -320,6 +377,9 @@ CREATE TABLE document (
     requested_at   TIMESTAMP,                   -- 결재 요청일시
     processed_at   TIMESTAMP,                   -- 처리일시
     reject_reason  VARCHAR2(500 CHAR),          -- 반려 사유 (최종 반려 단계 기준)
+    document_content JSON DEFAULT '{}' NOT NULL, -- 문서 본문 (JSON 형태로 다양한 필드 저장)
+    version        NUMBER DEFAULT 0 NOT NULL,   -- 결재 승인 시 충돌 방지
+    document_version NUMBER DEFAULT 1 NOT NULL, -- 문서 버전(재기안 시 1씩 증가)
     CONSTRAINT document_fk_doc_type FOREIGN KEY (document_type) REFERENCES document_type(type_id),
     CONSTRAINT document_fk_requester FOREIGN KEY (requester_id) REFERENCES users(employee_id),
     CONSTRAINT document_fk_processor FOREIGN KEY (processor_id) REFERENCES users(employee_id),
@@ -337,10 +397,12 @@ CREATE TABLE approval_history (
     approver_comment VARCHAR2(500 CHAR),
     acted_at         TIMESTAMP,
     created_at       TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
+    version          NUMBER DEFAULT 0 NOT NULL, -- 결재 승인 시 충돌 방지
+    document_version NUMBER DEFAULT 1 NOT NULL, -- 결재 문서 버전 (document.version)
     CONSTRAINT history_fk_document FOREIGN KEY (document_id) REFERENCES document(document_id),
     CONSTRAINT history_fk_approver FOREIGN KEY (approver_id) REFERENCES users(employee_id),
-    CONSTRAINT history_ck_status CHECK (status IN ('APR', 'REJ', 'PND')),
-    CONSTRAINT history_uq_step UNIQUE (document_id, step_order)
+    CONSTRAINT history_ck_status CHECK (status IN ('APR', 'REJ', 'PND', 'CAN')),
+    CONSTRAINT HISTORY_UQ_DOC_VERSION_STEP UNIQUE (document_id, document_version, step_order) -- 동일 문서, 버전, 단계에 대한 중복 결재 방지
 );
 -- 첨부파일 (업로드된 파일 메타정보 관리)
 CREATE TABLE
@@ -374,27 +436,37 @@ CREATE TABLE
         delegate_id NUMBER NOT NULL, -- 대리 결재자 ID (FK → users)
         start_date DATE NOT NULL, -- 위임 시작일
         end_date DATE NOT NULL, -- 위임 종료일
-        reason VARCHAR2 (300 CHAR), -- 위임 사유
+        reason VARCHAR2 (300 CHAR) NOT NULL, -- 위임 사유
         is_active CHAR(1) DEFAULT 'Y' NOT NULL, -- 활성 여부
+        approval_line_id NUMBER NOT NULL,
         CONSTRAINT delegate_fk_approver FOREIGN KEY (approver_id) REFERENCES users (employee_id),
         CONSTRAINT delegate_fk_delegate FOREIGN KEY (delegate_id) REFERENCES users (employee_id),
+        CONSTRAINT delegate_fk_approval_line FOREIGN KEY (approval_line_id) REFERENCES approval_line (approval_line_id),
         CONSTRAINT delegate_ck_is_active CHECK (is_active IN ('Y', 'N'))
     );
 
 -- 휴가 신청 (연차/반차/조퇴 등 휴가 신청 데이터)
--- leave_cnt: 사용 휴가 일수 (0.5 단위, 예: 반차=0.5, 조퇴=0.25)
+-- leave_cnt: 사용 휴가 일수 (0.5 단위, 예: 반차=0.5)
+-- 날짜는 leave_date 조회
 CREATE TABLE
     leave (
         leave_id NUMBER PRIMARY KEY, -- 휴가신청 ID (leave_seq)
         leave_type NUMBER NOT NULL, -- 휴가유형 ID (FK → leave_type)
         document_id NUMBER NOT NULL, -- 연결 결재문서 ID (FK → document)
-        start_date DATE NOT NULL, -- 휴가 시작일
-        end_date DATE NOT NULL, -- 휴가 종료일
         leave_cnt NUMBER (3, 2) NOT NULL, -- 사용 일수
+        leave_reason VARCHAR2(300 CHAR) NOT NULL, -- 연차 사유
         CONSTRAINT leave_fk_document FOREIGN KEY (document_id) REFERENCES document (document_id),
         CONSTRAINT leave_fk_type FOREIGN KEY (leave_type) REFERENCES leave_type (type_id),
         CONSTRAINT leave_uq_document UNIQUE (document_id)
     );
+
+    -- 휴가 날짜 관리를 위한 날짜 테이블
+    CREATE TABLE leave_date (
+    leave_date_id NUMBER PRIMARY KEY,
+    leave_id NUMBER NOT NULL,
+    leave_date DATE NOT NULL,
+    CONSTRAINT leave_date_fk FOREIGN KEY (leave_id) REFERENCES leave(leave_id)
+);
 
 
 
@@ -405,7 +477,6 @@ CREATE TABLE
 CREATE TABLE meeting_room (
     room_id     NUMBER          NOT NULL,
     room_name   VARCHAR2(100)   NOT NULL,
-    capacity    NUMBER          NOT NULL,
     location    VARCHAR2(200)   NULL,
     status      VARCHAR2(20)    DEFAULT 'ACTIVE' NOT NULL,
     CONSTRAINT pk_meeting_room PRIMARY KEY (room_id),
@@ -415,7 +486,6 @@ CREATE TABLE meeting_room (
 COMMENT ON TABLE  meeting_room          IS '회의실';
 COMMENT ON COLUMN meeting_room.room_id  IS '회의실 PK';
 COMMENT ON COLUMN meeting_room.room_name IS '회의실명';
-COMMENT ON COLUMN meeting_room.capacity IS '수용 인원';
 COMMENT ON COLUMN meeting_room.location IS '위치';
 COMMENT ON COLUMN meeting_room.status   IS 'ACTIVE/INACTIVE';
 
@@ -431,6 +501,7 @@ CREATE TABLE room_reservation (
     end_time        VARCHAR2(5)     NOT NULL,
     status          VARCHAR2(20)    DEFAULT 'CONFIRMED' NOT NULL,
     purpose         VARCHAR2(500)   NULL,
+    meeting_type    VARCHAR2(20)    NULL,
     create_at       TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
     CONSTRAINT pk_room_reservation PRIMARY KEY (reservation_id),
     CONSTRAINT fk_rsvn_room FOREIGN KEY (room_id) REFERENCES meeting_room (room_id),
@@ -470,75 +541,6 @@ COMMENT ON COLUMN reservation_participant.user_id        IS '참석자 FK';
 COMMENT ON COLUMN reservation_participant.is_organizer   IS '0=참석자, 1=주최자';
 
 
--- 사내메일
-CREATE TABLE mail (
-    mail_id         NUMBER          NOT NULL,
-    user_id         NUMBER          NOT NULL,
-    parent_mail_id  NUMBER          NULL,
-    title           VARCHAR2(300)   NOT NULL,
-    content         CLOB            NOT NULL,
-    create_at       TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
-    CONSTRAINT pk_mail PRIMARY KEY (mail_id),
-    CONSTRAINT fk_mail_user   FOREIGN KEY (user_id)        REFERENCES users (employee_id),
-    CONSTRAINT fk_mail_parent FOREIGN KEY (parent_mail_id) REFERENCES mail (mail_id)
-);
-
-COMMENT ON TABLE  mail                IS '사내메일';
-COMMENT ON COLUMN mail.mail_id        IS '메일 PK';
-COMMENT ON COLUMN mail.user_id        IS '발신자 FK';
-COMMENT ON COLUMN mail.parent_mail_id IS '답장 원본 FK (자기참조, 최초메일은 NULL)';
-COMMENT ON COLUMN mail.title          IS '메일 제목';
-COMMENT ON COLUMN mail.content        IS '메일 본문';
-COMMENT ON COLUMN mail.create_at      IS '발송일시';
-
-
--- 메일 수신자
-CREATE TABLE mail_receiver (
-    receiver_id NUMBER      NOT NULL,
-    mail_id     NUMBER      NOT NULL,
-    user_id     NUMBER      NOT NULL,
-    is_read     NUMBER(1)   DEFAULT 0 NOT NULL,
-    is_deleted  NUMBER(1)   DEFAULT 0 NOT NULL,
-    CONSTRAINT pk_mail_receiver PRIMARY KEY (receiver_id),
-    CONSTRAINT fk_rcvr_mail FOREIGN KEY (mail_id) REFERENCES mail (mail_id),
-    CONSTRAINT fk_rcvr_user FOREIGN KEY (user_id) REFERENCES users (employee_id),
-    CONSTRAINT ck_rcvr_read    CHECK (is_read    IN (0, 1)),
-    CONSTRAINT ck_rcvr_deleted CHECK (is_deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  mail_receiver             IS '메일 수신자';
-COMMENT ON COLUMN mail_receiver.receiver_id IS '수신 PK';
-COMMENT ON COLUMN mail_receiver.mail_id     IS '메일 FK';
-COMMENT ON COLUMN mail_receiver.user_id     IS '수신자 FK';
-COMMENT ON COLUMN mail_receiver.is_read     IS '0=안읽음, 1=읽음';
-COMMENT ON COLUMN mail_receiver.is_deleted  IS '0=미삭제, 1=삭제';
-
-
--- 메일 첨부파일
-CREATE TABLE mail_attachment (
-    attachment_id   NUMBER          NOT NULL,
-    mail_id         NUMBER          NOT NULL,
-    original_name   VARCHAR2(300)   NOT NULL,
-    saved_name      VARCHAR2(300)   NOT NULL,
-    file_path       VARCHAR2(500)   NOT NULL,
-    file_size       NUMBER          NOT NULL,
-    file_type       VARCHAR2(100)   NOT NULL,
-    create_at       TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
-    CONSTRAINT pk_mail_attachment PRIMARY KEY (attachment_id),
-    CONSTRAINT fk_attach_mail FOREIGN KEY (mail_id) REFERENCES mail (mail_id)
-);
-
-COMMENT ON TABLE  mail_attachment               IS '메일 첨부파일';
-COMMENT ON COLUMN mail_attachment.attachment_id IS '첨부파일 PK';
-COMMENT ON COLUMN mail_attachment.mail_id       IS '메일 FK';
-COMMENT ON COLUMN mail_attachment.original_name IS '원본 파일명';
-COMMENT ON COLUMN mail_attachment.saved_name    IS 'UUID 저장 파일명';
-COMMENT ON COLUMN mail_attachment.file_path     IS '서버 저장 경로';
-COMMENT ON COLUMN mail_attachment.file_size     IS '파일 크기(byte)';
-COMMENT ON COLUMN mail_attachment.file_type     IS 'MIME 타입';
-COMMENT ON COLUMN mail_attachment.create_at     IS '업로드일시';
-
-
 -- 일정
 CREATE TABLE schedule (
     schedule_id     NUMBER          NOT NULL,
@@ -548,12 +550,16 @@ CREATE TABLE schedule (
     schedule_type   VARCHAR2(20)    NOT NULL,
     start_dt        DATE            NOT NULL,
     end_dt          DATE            NOT NULL,
+    start_time      VARCHAR2(5)     NULL,
+    end_time        VARCHAR2(5)     NULL,
     location        VARCHAR2(200)   NULL,
     memo            CLOB            NULL,
+    reservation_id  NUMBER          NULL,
     created_at      TIMESTAMP       DEFAULT SYSTIMESTAMP NOT NULL,
     CONSTRAINT pk_schedule PRIMARY KEY (schedule_id),
     CONSTRAINT fk_sched_user FOREIGN KEY (user_id)  REFERENCES users (employee_id),
     CONSTRAINT fk_sched_dept FOREIGN KEY (dept_id)  REFERENCES departments (department_id),
+    CONSTRAINT fk_sched_rsv  FOREIGN KEY (reservation_id) REFERENCES room_reservation (reservation_id),
     CONSTRAINT ck_sched_type CHECK (schedule_type IN ('PERSONAL', 'DEPT', 'COMPANY', 'PROJECT'))
 );
 
@@ -565,8 +571,11 @@ COMMENT ON COLUMN schedule.title        IS '일정 제목';
 COMMENT ON COLUMN schedule.schedule_type IS 'PERSONAL/DEPT/COMPANY/PROJECT';
 COMMENT ON COLUMN schedule.start_dt     IS '시작일';
 COMMENT ON COLUMN schedule.end_dt       IS '종료일';
+COMMENT ON COLUMN schedule.start_time   IS '시작 시간 (HH:MM)';
+COMMENT ON COLUMN schedule.end_time     IS '종료 시간 (HH:MM)';
 COMMENT ON COLUMN schedule.location     IS '장소';
 COMMENT ON COLUMN schedule.memo         IS '메모';
+COMMENT ON COLUMN schedule.reservation_id IS '회의실 예약 FK (예약 연동 일정일 때, room_reservation.reservation_id)';
 COMMENT ON COLUMN schedule.created_at   IS '등록일시';
 
 
@@ -598,7 +607,7 @@ COMMENT ON COLUMN holidays.is_substitute IS '0=일반, 1=대체공휴일';
 CREATE TABLE payrolls (
 	payroll_id NUMBER NOT NULL,
 	employee_id NUMBER,
-	pay_month DATE NOT NULL,
+	pay_month VARCHAR2(7) NOT NULL,
 	total_pay NUMBER NOT NULL,
     total_deduction NUMBER NOT NULL,
     net_salary NUMBER NOT NULL,
@@ -607,7 +616,8 @@ CREATE TABLE payrolls (
 	updated_at TIMESTAMP NULL,	
 	CONSTRAINT pk_payrolls PRIMARY KEY (payroll_id),
 	CONSTRAINT fk_payrolls FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE
+	REFERENCES users(employee_id),
+	CONSTRAINT chk_pay_month CHECK (LENGTH(pay_month) = 7 AND REGEXP_LIKE(pay_month, '^[0-9]{4}-(0[1-9]|1[0-2])$'))
 );
 
 
@@ -623,24 +633,11 @@ CREATE TABLE payroll_details (
 	updated_at TIMESTAMP NULL,
 	CONSTRAINT pk_payroll_details PRIMARY KEY (payroll_details_id),
 	CONSTRAINT fk_payroll_details FOREIGN KEY(payroll_id)
-	REFERENCES payrolls(payroll_id) ON DELETE CASCADE
+	REFERENCES payrolls(payroll_id)
 );
 
 
--- 3. 급여명세서 테이블 생성
-CREATE TABLE payslips (
-	payslip_id NUMBER NOT NULL,
-	payroll_id NUMBER,
-	file_name VARCHAR2(100) NOT NULL,
-	file_path VARCHAR2(300) NOT NULL,
-	file_type VARCHAR2(10) NOT NULL,
-	created_at TIMESTAMP NOT NULL,
-	CONSTRAINT pk_payslips PRIMARY KEY (payslip_id),
-	CONSTRAINT fk_payslips FOREIGN KEY(payroll_id)
-	REFERENCES payrolls(payroll_id) ON DELETE CASCADE
-);
-
--- 4. 기본급 정보 테이블 생성
+-- 3. 기본급 정보 테이블 생성
 CREATE TABLE salary (
 	salary_id NUMBER NOT NULL,
 	employee_id NUMBER,
@@ -649,66 +646,50 @@ CREATE TABLE salary (
 	updated_at TIMESTAMP NULL,
 	CONSTRAINT pk_salary PRIMARY KEY (salary_id),
 	CONSTRAINT fk_salary FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE
+	REFERENCES users(employee_id),
+    CONSTRAINT uk_salary_employee UNIQUE (employee_id)
 );
 
 
--- 5. 수당 항목 테이블 생성
-CREATE TABLE allowance_items (
-	allowance_item_id NUMBER NOT NULL,
-	item_name VARCHAR2(50) NOT NULL,
-	amount NUMBER NOT NULL,
-	CONSTRAINT pk_allowance_items PRIMARY KEY (allowance_item_id)
+
+-- 알림 테이블
+CREATE TABLE work_notifications (
+    notification_id NUMBER          NOT NULL,
+    login_id        VARCHAR2(50)    NULL,
+    department_name VARCHAR2(100)   NULL,
+    scope           VARCHAR2(20)    NOT NULL,
+    type            VARCHAR2(50)    NOT NULL,
+    title           VARCHAR2(200)   NOT NULL,
+    message         VARCHAR2(1000)  NOT NULL,
+    is_read         CHAR(1)         DEFAULT 'N' NOT NULL,
+    created_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT pk_work_notifications PRIMARY KEY (notification_id),
+    CONSTRAINT chk_notif_scope CHECK (scope IN ('PERSONAL', 'DEPT', 'COMPANY')),
+    CONSTRAINT chk_notif_read  CHECK (is_read IN ('Y', 'N'))
 );
 
+COMMENT ON TABLE  work_notifications                 IS '알림 저장 테이블';
+COMMENT ON COLUMN work_notifications.notification_id IS '알림 PK';
+COMMENT ON COLUMN work_notifications.login_id        IS 'PERSONAL 알림 수신자 loginId';
+COMMENT ON COLUMN work_notifications.department_name IS 'DEPT 알림 대상 부서명';
+COMMENT ON COLUMN work_notifications.scope           IS 'PERSONAL/DEPT/COMPANY';
+COMMENT ON COLUMN work_notifications.type            IS '알림 유형 코드';
+COMMENT ON COLUMN work_notifications.title           IS '알림 제목';
+COMMENT ON COLUMN work_notifications.message         IS '알림 내용';
+COMMENT ON COLUMN work_notifications.is_read         IS 'Y=읽음, N=미읽음 (PERSONAL만 사용)';
+COMMENT ON COLUMN work_notifications.created_at      IS '발송일시';
 
--- 6. 직원 수당 정보 테이블 생성
-CREATE TABLE employee_allowance (
-	employee_allowance_id NUMBER NOT NULL,
-	employee_id NUMBER,
-	allowance_item_id NUMBER,
-	amount NUMBER NOT NULL,
-	CONSTRAINT pk_employee_allowance PRIMARY KEY (employee_allowance_id),
-	CONSTRAINT fk_employee_allowance_employee_id FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE,
-	CONSTRAINT fk_employee_allowance_allowance_item_id FOREIGN KEY(allowance_item_id)
-	REFERENCES allowance_items(allowance_item_id) ON DELETE CASCADE
-);
+-- 인사평가 등급 컬럼 추가
+ALTER TABLE employee_evaluations ADD grade VARCHAR2(5);
 
-
--- 7. 공제 항목 테이블 생성
-CREATE TABLE deduction_items (
-	deduction_item_id NUMBER NOT NULL,
-	item_name VARCHAR2(50) NOT NULL,
-	ratio NUMBER NOT NULL,
-	CONSTRAINT pk_deduction_items PRIMARY KEY(deduction_item_id)
-);
-
-
--- 8. 직원 공제 정보 테이블 생성
-CREATE TABLE employee_deduction (
-	employee_deduction_id NUMBER NOT NULL,
-	employee_id NUMBER,
-	deduction_item_id NUMBER,
-	amount NUMBER NOT NULL,
-	CONSTRAINT pk_employee_deduction PRIMARY KEY (employee_deduction_id),
-	CONSTRAINT fk_employee_deduction_employee_id FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE,
-	CONSTRAINT fk_employee_deduction_deduction_item_id FOREIGN KEY(deduction_item_id)
-	REFERENCES deduction_items(deduction_item_id) ON DELETE CASCADE
-);
-
-
--- 9. 부양가족 / 원천징수 테이블 생성
-CREATE TABLE employee_tax_info (
-	tax_info_id NUMBER NOT NULL,
-	employee_id NUMBER,
-	dependents NUMBER NOT NULL,
-	children NUMBER NOT NULL,
-	withholding_rate NUMBER NOT NULL,
-	created_at TIMESTAMP NOT NULL,
-	updated_at TIMESTAMP NULL,
-	CONSTRAINT pk_employee_tax_info PRIMARY KEY (tax_info_id),
-	CONSTRAINT fk_employee_tax_info FOREIGN KEY(employee_id)
-	REFERENCES users(employee_id) ON DELETE CASCADE
-);
+-- 기존 확정 평가 데이터 등급 백필
+UPDATE employee_evaluations
+SET grade = CASE
+    WHEN total_score >= 43 THEN 'S'
+    WHEN total_score >= 38 THEN 'A'
+    WHEN total_score >= 33 THEN 'B'
+    WHEN total_score >= 28 THEN 'C'
+    ELSE 'D'
+END
+WHERE status = 'CONFIRMED' AND total_score IS NOT NULL;
+COMMIT;

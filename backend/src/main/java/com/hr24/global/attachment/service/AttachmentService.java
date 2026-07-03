@@ -23,11 +23,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AttachmentService {
 
-    private final AttachmentRepository attachmentRepository;
-    private final UserRepository userRepository;
-    private final StorageService storageService;  // 주입
+	private final AttachmentRepository attachmentRepository;
+	private final UserRepository userRepository;
+	private final StorageService storageService; // 주입
 
-    public List<AttachmentDto> upload(@NonNull List<MultipartFile> files, @NonNull Long uploader) {
+	public List<Attachment> upload(@NonNull List<MultipartFile> files, @NonNull Long uploader) {
         User uploaderId = userRepository.findById(uploader)
                 .orElseThrow(() -> new EntityNotFoundException("업로더를 찾을 수 없습니다."));
 
@@ -45,38 +45,46 @@ public class AttachmentService {
                     .uploadTime(LocalDateTime.now())
                     .build();
 
-            return AttachmentDto.from(attachmentRepository.save(attachment));
-        }).collect(Collectors.toList());
-    }
-
-    @Transactional
-    public void delete(@NonNull Long attachmentId) {
-        Attachment attachment = attachmentRepository.findById(attachmentId)
-                .orElseThrow(() -> new EntityNotFoundException("첨부파일을 찾을 수 없습니다."));
-
-        storageService.delete(attachment.getStoredName());  // 삭제 위임
-        attachmentRepository.delete(attachment);
-    }
+            return attachmentRepository.save(attachment);
+            
+        	}).toList();
     
-    public AttachmentDto findById(@NonNull Long attachmentId) {
-        Attachment attachment = attachmentRepository.findById(attachmentId)
-                .orElseThrow(() -> new EntityNotFoundException("첨부파일을 찾을 수 없습니다."));
+	}
 
-        return AttachmentDto.from(attachment);
-    }
+	@Transactional
+	public void delete(@NonNull Long attachmentId) {
+		Attachment attachment = attachmentRepository.findById(attachmentId)
+				.orElseThrow(() -> new EntityNotFoundException("첨부파일을 찾을 수 없습니다."));
 
-    public AttachmentDownloadDto download(@NonNull Long attachmentId) {
-        Attachment attachment = attachmentRepository.findById(attachmentId)
-                .orElseThrow(() -> new EntityNotFoundException("첨부파일을 찾을 수 없습니다."));
+		storageService.delete(attachment.getStoredName()); // 삭제 위임
+		attachmentRepository.delete(attachment);
+	}
+	
 
-            byte[] data = storageService.load(attachment.getStoredName());
+	public AttachmentDto findById(@NonNull Long attachmentId) {
+		Attachment attachment = attachmentRepository.findById(attachmentId)
+				.orElseThrow(() -> new EntityNotFoundException("첨부파일을 찾을 수 없습니다."));
 
-            return new AttachmentDownloadDto(
-                    attachment.getOriginalName(),
-                    attachment.getAttachmentType(),
-                    data
-            );
-    }
-    
-    
+		return AttachmentDto.from(attachment);
+	}
+	
+	//여러 파일 삭제
+	@Transactional
+	public void deleteAll(List<Long> attachmentIds) {
+	    List<Attachment> attachments = attachmentRepository.findAllById(attachmentIds); // SELECT 1번
+
+	    attachments.forEach(attachment -> storageService.delete(attachment.getStoredName())); // 파일 삭제는 IO라 N번 불가피
+
+	    attachmentRepository.deleteAllByIdInBatch(attachmentIds); // DB row는 단일 DELETE
+	}
+
+	public AttachmentDownloadDto download(@NonNull Long attachmentId) {
+		Attachment attachment = attachmentRepository.findById(attachmentId)
+				.orElseThrow(() -> new EntityNotFoundException("첨부파일을 찾을 수 없습니다."));
+
+		byte[] data = storageService.load(attachment.getStoredName());
+
+		return new AttachmentDownloadDto(attachment.getOriginalName(), attachment.getAttachmentType(), data);
+	}
+
 }

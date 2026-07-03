@@ -1,15 +1,108 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
   --background: #ffffff;
   --foreground: #133C63;
+  --sidebar: #1a2f4e;
+  --sidebar-foreground: rgba(255, 255, 255, 0.8);
+  --sidebar-primary: #a9e4d5;
+  --sidebar-primary-foreground: #1a2f4e;
+  --sidebar-accent: #a9e4d5;
+  --sidebar-accent-foreground: #1a2f4e;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #a9e4d5;
+
+  /* shadcn 기본 변수 */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #133C63;
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: #a4e6d277;
+  --accent-foreground: #1a2f4e;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: #133C63;
+  --radius: 0.625rem;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #133C63;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --sidebar: #1a2f4e;
+  --sidebar-foreground: rgba(255, 255, 255, 0.8);
+  --sidebar-primary: #a4e6d277;
+  --sidebar-primary-foreground: #1a2f4e;
+  --sidebar-accent: #a4e6d277;
+  --sidebar-accent-foreground: #1a2f4e;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #a4e6d277;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 html {
@@ -20,6 +113,7 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
+  height: 100%;
 }
 
 body {
@@ -41,8 +135,65 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+
+/* FullCalendar 이벤트 커서 */
+.fc-event {
+  cursor: pointer !important;
+}
+
+/* FullCalendar 날짜 색상 */
+.fc-daygrid-day-number,
+.fc-col-header-cell-cushion {
+  color: #1a1a1a !important;
+  text-decoration: none !important;
+}
+
+/* 일요일 - 빨간색 */
+.fc-day-sun .fc-daygrid-day-number,
+.fc-day-sun .fc-col-header-cell-cushion {
+  color: #e53e3e !important;
+}
+
+/* 토요일 - 파란색 */
+.fc-day-sat .fc-daygrid-day-number,
+.fc-day-sat .fc-col-header-cell-cushion {
+  color: #3182ce !important;
+}
+
+/* 마커 툴팁의 기본 말풍선 모양을 제거 */
+.text-label {
+  border: none !important;
+  font-weight: bold;               
+  color: #1a1a1a;                    
+  font-size: 14px;                
+}
+
+/* 툴팁의 뾰족한 화살표 제거 */
+.text-label::before {
+  display: none !important;
+}
+
+[data-slot="tabs-trigger"][aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--foreground);
+}
+
+/* 근태 뱃지 디자인 */
+.attendance-badge {
+    cursor: default !important;
+    border-radius: 10px;
+    padding: 3px 0 3px 0;
+}
+
+.attendance-badge:hover {
+    cursor: default !important;
+}
+
+.attendance-badge .fc-event-main {
+    text-align: center;
 }

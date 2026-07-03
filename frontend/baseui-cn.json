@@ -1,0 +1,7 @@
+{
+  "componentsPath": "src/components/ui",
+  "utilsPath": "src/lib/utils",
+  "globalCss": "src/app/globals.css",
+  "tailwind": true,
+  "rsc": true
+}

@@ -28,10 +28,13 @@ public class DocumentType {
 	@SequenceGenerator(name = "document_type_seq", sequenceName = "document_type_seq", allocationSize = 1)
 	private Long typeId;
 	
-	@Column(name = "type_name")
+	@Column(name = "type_name", nullable = false)
 	private String typeName;
 	
 	@Column(name = "detail_table")
 	private String detailTable;
+	
+	@Column(name = "required_processing", nullable = false)
+	private String requiredProcessing;
 	
 }
