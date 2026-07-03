@@ -17,9 +17,15 @@ jobs:
 
           cd /home/sykim/apps/TEAM-24HR-ERP
 
+          export KUBECONFIG=/home/sykim/.kube/config
+
           echo "배포 전 서버 브랜치 확인"
           git branch --show-current
           git status --short
+
+          echo "환경변수 덮어쓰기 방지"
+          unset CORS_ALLOWED_ORIGINS || true
+          unset NEXT_PUBLIC_API_ORIGIN || true
 
           echo "main 브랜치로 전환 및 최신 코드 반영"
           git fetch origin main
@@ -31,11 +37,68 @@ jobs:
           git log --oneline --decorate -3
           git status
 
+          echo "배포 환경변수 로드"
+          set -a
+          source .env.prod
+          set +a
+
           echo "Docker Compose 설정 확인"
           docker compose --env-file .env.prod -f docker-compose.prod.yml config > /tmp/hr24-compose-check.yml
 
-          echo "컨테이너 재빌드 및 재실행"
-          docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+          echo "Oracle / Redis / Apache Compose 인프라 유지"
+          docker compose --env-file .env.prod -f docker-compose.prod.yml up -d oracle redis
+
+          echo "frontend / backend Docker 이미지 빌드"
+          docker compose --env-file .env.prod -f docker-compose.prod.yml build backend frontend
+
+          echo "k3s containerd로 이미지 import"
+          docker save hr24-backend:prod | sudo k3s ctr images import -
+          docker save hr24-frontend:prod | sudo k3s ctr images import -
+
+          echo "Kubernetes namespace 적용"
+          kubectl create namespace hr24 --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "Kubernetes ConfigMap 적용"
+          kubectl create configmap hr24-config -n hr24 \
+            --from-literal=SPRING_PROFILES_ACTIVE=prod \
+            --from-literal=DB_URL='jdbc:oracle:thin:@192.168.0.2:1522/XEPDB1' \
+            --from-literal=REDIS_HOST='192.168.0.2' \
+            --from-literal=REDIS_PORT='6379' \
+            --from-literal=CORS_ALLOWED_ORIGINS="${CORS_ALLOWED_ORIGINS}" \
+            --from-literal=COOKIE_SECURE="${COOKIE_SECURE}" \
+            --from-literal=COOKIE_SAME_SITE="${COOKIE_SAME_SITE}" \
+            --from-literal=FILE_UPLOAD_PATH='/app/uploads' \
+            --from-literal=SPRINGDOC_ENABLED="${SPRINGDOC_ENABLED}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "Kubernetes Secret 적용"
+          kubectl create secret generic hr24-secret -n hr24 \
+            --from-literal=DB_USERNAME="${DB_USERNAME}" \
+            --from-literal=DB_PASSWORD="${DB_PASSWORD}" \
+            --from-literal=MAIL_ENABLED="${MAIL_ENABLED}" \
+            --from-literal=MAIL_USERNAME="${MAIL_USERNAME}" \
+            --from-literal=MAIL_PASSWORD="${MAIL_PASSWORD}" \
+            --from-literal=JWT_SECRET="${JWT_SECRET}" \
+            --from-literal=HR24_CRYPTO_SECRET_KEY="${HR24_CRYPTO_SECRET_KEY}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "Kubernetes manifest 적용"
+          kubectl apply -f k8s/hr24-apps.yaml
+
+          echo "frontend / backend rollout 재시작"
+          kubectl rollout restart deployment/hr24-backend -n hr24
+          kubectl rollout restart deployment/hr24-frontend -n hr24
+
+          echo "rollout 상태 확인"
+          kubectl rollout status deployment/hr24-backend -n hr24 --timeout=180s
+          kubectl rollout status deployment/hr24-frontend -n hr24 --timeout=180s
+
+          echo "Apache를 k8s NodePort 프록시 설정으로 재실행"
+          docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --force-recreate --no-deps apache
+
+          echo "Compose frontend/backend 중지"
+          docker compose --env-file .env.prod -f docker-compose.prod.yml stop frontend backend || true
 
           echo "배포 상태 확인"
           docker compose --env-file .env.prod -f docker-compose.prod.yml ps
+          kubectl get all -n hr24
