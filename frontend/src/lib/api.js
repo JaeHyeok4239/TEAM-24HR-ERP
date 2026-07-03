@@ -6,7 +6,11 @@ import { useAuthStore } from "@/store/authStore";
 // const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 // .env.local
 // NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
-const BASE_URL = "http://localhost:8080";
+// const BASE_URL = "http://localhost:8080";
+
+const API_ORIGIN =
+  process.env.NEXT_PUBLIC_API_ORIGIN ??
+  (process.env.NODE_ENV === "production" ? "" : "http://localhost:8080");
 
 const clearAuthAndRedirect = async () => {
   try {
@@ -14,7 +18,7 @@ const clearAuthAndRedirect = async () => {
       useAuthStore.getState().accessToken ||
       localStorage.getItem("accessToken");
 
-    await fetch(`${BASE_URL}/api/auth/logout`, {
+    await fetch(`${API_ORIGIN}/api/auth/logout`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -33,7 +37,7 @@ const clearAuthAndRedirect = async () => {
 };
 
 const refreshAccessToken = async () => {
-  const response = await fetch(`${BASE_URL}/api/auth/refresh`, {
+  const response = await fetch(`${API_ORIGIN}/api/auth/refresh`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -69,7 +73,7 @@ export const apiRequest = async (url, options = {}) => {
 
     const isFormData = options.body instanceof FormData;
 
-    return fetch(`${BASE_URL}${url}`, {
+    return fetch(`${API_ORIGIN}${url}`, {
       ...options,
       credentials: "include",
       headers: {
@@ -140,20 +144,3 @@ export const apiRequest = async (url, options = {}) => {
 
   return response;
 };
-
-
-//axios 코드는 추후 삭제 예정 (추후/나중에)
-// 1. 프로젝트 전체에서 `import api from "@/lib/api"` 사용 여부 검색
-// 2. axios 기반 호출이 남아 있으면 apiRequest 기반으로 교체
-// 3. 교체 완료 후 axios import 및 default export 제거
-
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: "http://localhost:8080",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-export default api;

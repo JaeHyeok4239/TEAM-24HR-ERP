@@ -6,11 +6,13 @@ import { apiRequest } from "@/lib/api";
 // const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 // .env.local
 // NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
-const BASE_URL = "http://localhost:8080";
+const API_ORIGIN =
+  process.env.NEXT_PUBLIC_API_ORIGIN ??
+  (process.env.NODE_ENV === "production" ? "" : "http://localhost:8080");
 
 // 로그인 요청
 export const loginRequest = async (loginId, password) => {
-  const response = await fetch(`${BASE_URL}/api/auth/login`, {
+  const response = await fetch(`${API_ORIGIN}/api/auth/login`, {
     method: "POST",
     credentials: "include",
     headers: {
