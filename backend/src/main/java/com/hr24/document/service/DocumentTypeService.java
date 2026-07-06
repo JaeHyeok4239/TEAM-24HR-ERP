@@ -41,4 +41,6 @@ public class DocumentTypeService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
         }
     }
+    
+    
 }

@@ -6,11 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.hr24.document.entity.DocumentTypeSchema;
 import com.hr24.document.entity.DocumentType;
 
-public interface DocumentTypeSchemaRepository extends JpaRepository<DocumentTypeSchema, Long>{
-	
+public interface DocumentTypeSchemaRepository extends JpaRepository<DocumentTypeSchema, Long> {
+
 	Optional<DocumentTypeSchema> findByDocumentType(DocumentType documentType);
-	
+
 	boolean existsByDocumentType(DocumentType documentType);
 
 	Optional<DocumentTypeSchema> findByDocumentType_TypeId(Long typeId);
+
 }

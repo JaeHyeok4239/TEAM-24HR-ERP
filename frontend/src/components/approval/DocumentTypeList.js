@@ -16,7 +16,7 @@ import { Plus } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { hasAnyRole, HR_MANAGE_ROLES } from "@/lib/roles";
 import DocumentTypeFormModal from "./DocumentTypeFormModal";
-
+import DocumentTypeSchemaFormModal from "./DocumentTypeSchemaFormModal";
 
 export default function DocumentTypeList() {
   const userInfo = useAuthStore((state) => state.userInfo);
@@ -24,7 +24,13 @@ export default function DocumentTypeList() {
 
   const [typeList, setTypeList] = useState([]);
   const [searchTrigger, setSearchTrigger] = useState(0);
+
+  // 문서 종류 생성 모달
   const [formOpen, setFormOpen] = useState(false);
+
+  // 문서 양식(스키마) 설정 모달
+  const [schemaModalOpen, setSchemaModalOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -42,6 +48,17 @@ export default function DocumentTypeList() {
 
   const handleFormSuccess = () => {
     setFormOpen(false);
+    setSearchTrigger((prev) => prev + 1);
+  };
+
+  const handleSchemaClick = (type) => {
+    setSelectedType(type);
+    setSchemaModalOpen(true);
+  };
+
+  const handleSchemaSuccess = () => {
+    setSchemaModalOpen(false);
+    setSelectedType(null);
     setSearchTrigger((prev) => prev + 1);
   };
 
@@ -74,6 +91,11 @@ export default function DocumentTypeList() {
                     <TableHead className="font-bold text-center">
                       문서 종류명
                     </TableHead>
+                    {isAdmin && (
+                      <TableHead className="font-bold text-center">
+                        양식 관리
+                      </TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -84,6 +106,23 @@ export default function DocumentTypeList() {
                     >
                       <TableCell>{type.typeId}</TableCell>
                       <TableCell>{type.typeName}</TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          {type.detailTable ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSchemaClick(type)}
+                            >
+                              양식 설정
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-gray-400">
+                              상세 테이블 없음
+                            </span>
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -97,6 +136,12 @@ export default function DocumentTypeList() {
         open={formOpen}
         onOpenChange={setFormOpen}
         onSuccess={handleFormSuccess}
+      />
+      <DocumentTypeSchemaFormModal
+        open={schemaModalOpen}
+        onOpenChange={setSchemaModalOpen}
+        typeId={selectedType?.typeId}
+        onSuccess={handleSchemaSuccess}
       />
     </div>
   );
