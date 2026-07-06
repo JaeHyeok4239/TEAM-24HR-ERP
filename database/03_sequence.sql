@@ -23,10 +23,10 @@ CREATE SEQUENCE employee_history_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 기본 샘플데이터 다 넣고 마지막에 추가 부서 시퀀스
+-- 부서 시퀀스
 CREATE SEQUENCE department_seq START
 WITH
-    10 INCREMENT BY 1 NOCACHE NOCYCLE;
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
 -- 연차 잔액 시퀀스
 CREATE SEQUENCE annual_leave_balance_seq START
@@ -58,72 +58,72 @@ CREATE SEQUENCE attendance_results_seq START
 WITH
     1 INCREMENT BY 1 CACHE 50 NOCYCLE;
 
--- 근태 정정 이력
+-- 근태 정정 이력 시퀀스
 CREATE SEQUENCE attendance_correction_seq START
 WITH
     1 INCREMENT BY 1 CACHE 50 NOCYCLE;
 
--- 일용직 근태 기록 추가
+-- 일용직 근태 기록 시퀀스
 CREATE SEQUENCE attendance_logs_daily_seq START
 WITH
     1 INCREMENT BY 1 CACHE 50 NOCYCLE;
 
--- 결재문서 PK
+-- 결재문서 시퀀스
 CREATE SEQUENCE approval_document_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 결재 이력 PK
+-- 결재 이력 시퀀스
 CREATE SEQUENCE approval_history_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 문서유형 PK
+-- 문서유형 시퀀스
 CREATE SEQUENCE document_type_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 문서 스키마 정의 PK
+-- 문서 스키마 정의 시퀀스
 CREATE SEQUENCE document_type_schema_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 문서처리 PK
+-- 문서처리 시퀀스
 CREATE SEQUENCE document_process_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 첨부매핑 PK
+-- 첨부매핑 시퀀스
 CREATE SEQUENCE document_attach_mapping_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 첨부파일 PK
+-- 첨부파일 시퀀스
 CREATE SEQUENCE attachment_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 결재선 PK
+-- 결재선 시퀀스
 CREATE SEQUENCE approval_line_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 결재위임 PK
+-- 결재위임 시퀀스
 CREATE SEQUENCE approval_delegate_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 휴가유형 PK
+-- 휴가유형 시퀀스
 CREATE SEQUENCE leave_type_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 휴가신청 PK
+-- 휴가신청 시퀀스
 CREATE SEQUENCE leave_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 휴가날짜 PK
+-- 휴가날짜 시퀀스
 CREATE SEQUENCE leave_date_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -153,24 +153,47 @@ CREATE SEQUENCE holidays_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 급여 내역 테이블 시퀀스
+-- 급여 내역 시퀀스
 CREATE SEQUENCE payrolls_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
--- 급여 상세 항목 테이블 시퀀스
+-- 급여 상세 항목 시퀀스
 CREATE SEQUENCE payroll_details_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
-
--- 기본급 정보 테이블 시퀀스
+-- 기본급 정보 시퀀스
 CREATE SEQUENCE salary_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
-    
 
 -- 알림 시퀀스
 CREATE SEQUENCE work_notification_seq START
+WITH
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+-- 평가 기간 시퀀스
+CREATE SEQUENCE evaluation_period_seq START
+WITH
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+-- 평가 문항 시퀀스
+CREATE SEQUENCE evaluation_question_seq START
+WITH
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+-- 직원 평가 시퀀스
+CREATE SEQUENCE employee_evaluation_seq START
+WITH
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+-- 직원 평가 답변 시퀀스
+CREATE SEQUENCE evaluation_answer_seq START
+WITH
+    1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+-- 승진 기준 시퀀스
+CREATE SEQUENCE promotion_rule_seq START
 WITH
     1 INCREMENT BY 1 NOCACHE NOCYCLE;
