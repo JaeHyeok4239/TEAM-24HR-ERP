@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hr24.document.dto.DocumentManagementDto;
+import com.hr24.document.dto.DocumentManagementDto.DocumentTypeSchemaRequestDto;
+import com.hr24.document.dto.DocumentTypeDto;
 import com.hr24.document.entity.DocumentType;
 import com.hr24.document.entity.LeaveType;
 import com.hr24.document.service.DocumentManagementService;
