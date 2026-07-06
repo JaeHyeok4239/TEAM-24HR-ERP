@@ -26,7 +26,11 @@ const INITIAL_FORM = {
   requiredProcessing: "N",
 };
 
-export default function DocumentTypeFormModal({ open, onOpenChange, onSuccess }) {
+export default function DocumentTypeFormModal({
+  open,
+  onOpenChange,
+  onSuccess,
+}) {
   const [typeName, setTypeName] = useState(INITIAL_FORM.typeName);
   const [detailTable, setDetailTable] = useState(INITIAL_FORM.detailTable);
   const [requiredProcessing, setRequiredProcessing] = useState(
@@ -49,26 +53,25 @@ export default function DocumentTypeFormModal({ open, onOpenChange, onSuccess })
   };
 
   const handleSubmit = async () => {
-    if (!typeName.trim()) {
-      alert("문서 종류 이름을 입력해주세요.");
-      return;
-    }
+    if (!validate()) return;
 
     setSubmitting(true);
     try {
-      await apiRequest("/api/admin/document/type", {
-        method: "POST",
-        body: JSON.stringify({
-          typeName: typeName.trim(),
-          detailTable: detailTable.trim() || null,
-          requiredProcessing,
-        }),
+      const res = await apiRequest(`/api/document/schema/type/${typeId}`, {
+        method: "PUT",
+        body: JSON.stringify({ fields: buildFieldsPayload() }),
       });
+
+      if (!res.ok) {
+        const message = await res.text();
+        alert(message || "스키마 저장 중 오류가 발생했습니다.");
+        return;
+      }
+
       onSuccess?.();
-      handleOpenChange(false); // 성공 시 닫으면서 자동 리셋
-    } catch (err) {
-      console.error(err);
-      alert("문서 종류 생성에 실패했습니다.");
+    } catch (e) {
+      console.error(e);
+      alert("스키마 저장 중 오류가 발생했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -102,7 +105,10 @@ export default function DocumentTypeFormModal({ open, onOpenChange, onSuccess })
 
           <div className="flex flex-col gap-2">
             <Label>후처리 필요 여부</Label>
-            <Select value={requiredProcessing} onValueChange={setRequiredProcessing}>
+            <Select
+              value={requiredProcessing}
+              onValueChange={setRequiredProcessing}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="선택" />
               </SelectTrigger>

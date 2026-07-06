@@ -44,5 +44,8 @@ public class DocumentTypeSchema {
 
 	    @Column(name = "updated_at")
 	    private LocalDateTime updatedAt;
-
+	    
+	    public void updateSchemaJson(String schemaJson) {
+	        this.schemaJson = schemaJson;
+	    }
 }
