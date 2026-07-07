@@ -3,8 +3,12 @@ package com.hr24.attendance.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.hr24.attendance.enums.WorkplaceCode;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -37,8 +41,9 @@ public class Workplace{
 			generator = "workplaces_seq")
 	private Long workplaceId;
 	
+	@Enumerated(EnumType.STRING)
 	@Column(name="workplace_code")
-	private String workplaceCode;
+	private WorkplaceCode workplaceCode;
 	
 	@Column(name="workplace_name")
 	private String workplaceName;

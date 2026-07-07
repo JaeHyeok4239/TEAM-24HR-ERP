@@ -428,8 +428,10 @@ WHERE u.employment_type = 'REGULAR'
   );
 
 -- 테이블 삭제
-DELETE FROM attendance_logs;
+DELETE FROM attendance_correction;
 DELETE FROM attendance_results;
+DELETE FROM attendance_logs;
+DELETE FROM attendance_logs_daily;
 DELETE FROM attendance_time_policies;
 DELETE FROM attendance_thresholds;
 DELETE FROM workplaces;
@@ -451,10 +453,27 @@ VALUES (attendance_thresholds_seq.NEXTVAL, 'REGULAR', 'ABSENCE', 180, '출근 �
 
 -- 근무지
 -- 정규직 근무지
-INSERT INTO workplaces VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '강남역', 100, 37.4979420, 127.0276210, CURRENT_TIMESTAMP, NULL);
+INSERT INTO workplaces VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '구로디지털단지', 100, 37.4811291, 126.8953038, CURRENT_TIMESTAMP, NULL);
 -- 일용직 근무지
 INSERT INTO workplaces VALUES (workplaces_seq.NEXTVAL, 'TEMP01', '근무지1', '부산광역시 강서구', 100, 35.1052000, 128.8450000, CURRENT_TIMESTAMP, NULL);
 INSERT INTO workplaces VALUES (workplaces_seq.NEXTVAL, 'TEMP02', '근무지2', '대전광역시 유성구', 100, 36.3350000, 127.3350000, CURRENT_TIMESTAMP, NULL);
+
+/*
+임시 주석 처리(추가 후 삭제 예정)
+-- 정규직 출퇴근 기록(logs)
+INSERT INTO attendance_logs VALUES ();
+
+-- 일용직 출퇴근 기록(logs_daily)
+INSERT INTO attendance_logs_daily VALUES ();
+
+-- 근태 결과(results)
+INSERT INTO attendance_results VALUES ();
+
+-- 정정 이력(correction)
+INSERT INTO attendance_correction VALUES ();
+*/
+
+
 
 -- 전자결재 샘플 데이터(테스트 용도로만 사용)
 -- 기존 사용자 테이블 참조
