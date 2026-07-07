@@ -445,6 +445,9 @@ public class AttendanceService{
 	    		.map(log -> log.getEmployee().getEmployeeId())
 	    		.collect(Collectors.toSet());
 	    
+	    // 신규 등록 데이터 필터링
+	    List<AttendanceLogsDaily> newLogs = new ArrayList<>();
+	    
 	    // DAILY인 모든 사원 Map
 	    Map<Long, User> userMap = foundUsers.stream()
 	        .filter(user -> user.getEmploymentType() == EmploymentType.DAILY)
@@ -463,6 +466,10 @@ public class AttendanceService{
 	        .stream()
 	        .collect(Collectors.toMap(Workplace::getWorkplaceCode, w -> w));
 	    
+	    // 수정용
+	    Map<Long, AttendanceLogsDaily> logMap = existingLogs.stream()
+	            .collect(Collectors.toMap(l -> l.getEmployee().getEmployeeId(), l -> l));
+	    
 	    // 성공/스킵 count
 	    int successCount = 0;
 	    int skippedCount = 0;
@@ -470,38 +477,31 @@ public class AttendanceService{
 	    for (AttendanceRequest req : attendanceList) {
 	    	Long empId = Long.valueOf(req.getEmployeeId());
 	    	
-	    	// 중복체크
 	    	if(existingEmpIds.contains(empId)) {
-	    		log.info(">>> 이미 등록된 사원입니다. ID {}", empId);
-	    		skippedCount++;
-	    		continue;
-	    	}
-	    	
-	        User user = userMap.get(empId);
-	        Workplace workplace = workplaceMap.get(req.getWorkplaceCode());
-	        
-	        if (user == null || workplace == null) {
-	        	log.warn(">>> 유효하지 않은 데이터입니다. ID {}", empId);
-	        	continue;
+	            log.warn(">>> 이미 데이터가 존재하여 건너뜁니다. ID {}", empId);
+	            continue; 
 	        }
-	        
-	        AttendanceLogsDaily log = AttendanceLogsDaily.builder()
-	            .employee(user)
-	            .workplace(workplace)
-	            .checkInTime(req.getCheckInDateTime())
-	            .checkOutTime(req.getCheckOutDateTime())
-	            .workDate(todayDate)
-	            .isAttended("Y")
-				.createdAt(todayDateTime)
-				.updatedAt(todayDateTime)
-	            .build();
-	            
-	        logs.add(log);
-	        successCount++;
+	    	
+	    	User user = userMap.get(empId);
+	        Workplace workplace = workplaceMap.get(req.getWorkplaceCode());
+	    	
+	        if (user != null && workplace != null) {
+	            AttendanceLogsDaily log = AttendanceLogsDaily.builder()
+	                .employee(user)
+	                .workplace(workplace)
+	                .checkInTime(req.getCheckInDateTime())
+	                .checkOutTime(req.getCheckOutDateTime())
+	                .workDate(todayDate)
+	                .isAttended("Y")
+	                .createdAt(todayDateTime)
+	                .updatedAt(todayDateTime)
+	                .build();
+	            newLogs.add(log);
+	    	}
 	    }
 	    
-	    attendanceLogDailyRepository.saveAll(logs);
-	    return String.format("총 %d건 처리 완료 - 성공 %d, 중복 %d", attendanceList.size(), successCount, skippedCount);
+	    attendanceLogDailyRepository.saveAll(newLogs);
+	    return String.format("총 %d건 처리 완료 ", attendanceList.size());
 	}
 	
 	// 시간 검증(오후 11시~오전 6시 출퇴근 막기)
