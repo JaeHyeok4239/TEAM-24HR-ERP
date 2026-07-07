@@ -8,7 +8,6 @@ import PageHeader from '@/components/attendance/PageHeader';
 import SummaryDaily from "@/components/attendance/admin/SummaryDaily";
 import AttendanceEmployeeList from "@/components/attendance/admin/AttendanceEmployeeList";
 import AdminCalendar from "@/components/attendance/admin/AdminCalendar";
-import dayjs from "dayjs";
 import { getMonthlyAttendanceStats, getMonthlyCalendarEvents, getStatusLabel, getStatusColor } from "@/services/attendanceService";
 
 export default function AttendanceRegularPage() {

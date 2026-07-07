@@ -10,6 +10,7 @@ import AttendanceEmployeeList from "@/components/attendance/admin/AttendanceEmpl
 import AdminCalendar from "@/components/attendance/admin/AdminCalendar";
 import {getMonthlyCalendarEvents } from "@/services/attendanceService";
 import AttendanceDailyInputPanel from "@/components/attendance/AttendanceDailyInputPanel";
+import dayjs from 'dayjs';
 
 export default function AttendanceDailyPage() {
     const [employees, setEmployees] = useState([]);
