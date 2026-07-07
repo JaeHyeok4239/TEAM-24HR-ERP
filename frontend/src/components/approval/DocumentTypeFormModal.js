@@ -19,7 +19,6 @@ import {
   SelectContent,
   SelectItem,
 } from "../ui/select";
-
 const INITIAL_FORM = {
   typeName: "",
   detailTable: "",
@@ -53,25 +52,26 @@ export default function DocumentTypeFormModal({
   };
 
   const handleSubmit = async () => {
-    if (!validate()) return;
+    if (!typeName.trim()) {
+      alert("문서 종류 이름을 입력해주세요.");
+      return;
+    }
 
     setSubmitting(true);
     try {
-      const res = await apiRequest(`/api/document/schema/type/${typeId}`, {
-        method: "PUT",
-        body: JSON.stringify({ fields: buildFieldsPayload() }),
+      await apiRequest("/api/admin/document/type", {
+        method: "POST",
+        body: JSON.stringify({
+          typeName: typeName.trim(),
+          detailTable: detailTable.trim() || null,
+          requiredProcessing,
+        }),
       });
-
-      if (!res.ok) {
-        const message = await res.text();
-        alert(message || "스키마 저장 중 오류가 발생했습니다.");
-        return;
-      }
-
       onSuccess?.();
-    } catch (e) {
-      console.error(e);
-      alert("스키마 저장 중 오류가 발생했습니다.");
+      handleOpenChange(false); // 성공 시 닫으면서 자동 리셋
+    } catch (err) {
+      console.error(err);
+      alert("문서 종류 생성에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
