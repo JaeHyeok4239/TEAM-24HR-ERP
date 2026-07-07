@@ -28,37 +28,38 @@ export default function DepartmentCost() {
 
   const [loading, setLoading] = useState(false);
 
-  // 통계 조회 함수
-  const loadStatistics = async () => {
+  
+  useEffect(() => {
 
-    try {
+    async function fetchData() {
 
-      setLoading(true);
+        try {
 
-      const department = await getDepartmentCost(month);
+          setLoading(true);
 
-      setDepartmentData(department);
+          const department = await getDepartmentCost(month);
 
-    } catch (error) {
+          setDepartmentData(department);
 
-      console.error(error);
+        } catch (error) {
 
-      alert("부서별 인건비 조회 실패");
+          console.error(error);
 
-    } finally {
+          alert("부서별 인건비 조회 실패");
 
-      setLoading(false);
+        } finally {
+
+          setLoading(false);
+
+        }
 
     }
 
-  };
+    fetchData();
 
-  // 처음 화면 진입 시 자동 조회
-  useEffect(() => {
+  }, [month]);
 
-    loadStatistics();
-
-  }, []);
+  
 
   return (
 
@@ -117,7 +118,10 @@ export default function DepartmentCost() {
 
               <CartesianGrid strokeDasharray="3 3" />
 
-              <XAxis dataKey="departmentName" />
+              <XAxis
+                  dataKey="departmentName"
+                  interval={0}
+              />
 
               <YAxis
                 width={120}
