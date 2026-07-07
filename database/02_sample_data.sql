@@ -246,7 +246,7 @@ INSERT INTO workplaces VALUES (workplaces_seq.NEXTVAL, 'HQ', '본사', '강남�
 INSERT INTO workplaces VALUES (workplaces_seq.NEXTVAL, 'TEMP01', '근무지1', '부산광역시 강서구', 100, 35.1052000, 128.8450000, CURRENT_TIMESTAMP, NULL);
 INSERT INTO workplaces VALUES (workplaces_seq.NEXTVAL, 'TEMP02', '근무지2', '대전광역시 유성구', 100, 36.3350000, 127.3350000, CURRENT_TIMESTAMP, NULL);
 
--- 전자결재 샘플 데이터
+-- 전자결재 샘플 데이터(테스트 용도로만 사용)
 -- 기존 사용자 테이블 참조
 -- 플로우: 기안(TMP/REQ) → 결재(APR/REJ) → 처리(PRC→COM)
 -- 결재 방식 : 다단계 승인(approval_history 에서 처리)
@@ -263,118 +263,254 @@ DELETE FROM document_process;
 DELETE FROM document_type;
 DELETE FROM leave_type;
 
+-- ------------------------------------------------------------
+-- 1. 문서 유형 (document_type)
+-- ------------------------------------------------------------
+INSERT INTO document_type (type_id, type_name, detail_table, required_processing)
+VALUES (1, '연차신청서', 'leave', 'N');
 
--- 1. 문서 유형
-INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '연차신청서', 'leave');
-INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '반차신청서', 'leave');
-INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '조퇴신청서', 'leave');
-INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '지출결의서', NULL);
-INSERT INTO document_type (type_id, type_name, detail_table) VALUES (document_type_seq.NEXTVAL, '구매요청서', NULL);
+INSERT INTO document_type (type_id, type_name, detail_table, required_processing)
+VALUES (2, '지출결의서', 'expenditure', 'Y');
 
+INSERT INTO document_type (type_id, type_name, detail_table, required_processing)
+VALUES (3, '구매요청서', 'purchase', 'Y');
 
--- 2. 휴가 유형
-INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '연차',    'Y');
-INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '반차',    'Y');
-INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '조퇴',    'Y');
-INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (leave_type_seq.NEXTVAL, '무급휴가', 'N');
-
-
--- 3. 결재선 (step_order 포함)
--- 연차/반차/조퇴: 1단계 인사팀장(2)
--- 지출결의서:    1단계 인사팀장(2) → 2단계 대표이사(1)
--- 구매요청서:    1단계 구매팀장(6) → 2단계 대표이사(1)
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 1, 1, 2, 2); 
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 2, 1, 2, 2);
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 3, 1, 2, 2);
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 4, 1, 2, 2); -- 지출결의 1차: 인사팀장
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 4, 2, 1, NULL); -- 지출결의 2차: 대표이사
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 5, 1, 6, NULL); -- 구매요청 1차: 구매팀장
-INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id) VALUES (approval_line_seq.NEXTVAL, 5, 2, 1, NULL); -- 구매요청 2차: 대표이사
+-- detail_table이 없는 유형 -> 서비스 로직상 schema 등록 불가 (참고용, INSERT 없음)
+INSERT INTO document_type (type_id, type_name, detail_table, required_processing)
+VALUES (4, '재직증명서', NULL, 'N');
 
 
--- 4. 문서 처리 부서
-INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 1, 4, 'ALL');
-INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 2, 4, 'ALL');
-INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 3, 4, 'ALL');
-INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 4, 5, 'ADMIN');
-INSERT INTO document_process (process_id, document_type, process_department, processing_role) VALUES (document_process_seq.NEXTVAL, 5, 6, 'ADMIN');
+-- ------------------------------------------------------------
+-- 2. 문서유형 스키마 (document_type_schema)
+--    detail_table이 있는 1,2,3번 유형만 등록
+-- ------------------------------------------------------------
+INSERT INTO document_type_schema (schema_id, schema_json, document_type, created_at, updated_at)
+VALUES (
+    1,
+    '{"fields":[
+        {"name":"leaveType","type":"select","required":true,"options":["연차","반차","조퇴"]},
+        {"name":"startDate","type":"date","required":true},
+        {"name":"endDate","type":"date","required":true},
+        {"name":"reason","type":"text","required":true}
+    ]}',
+    1, SYSTIMESTAMP, NULL
+);
+
+INSERT INTO document_type_schema (schema_id, schema_json, document_type, created_at, updated_at)
+VALUES (
+    2,
+    '{"fields":[
+        {"name":"amount","type":"number","required":true},
+        {"name":"category","type":"select","required":true,"options":["교통비","식비","비품비","기타"]},
+        {"name":"description","type":"text","required":true}
+    ]}',
+    2, SYSTIMESTAMP, NULL
+);
+
+INSERT INTO document_type_schema (schema_id, schema_json, document_type, created_at, updated_at)
+VALUES (
+    3,
+    '{"fields":[
+        {"name":"itemName","type":"text","required":true},
+        {"name":"quantity","type":"number","required":true},
+        {"name":"unitPrice","type":"number","required":true},
+        {"name":"vendor","type":"text","required":false}
+    ]}',
+    3, SYSTIMESTAMP, NULL
+);
 
 
--- 5. 결재 문서
--- [COM] 일반직원1(9) 연차 → 1단계 승인 → 인사실무자(3) 처리완료
-INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at, processed_at)
-VALUES (approval_document_seq.NEXTVAL, 1, 9, 3, '연차 신청', 'COM', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP);
-
--- [PRC] 일반직원2(10) 반차 → 1단계 승인 → 인사실무자(3) 처리 중
-INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at, processed_at)
-VALUES (approval_document_seq.NEXTVAL, 2, 10, 3, '반차 신청', 'PRC', SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP);
-
--- [REJ] 인사실무자(3) 조퇴 → 1단계 반려
-INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at, reject_reason)
-VALUES (approval_document_seq.NEXTVAL, 3, 3, NULL, '조퇴 신청', 'REJ', SYSTIMESTAMP, SYSTIMESTAMP, '당일 마감 업무로 인해 반려합니다.');
-
--- [REQ] 구매팀장(6) 구매요청서 → 1단계 결재 대기
-INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at)
-VALUES (approval_document_seq.NEXTVAL, 5, 6, NULL, '현장 자재 구매 요청', 'REQ', SYSTIMESTAMP, SYSTIMESTAMP);
-
--- [TMP] 근태담당자(4) 지출결의서 임시저장
-INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at)
-VALUES (approval_document_seq.NEXTVAL, 4, 4, NULL, '출장 교통비 지출결의', 'TMP', SYSTIMESTAMP);
-
--- [REQ] 공사관리팀장(7) 연차 → 1단계 결재 대기
-INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at)
-VALUES (approval_document_seq.NEXTVAL, 1, 7, NULL, '연차 신청', 'REQ', SYSTIMESTAMP, SYSTIMESTAMP);
-
--- [APR] 근태담당자(4) 구매요청서 → 1단계 승인 → 2단계 대기
-INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title, status, created_at, requested_at)
-VALUES (approval_document_seq.NEXTVAL, 5, 4, NULL, '사무용품 구매 요청', 'REQ', SYSTIMESTAMP, SYSTIMESTAMP);
+-- ------------------------------------------------------------
+-- 3. 휴가 유형 (leave_type)
+-- ------------------------------------------------------------
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (1, '연차', 'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (2, '반차', 'Y');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (3, '조퇴', 'N');
+INSERT INTO leave_type (type_id, type_name, is_paid) VALUES (4, '병가', 'N');
 
 
--- 6. 결재 이력 (approval_history)
--- document_id=1 (연차, COM) → 1단계 승인완료
-INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
-VALUES (approval_history_seq.NEXTVAL, 1, 1, 2, 'APR', '승인합니다.', SYSTIMESTAMP);
+-- ------------------------------------------------------------
+-- 4. 결재선 (approval_line)
+--    사용 employee_id: 1=김민준(최종승인자), 11=한지민(1차승인), 6=강도윤(구매 1차승인)
+-- ------------------------------------------------------------
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id)
+VALUES (1, 1, 1, 11, NULL); -- 연차신청서 1단계
 
--- document_id=2 (반차, PRC) → 1단계 승인완료
-INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
-VALUES (approval_history_seq.NEXTVAL, 2, 1, 2, 'APR', '승인합니다.', SYSTIMESTAMP);
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id)
+VALUES (2, 1, 2, 1, NULL);  -- 연차신청서 2단계(최종)
 
--- document_id=3 (조퇴, REJ) → 1단계 반려
-INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
-VALUES (approval_history_seq.NEXTVAL, 3, 1, 2, 'REJ', '당일 마감 업무로 인해 반려합니다.', SYSTIMESTAMP);
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id)
+VALUES (3, 2, 1, 11, NULL); -- 지출결의서 1단계
 
--- document_id=4 (구매요청, REQ) → 1단계 대기
-INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
-VALUES (approval_history_seq.NEXTVAL, 4, 1, 6, 'PND', NULL, NULL);
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id)
+VALUES (4, 2, 2, 1, NULL);  -- 지출결의서 2단계(최종)
 
--- document_id=6 (연차, REQ) → 1단계 대기
-INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
-VALUES (approval_history_seq.NEXTVAL, 6, 1, 2, 'PND', NULL, NULL);
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id)
+VALUES (5, 3, 1, 6, NULL);  -- 구매요청서 1단계
 
--- document_id=7 (구매요청 2단계) → 1단계 승인 → 2단계 대기
-INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
-VALUES (approval_history_seq.NEXTVAL, 7, 1, 6, 'APR', '구매 필요성 확인. 승인합니다.', SYSTIMESTAMP);
-
-INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status, approver_comment, acted_at)
-VALUES (approval_history_seq.NEXTVAL, 7, 2, 1, 'PND', NULL, NULL);
-
--- 7. 결재 위임
-INSERT INTO approval_delegate (approval_delegate_id, approver_id, delegate_id, start_date, end_date, reason, is_active)
-VALUES (approval_delegate_seq.NEXTVAL, 2, 3, DATE '2025-06-01', DATE '2025-06-07', '출장으로 인한 결재 위임', 'N');
-
-INSERT INTO approval_delegate (approval_delegate_id, approver_id, delegate_id, start_date, end_date, reason, is_active)
-VALUES (approval_delegate_seq.NEXTVAL, 1, 2, DATE '2025-06-20', DATE '2025-06-25', '연차 휴가로 인한 결재 위임', 'Y');
+INSERT INTO approval_line (approval_line_id, document_type, step_order, default_approver, department_id)
+VALUES (6, 3, 2, 1, NULL);  -- 구매요청서 2단계(최종)
 
 
--- 8. 휴가 데이터
-INSERT INTO leave (leave_id, leave_type, document_id, start_date, end_date, leave_cnt)
-VALUES (leave_seq.NEXTVAL, 1, 1, DATE '2025-06-10', DATE '2025-06-10', 1.00);
+-- ------------------------------------------------------------
+-- 5. 문서 처리 부서 (document_process)
+--    required_processing='Y'인 지출결의서/구매요청서만 대상
+--    (departments FK는 3=재무팀으로 가정)
+-- ------------------------------------------------------------
+INSERT INTO document_process (process_id, document_type, process_department)
+VALUES (1, 2, 3);
 
-INSERT INTO leave (leave_id, leave_type, document_id, start_date, end_date, leave_cnt)
-VALUES (leave_seq.NEXTVAL, 2, 2, DATE '2025-06-11', DATE '2025-06-11', 0.50);
+INSERT INTO document_process (process_id, document_type, process_department)
+VALUES (2, 3, 3);
 
 
+-- ------------------------------------------------------------
+-- 6. 결재 문서 (document)
+--    기안자: 93=서하늘, 65=심가온, 41=김하준, 53=서도윤
+-- ------------------------------------------------------------
+-- 문서1: 서하늘 연차신청 - 1단계 결재 대기중
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title,
+    status, current_step, created_at, updated_at, requested_at, processed_at, reject_reason,
+    document_content, version, document_version)
+VALUES (1, 1, 93, NULL, '서하늘 연차신청서', 'REQ', 1,
+    TIMESTAMP '2026-07-01 09:10:00', NULL, TIMESTAMP '2026-07-01 09:10:00', NULL, NULL,
+    '{"leaveType":"연차","startDate":"2026-07-10","endDate":"2026-07-10","reason":"개인 사유"}',
+    0, 1);
 
+-- 문서2: 심가온 반차신청 - 승인 완료(자동 처리, required_processing='N')
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title,
+    status, current_step, created_at, updated_at, requested_at, processed_at, reject_reason,
+    document_content, version, document_version)
+VALUES (2, 1, 65, NULL, '심가온 반차신청서', 'COM', 2,
+    TIMESTAMP '2026-06-20 08:40:00', TIMESTAMP '2026-06-20 14:00:00',
+    TIMESTAMP '2026-06-20 08:40:00', TIMESTAMP '2026-06-20 14:00:00', NULL,
+    '{"leaveType":"반차","startDate":"2026-06-21","endDate":"2026-06-21","reason":"병원 진료"}',
+    2, 1);
+
+-- 문서3: 김하준 지출결의서 - 결재 승인 완료 후 재무팀 처리중
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title,
+    status, current_step, created_at, updated_at, requested_at, processed_at, reject_reason,
+    document_content, version, document_version)
+VALUES (3, 2, 41, 8, '김하준 지출결의서(교통비)', 'PRC', 2,
+    TIMESTAMP '2026-06-25 10:00:00', TIMESTAMP '2026-06-25 10:05:00',
+    TIMESTAMP '2026-06-25 10:00:00', NULL, NULL,
+    '{"amount":45000,"category":"교통비","description":"현장 출장 교통비 정산"}',
+    2, 1);
+
+-- 문서4: 서도윤 구매요청서 - 1단계에서 반려
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title,
+    status, current_step, created_at, updated_at, requested_at, processed_at, reject_reason,
+    document_content, version, document_version)
+VALUES (4, 3, 53, NULL, '서도윤 구매요청서(사무용품)', 'REJ', 1,
+    TIMESTAMP '2026-06-28 11:00:00', TIMESTAMP '2026-06-28 15:00:00',
+    TIMESTAMP '2026-06-28 11:00:00', TIMESTAMP '2026-06-28 15:00:00', '예산 초과로 반려',
+    '{"itemName":"모니터","quantity":5,"unitPrice":250000,"vendor":"LG전자"}',
+    1, 1);
+
+-- 문서5: 김하준 연차신청서 - 임시저장(작성중)
+INSERT INTO document (document_id, document_type, requester_id, processor_id, document_title,
+    status, current_step, created_at, updated_at, requested_at, processed_at, reject_reason,
+    document_content, version, document_version)
+VALUES (5, 1, 41, NULL, '김하준 연차신청서(임시)', 'TMP', 1,
+    TIMESTAMP '2026-07-05 09:00:00', NULL, NULL, NULL, NULL,
+    '{"leaveType":"연차","startDate":"2026-07-20","endDate":"2026-07-21","reason":""}',
+    0, 1);
+
+
+-- ------------------------------------------------------------
+-- 7. 결재 이력 (approval_history)
+-- ------------------------------------------------------------
+-- 문서1: 1단계 대기중
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status,
+    approver_comment, acted_at, created_at, version, document_version)
+VALUES (1, 1, 1, 11, 'PND', NULL, NULL, TIMESTAMP '2026-07-01 09:10:00', 0, 1);
+
+-- 문서2: 1,2단계 모두 승인
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status,
+    approver_comment, acted_at, created_at, version, document_version)
+VALUES (2, 2, 1, 11, 'APR', '확인했습니다.', TIMESTAMP '2026-06-20 10:00:00',
+    TIMESTAMP '2026-06-20 08:40:00', 1, 1);
+
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status,
+    approver_comment, acted_at, created_at, version, document_version)
+VALUES (3, 2, 2, 1, 'APR', '승인합니다.', TIMESTAMP '2026-06-20 14:00:00',
+    TIMESTAMP '2026-06-20 08:40:00', 1, 1);
+
+-- 문서3: 1,2단계 모두 승인 (이후 재무팀 처리 단계로 이동)
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status,
+    approver_comment, acted_at, created_at, version, document_version)
+VALUES (4, 3, 1, 11, 'APR', '결재 승인', TIMESTAMP '2026-06-25 10:03:00',
+    TIMESTAMP '2026-06-25 10:00:00', 1, 1);
+
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status,
+    approver_comment, acted_at, created_at, version, document_version)
+VALUES (5, 3, 2, 1, 'APR', '결재 승인', TIMESTAMP '2026-06-25 10:05:00',
+    TIMESTAMP '2026-06-25 10:00:00', 1, 1);
+
+-- 문서4: 1단계에서 반려, 2단계는 취소 처리
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status,
+    approver_comment, acted_at, created_at, version, document_version)
+VALUES (6, 4, 1, 6, 'REJ', '예산 초과로 반려', TIMESTAMP '2026-06-28 15:00:00',
+    TIMESTAMP '2026-06-28 11:00:00', 1, 1);
+
+INSERT INTO approval_history (history_id, document_id, step_order, approver_id, status,
+    approver_comment, acted_at, created_at, version, document_version)
+VALUES (7, 4, 2, 1, 'CAN', NULL, NULL, TIMESTAMP '2026-06-28 11:00:00', 0, 1);
+
+
+-- ------------------------------------------------------------
+-- 8. 첨부파일 (attachment)
+-- ------------------------------------------------------------
+INSERT INTO attachment (attachment_id, original_name, stored_name, attachment_type,
+    upload_time, attachment_size, uploader)
+VALUES (1, '병원진료확인서.pdf', 'a1b2c3d4-1111.pdf', 'application/pdf',
+    TIMESTAMP '2026-06-20 08:35:00', 245678, 65);
+
+INSERT INTO attachment (attachment_id, original_name, stored_name, attachment_type,
+    upload_time, attachment_size, uploader)
+VALUES (2, '교통비영수증.jpg', 'a1b2c3d4-2222.jpg', 'image/jpeg',
+    TIMESTAMP '2026-06-25 09:55:00', 1024500, 41);
+
+INSERT INTO attachment (attachment_id, original_name, stored_name, attachment_type,
+    upload_time, attachment_size, uploader)
+VALUES (3, '모니터견적서.xlsx', 'a1b2c3d4-3333.xlsx',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    TIMESTAMP '2026-06-28 10:50:00', 87234, 53);
+
+
+-- ------------------------------------------------------------
+-- 9. 문서-첨부파일 매핑 (document_attach_mapping)
+-- ------------------------------------------------------------
+INSERT INTO document_attach_mapping (doc_mapping_id, document_id, attachment_id) VALUES (1, 2, 1);
+INSERT INTO document_attach_mapping (doc_mapping_id, document_id, attachment_id) VALUES (2, 3, 2);
+INSERT INTO document_attach_mapping (doc_mapping_id, document_id, attachment_id) VALUES (3, 4, 3);
+
+
+-- ------------------------------------------------------------
+-- 10. 결재 위임 (approval_delegate)
+-- ------------------------------------------------------------
+-- 현재 활성 위임: 한지민(11) -> 강도윤(6), 여름휴가 기간
+INSERT INTO approval_delegate (approval_delegate_id, approver_id, delegate_id, start_date,
+    end_date, reason, is_active, approval_line_id)
+VALUES (1, 11, 6, DATE '2026-07-15', DATE '2026-07-19', '여름휴가로 인한 결재 위임', 'Y', 1);
+
+-- 종료된 위임 이력
+INSERT INTO approval_delegate (approval_delegate_id, approver_id, delegate_id, start_date,
+    end_date, reason, is_active, approval_line_id)
+VALUES (2, 1, 6, DATE '2026-05-01', DATE '2026-05-05', '출장으로 인한 결재 위임', 'N', 3);
+
+
+-- ------------------------------------------------------------
+-- 11. 휴가 신청 상세 (leave, leave_date)
+-- ------------------------------------------------------------
+INSERT INTO leave (leave_id, leave_type, document_id, leave_cnt, leave_reason)
+VALUES (1, 1, 1, 1.0, '개인 사유로 인한 연차 사용');
+
+INSERT INTO leave (leave_id, leave_type, document_id, leave_cnt, leave_reason)
+VALUES (2, 2, 2, 0.5, '병원 진료로 인한 반차 사용');
+
+INSERT INTO leave_date (leave_date_id, leave_id, leave_date) VALUES (1, 1, DATE '2026-07-10');
+INSERT INTO leave_date (leave_date_id, leave_id, leave_date) VALUES (2, 2, DATE '2026-06-21');
 
 ---------------------------------업무관리------------------------
 
