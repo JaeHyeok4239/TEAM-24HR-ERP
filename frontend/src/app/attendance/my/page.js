@@ -18,13 +18,15 @@ export default function AttendanceUserPage(){
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedData, setSelectedData] = useState({});
 
-    const { currentDate, handlePrev, handleNext, handleToday, handleDatesSet, updateDate } = useDateNavigation(calendarRef);
-
-    const handleDateChange = (newDate) => {
-        calendarRef.current?.getApi().gotoDate(newDate);
-    };
+    const { currentDate, handlePrev, handleNext, handleToday, handleDatesSet, updateDate, isNextDisabled } = useDateNavigation(calendarRef);
 
     const handleDateClick = (info) => {
+        // 날짜 유효성 검사
+        if (dayjs(info.dateStr).isAfter(dayjs(), 'day')) {
+            console.log("오늘 이후 날짜는 선택할 수 없습니다.");
+            return; 
+        }   
+
         updateDate(info.dateStr);
         setSelectedData({
             status: '출근',
@@ -86,6 +88,7 @@ export default function AttendanceUserPage(){
                 onNext={handleNext}
                 onToday={handleToday}
                 onDateChange={(date) => updateDate(date)}
+                isNextDisabled={isNextDisabled}
             />
 
             {/* 월별 통계 */}

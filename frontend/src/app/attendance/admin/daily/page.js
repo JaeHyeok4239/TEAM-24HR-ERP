@@ -16,14 +16,10 @@ export default function AttendanceDailyPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const calendarRef = useRef(null);
-    const { currentDate, handlePrev, handleNext, handleToday, handleDatesSet, updateDate } = useDateNavigation(calendarRef);
+    const { currentDate, handlePrev, handleNext, handleToday, updateDate, isNextDisabled } = useDateNavigation(calendarRef);
     const [events, setEvents] = useState([]);
     const [selectedStats, setSelectedStats] = useState(null);
     const [isInputOpen, setIsInputOpen] = useState(false);
-
-    const handleDateChange = (newDate) => {
-        calendarRef.current?.getApi().gotoDate(newDate);
-    };
 
     const handleDateClick = (info) => {
         updateDate(info.dateStr); 
@@ -106,6 +102,7 @@ export default function AttendanceDailyPage() {
                 onNext={handleNext}
                 onToday={handleToday}
                 onDateChange={(date) => updateDate(date)}
+                isNextDisabled={isNextDisabled}
             />
 
             <button 
