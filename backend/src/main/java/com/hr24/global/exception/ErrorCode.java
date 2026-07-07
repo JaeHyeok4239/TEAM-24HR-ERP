@@ -215,7 +215,44 @@ public enum ErrorCode {
 	
 	NOT_YOUR_TURN(
 			HttpStatus.BAD_REQUEST,
-			"해당 단계의 결재자만 요청이 가능합니다.");
+			"해당 단계의 결재자만 요청이 가능합니다."),
+	
+	// 근태
+	BATCH_NOT_RUN(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "오늘의 근태 데이터가 생성되지 않았습니다."),
+
+    OUT_OF_OPERATING_HOURS(
+            HttpStatus.BAD_REQUEST,
+            "운영 시간이 아닙니다. (23:00 ~ 06:00)"),
+    
+    INVALID_LOCATION(
+            HttpStatus.BAD_REQUEST,
+            "근무지 반경을 벗어났습니다."),
+    
+    CHECK_IN_RECORD_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "오늘 출근 기록이 없습니다."),
+            
+    CHECK_IN_REQUIRED(
+            HttpStatus.BAD_REQUEST,
+            "출근 처리가 선행되어야 합니다."),
+            
+    INVALID_STATUS_FOR_CHECKOUT(
+            HttpStatus.BAD_REQUEST,
+            "퇴근이 가능한 상태가 아닙니다."),
+            
+    LEAVE_RESTRICTION(
+            HttpStatus.FORBIDDEN,
+            "휴가 중에는 퇴근 처리를 할 수 없습니다."),
+    
+    ATTENDANCE_RECORD_NOT_FOUND(
+    		HttpStatus.NOT_FOUND,
+    		"근태 기록을 찾을 수 없습니다."),
+    
+    INVALID_CORRECTION_TYPE(
+    		HttpStatus.BAD_REQUEST,
+    		"유효하지 않은 정정 유형입니다.");
 
 	
 	
