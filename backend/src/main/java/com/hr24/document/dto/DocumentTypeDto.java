@@ -14,10 +14,11 @@ public class DocumentTypeDto {
     public static class TypeListResponse {
         private Long typeId;
         private String typeName;
-
+        private String detailTable;
         public TypeListResponse(DocumentType documentType) {
             this.typeId = documentType.getTypeId();
             this.typeName = documentType.getTypeName();
+            this.detailTable = documentType.getDetailTable();
         }
     }
 
