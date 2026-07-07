@@ -1,6 +1,7 @@
 package com.hr24.auth.service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -62,13 +63,16 @@ public class AuthService {
 		        roles
 		);
 		
+		String sessionId = UUID.randomUUID().toString();
+		
 		String refreshToken = 
 				jwtProvider.createRefreshToken(
-						user.getEmployeeId()
+						user.getEmployeeId(),
+						sessionId
 				);
 		
 		redisService.save(
-				getRefreshTokenKey(user.getEmployeeId()),
+				getRefreshTokenKey(user.getEmployeeId(), sessionId),
 		        refreshToken,
 		        7,
 		        TimeUnit.DAYS
@@ -96,9 +100,13 @@ public class AuthService {
 		}
 		
 		Long employeeId = jwtProvider.getEmployeeId(refreshToken);
+		String sessionId = jwtProvider.getSessionId(refreshToken);
 		
-		String redisKey = getRefreshTokenKey(employeeId);
+		if (sessionId == null || sessionId.isBlank()) {
+			throw new BusinessException(ErrorCode.INVALID_TOKEN);
+		}
 		
+		String redisKey = getRefreshTokenKey(employeeId, sessionId);
 		String savedRefreshToken = redisService.get(redisKey);
 		
 		if (savedRefreshToken == null) {
@@ -125,18 +133,27 @@ public class AuthService {
 	
 	public void logout(String accessToken, String refreshToken) {
 
-        Long employeeId = resolveEmployeeIdFromRefreshToken(refreshToken);
+		if (refreshToken == null || refreshToken.isBlank()) {
+			return;
+		}
+		
+		if (!jwtProvider.validateToken(refreshToken)) {
+			return;
+		}
+		
+		if (!"REFRESH".equals(jwtProvider.getTokenType(refreshToken))) {
+			return;
+		}
+		
+		Long employeeId = jwtProvider.getEmployeeId(refreshToken);
+        String sessionId = jwtProvider.getSessionId(refreshToken);
 
-        if (employeeId == null) {
-            employeeId = resolveEmployeeIdFromAccessToken(accessToken);
-        }
-
-        if (employeeId == null) {
+        if (employeeId == null || sessionId == null || sessionId.isBlank()) {
             return;
         }
 
         redisService.delete(
-                getRefreshTokenKey(employeeId)
+        		getRefreshTokenKey(employeeId, sessionId)
         );
     }
 	
@@ -231,45 +248,10 @@ public class AuthService {
 	            getPasswordResetTokenKey(resetToken)
 	    );
 
-	    redisService.delete(
-	            getRefreshTokenKey(employeeId)
+	    redisService.deleteByPattern(
+	            getRefreshTokenPattern(employeeId)
 	    );
 	}
-	
-
-    private Long resolveEmployeeIdFromRefreshToken(String refreshToken) {
-
-        if (refreshToken == null || refreshToken.isBlank()) {
-            return null;
-        }
-
-        if (!jwtProvider.validateToken(refreshToken)) {
-            return null;
-        }
-
-        if (!"REFRESH".equals(jwtProvider.getTokenType(refreshToken))) {
-            return null;
-        }
-
-        return jwtProvider.getEmployeeId(refreshToken);
-    }
-
-    private Long resolveEmployeeIdFromAccessToken(String accessToken) {
-
-        if (accessToken == null || accessToken.isBlank()) {
-            return null;
-        }
-
-        if (!jwtProvider.validateToken(accessToken)) {
-            return null;
-        }
-
-        if (!"ACCESS".equals(jwtProvider.getTokenType(accessToken))) {
-            return null;
-        }
-
-        return jwtProvider.getEmployeeId(accessToken);
-    }
 
     private List<String> getRoleCodes(Long employeeId) {
 
@@ -281,9 +263,13 @@ public class AuthService {
                 )
                 .toList();
     }
-
-    private String getRefreshTokenKey(Long employeeId) {
-        return "RT:" + employeeId;
+    
+    private String getRefreshTokenPattern(Long employeeId) {
+        return "RT:" + employeeId + ":*";
+    }
+    
+    private String getRefreshTokenKey(Long employeeId, String sessionId) {
+        return "RT:" + employeeId + ":" + sessionId;
     }
     
     private String getPasswordResetCodeKey(Long employeeId) {
