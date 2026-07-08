@@ -3,6 +3,8 @@ package com.hr24.auth.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -67,7 +69,7 @@ class AuthServiceTest {
     private AuthService authService;
 
     @Test
-    @DisplayName("로그인 성공 시 Access Token과 Refresh Token을 발급하고 Refresh Token을 Redis에 저장한다")
+    @DisplayName("로그인 성공 시 Access Token과 Refresh Token을 발급하고 Refresh Token을 세션 단위 Redis Key로 저장한다")
     void login_success() {
         // given
         LoginRequestDto request = new LoginRequestDto();
@@ -94,7 +96,7 @@ class AuthServiceTest {
                 List.of("USER", "HR")
         )).thenReturn("access-token");
 
-        when(jwtProvider.createRefreshToken(1L))
+        when(jwtProvider.createRefreshToken(eq(1L), anyString()))
                 .thenReturn("refresh-token");
 
         // when
@@ -105,10 +107,10 @@ class AuthServiceTest {
         assertThat(result.refreshToken()).isEqualTo("refresh-token");
 
         verify(redisService).save(
-                "RT:1",
-                "refresh-token",
-                7,
-                TimeUnit.DAYS
+                argThat(key -> key.startsWith("RT:1:")),
+                eq("refresh-token"),
+                eq(7L),
+                eq(TimeUnit.DAYS)
         );
     }
 
@@ -139,14 +141,14 @@ class AuthServiceTest {
                 .isEqualTo(ErrorCode.INVALID_PASSWORD);
 
         verify(jwtProvider, never()).createAccessToken(
-                1L,
-                "hong",
-                List.of()
+                eq(1L),
+                eq("hong"),
+                anyList()
         );
     }
 
     @Test
-    @DisplayName("Refresh Token이 유효하고 Redis 저장값과 일치하면 Access Token을 재발급한다")
+    @DisplayName("Refresh Token이 유효하고 세션 단위 Redis 저장값과 일치하면 Access Token을 재발급한다")
     void refresh_success() {
         // given
         String refreshToken = "refresh-token";
@@ -162,7 +164,10 @@ class AuthServiceTest {
         when(jwtProvider.getEmployeeId(refreshToken))
                 .thenReturn(1L);
 
-        when(redisService.get("RT:1"))
+        when(jwtProvider.getSessionId(refreshToken))
+                .thenReturn("session-1");
+
+        when(redisService.get("RT:1:session-1"))
                 .thenReturn(refreshToken);
 
         when(userRepository.findById(1L))
@@ -188,7 +193,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("Refresh Token이 Redis 저장값과 다르면 Access Token 재발급에 실패한다")
+    @DisplayName("Refresh Token이 세션 단위 Redis 저장값과 다르면 Access Token 재발급에 실패한다")
     void refresh_fail_mismatchRedisToken() {
         // given
         String refreshToken = "refresh-token";
@@ -202,7 +207,10 @@ class AuthServiceTest {
         when(jwtProvider.getEmployeeId(refreshToken))
                 .thenReturn(1L);
 
-        when(redisService.get("RT:1"))
+        when(jwtProvider.getSessionId(refreshToken))
+                .thenReturn("session-1");
+
+        when(redisService.get("RT:1:session-1"))
                 .thenReturn("other-refresh-token");
 
         // when
@@ -216,14 +224,14 @@ class AuthServiceTest {
                 .isEqualTo(ErrorCode.INVALID_TOKEN);
 
         verify(jwtProvider, never()).createAccessToken(
-        		eq(1L),
+                eq(1L),
                 eq("hong"),
                 anyList()
         );
     }
 
     @Test
-    @DisplayName("로그아웃 시 Redis에 저장된 Refresh Token을 삭제한다")
+    @DisplayName("로그아웃 시 현재 세션의 Refresh Token만 Redis에서 삭제한다")
     void logout_success_deleteRefreshToken() {
         // given
         String accessToken = "access-token";
@@ -238,11 +246,14 @@ class AuthServiceTest {
         when(jwtProvider.getEmployeeId(refreshToken))
                 .thenReturn(1L);
 
+        when(jwtProvider.getSessionId(refreshToken))
+                .thenReturn("session-1");
+
         // when
         authService.logout(accessToken, refreshToken);
 
         // then
-        verify(redisService).delete("RT:1");
+        verify(redisService).delete("RT:1:session-1");
     }
 
     private User createUser(

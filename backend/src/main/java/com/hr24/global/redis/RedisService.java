@@ -1,5 +1,6 @@
 package com.hr24.global.redis;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.RedisTemplate;
@@ -37,5 +38,15 @@ public class RedisService {
 	
 	public void save(String key, String value) {
 	    redisTemplate.opsForValue().set(key, value);
+	}
+	
+	public void deleteByPattern(String pattern) {
+	    Set<String> keys = redisTemplate.keys(pattern);
+
+	    if (keys == null || keys.isEmpty()) {
+	        return;
+	    }
+
+	    redisTemplate.delete(keys);
 	}
 }

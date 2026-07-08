@@ -62,3 +62,38 @@ export const getStatusColor = (status) => {
     }
 };
 
+// 일용직 명단 불러오기
+export const getDailyWorkersRequest = async () => {
+  const response = await apiRequest(`/api/attendance/daily-workers`, {
+    method: "GET",
+  });
+  return response.json();
+};
+
+// 일용직 근태 기록 일괄 저장
+export const saveDailyAttendanceBatchRequest = async (attendanceList) => {
+  const response = await apiRequest(`/api/attendance/batch/daily-batch`, {
+    method: "POST",
+    body: JSON.stringify(attendanceList),
+  });
+  return response.text();
+};
+
+// 데이터 옮기기용
+export const applyDailyCorrectionRequest = async (logId, dtoList) => {
+    const response = await fetch(`/api/attendance/daily/${logId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dtoList),
+    });
+
+    if (!response.ok) {
+        // 에러 처리 로직 (필요시 추가)
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || '수정 요청 처리에 실패했습니다.');
+    }
+
+    return response;
+};
