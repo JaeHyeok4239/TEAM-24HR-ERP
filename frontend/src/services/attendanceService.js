@@ -79,14 +79,17 @@ export const saveDailyAttendanceBatchRequest = async (attendanceList) => {
   return response.text();
 };
 
-// 데이터 옮기기용
+// 일용직 근태 정정
 export const applyDailyCorrectionRequest = async (logId, dtoList) => {
+    const token = localStorage.getItem('accessToken'); 
+
     const response = await fetch(`/api/attendance/daily/${logId}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify(dtoList),
+        body: JSON.stringify(dtoList)
     });
 
     if (!response.ok) {
@@ -96,4 +99,10 @@ export const applyDailyCorrectionRequest = async (logId, dtoList) => {
     }
 
     return response;
+};
+
+// 일용직 근태 기록 유지용
+export const getDailyManagementRequest = async (date) => {
+    const response = await apiRequest(`/api/attendance/daily-management?date=${date}`);
+    return response.json();
 };

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import com.hr24.attendance.dto.CalendarBadgeDto;
 import com.hr24.attendance.dto.AttendanceCorrectionRecordDto;
 import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
+import com.hr24.attendance.dto.DailyAttendanceManageDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
 import com.hr24.attendance.dto.MonthlyAttendanceListResponseDto;
 import com.hr24.attendance.dto.WorkplaceDto;
@@ -460,9 +462,10 @@ public class AttendanceService{
 		LocalDate todayDate = todayDateTime.toLocalDate();
 		
 	    // 모든 ID 추출
-	    List<Long> empIds = attendanceList.stream()
-	        .map(req -> Long.valueOf(req.getEmployeeId()))
-	        .collect(Collectors.toList());
+		List<Long> empIds = attendanceList.stream()
+		        .filter(req -> req.getEmployeeId() != null && !req.getEmployeeId().isEmpty())
+		        .map(req -> Long.valueOf(req.getEmployeeId()))
+		        .collect(Collectors.toList());
 	    List<User> foundUsers = userRepository.findAllById(empIds);
 	    
 	    List<AttendanceLogsDaily> existingLogs = attendanceLogDailyRepository.findByEmployeeIdAndWorkDate(empIds, todayDate);
@@ -491,6 +494,11 @@ public class AttendanceService{
     	    .collect(Collectors.toMap(Workplace::getWorkplaceCode, w -> w));
 
 	    for (AttendanceRequest req : attendanceList) {
+	    	if (req.getEmployeeId() == null || req.getEmployeeId().trim().isEmpty()) {
+	            log.warn(">>> 유효하지 않은 EmployeeId 감지 건너뜁니다.");
+	            continue;
+	        }
+	    	
 	    	Long empId = Long.valueOf(req.getEmployeeId());
 	    	
 	    	if(existingEmpIds.contains(empId)) {
@@ -499,7 +507,7 @@ public class AttendanceService{
 	        }
 	    	
 	    	User user = userMap.get(empId);
-	        Workplace workplace = workplaceMap.get(req.getWorkplaceCode());
+	    	Workplace workplace = workplaceMap.get(WorkplaceCode.valueOf(req.getWorkplaceCode()));
 	    	
 	        if (user != null && workplace != null) {
 	            AttendanceLogsDaily log = AttendanceLogsDaily.builder()
@@ -513,6 +521,8 @@ public class AttendanceService{
 	                .updatedAt(todayDateTime)
 	                .build();
 	            newLogs.add(log);
+	    	}else {
+	    	    log.error(">>> 저장 실패: User({}) 또는 Workplace({})를 찾을 수 없음", empId, req.getWorkplaceCode());
 	    	}
 	    }
 	    
@@ -901,4 +911,33 @@ public class AttendanceService{
                 .build())
             .collect(Collectors.toList());
     }
+	
+	// 일용직 직원 목록 및 근태 로그 조회
+	@Transactional(readOnly = true)
+	public List<DailyAttendanceManageDto> getDailyManagementList(LocalDate date) {
+	    List<User> employees = userRepository.findAll().stream()
+	            .filter(u -> EmploymentType.DAILY.equals(u.getEmploymentType()))
+	            .collect(Collectors.toList()); 
+	    
+	    List<AttendanceLogsDaily> logs = attendanceLogDailyRepository.findByWorkDate(date);
+	    
+	    Map<Long, AttendanceLogsDaily> logMap = logs.stream()
+	            .collect(Collectors.toMap(
+	                log -> log.getEmployee().getEmployeeId(), 
+	                log -> log,
+	                (existing, replacement) -> existing // 중복 키 발생 시 기존 것 유지
+	            ));
+	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+	    return employees.stream().map((User emp) -> {
+	        AttendanceLogsDaily log = logMap.get(emp.getEmployeeId());
+	        return DailyAttendanceManageDto.builder()
+	                .employeeId(emp.getEmployeeId())
+	                .name(emp.getName())
+	                .logId(log != null ? log.getAttendanceLogsDailyId() : null)
+	                .workplaceCode(log != null && log.getWorkplace() != null ? log.getWorkplace().getWorkplaceCode().name() : "")
+	                .startTime(log != null && log.getCheckInTime() != null ? log.getCheckInTime().format(formatter) : "")
+	                .endTime(log != null && log.getCheckOutTime() != null ? log.getCheckOutTime().format(formatter) : "")
+	                .build();
+	    }).collect(Collectors.toList());
+	}
 }

@@ -141,6 +141,7 @@ export default function AttendanceDailyPage() {
             <AttendanceDailyInputPanel 
                 isOpen={isInputOpen} 
                 onClose={() => setIsInputOpen(false)} 
+                selectedDate={currentDate.replaceAll('.', '-')}
             />
         </main>
     );
