@@ -325,12 +325,13 @@ CREATE TABLE
         overtime_minutes NUMBER NULL, -- 초과 근무 시간(분)
         attendance_status VARCHAR2(20) NOT NULL, -- 근태 상태(대기/근무/지각/조퇴/결근/휴가)
         is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
+        is_checkout_missing CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
         is_fixed CHAR(1) DEFAULT 'N' NOT NULL, --(Y/N) 정정 여부
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
 
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
-        CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE', 'OUT', 'MISSING_CHECKOUT')),
+        CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE', 'OUT')),
         CONSTRAINT fk_att_workplace_id FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
         CONSTRAINT fk_att_employee_id FOREIGN KEY (employee_id) REFERENCES users (employee_id),
         CONSTRAINT uq_att_attendance_results UNIQUE (employee_id, work_date)
