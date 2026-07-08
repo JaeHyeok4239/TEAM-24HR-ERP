@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.hr24.attendance.dto.AdminAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceCombinedSummaryDto;
@@ -78,14 +77,14 @@ public class AttendanceService{
 	private final AttendanceCalculator attendanceCalculator;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
 	private final HolidayRepository holidayRepository;
-	private List<AttendanceDetailResponseDto> attendanceList;
+
 	
 	// 시간 관련 API 테스트용 메서드
 	private final boolean IS_TEST_MODE = false; 
 	public LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분
-	        return LocalDateTime.of(2026, 7, 2, 9, 0); 
+	        return LocalDateTime.of(2026, 7, 7, 9, 0); 
 	    }
 	    // 서울 시간대 고정
 	    return LocalDateTime.now(ZoneId.of("Asia/Seoul"));
@@ -458,8 +457,6 @@ public class AttendanceService{
 	    Map<Long, User> userMap = foundUsers.stream()
 	        .filter(user -> user.getEmploymentType() == EmploymentType.DAILY)
 	        .collect(Collectors.toMap(User::getEmployeeId, user -> user));
-
-	    List<AttendanceLogsDaily> logs = new ArrayList<>();
 	    
 	    // workplace 필요한 코드 추출
 	    Set<WorkplaceCode> workplaceCodes = attendanceList.stream()
@@ -471,15 +468,7 @@ public class AttendanceService{
     	    .findByWorkplaceCodeIn(workplaceCodes)
     	    .stream()
     	    .collect(Collectors.toMap(Workplace::getWorkplaceCode, w -> w));
-	    
-	    // 수정용
-	    Map<Long, AttendanceLogsDaily> logMap = existingLogs.stream()
-	            .collect(Collectors.toMap(l -> l.getEmployee().getEmployeeId(), l -> l));
-	    
-	    // 성공/스킵 count
-	    int successCount = 0;
-	    int skippedCount = 0;
-	    
+
 	    for (AttendanceRequest req : attendanceList) {
 	    	Long empId = Long.valueOf(req.getEmployeeId());
 	    	

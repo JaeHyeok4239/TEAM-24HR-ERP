@@ -334,7 +334,6 @@ CREATE TABLE
         CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE', 'OUT')),
         CONSTRAINT fk_att_workplace_id FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
         CONSTRAINT fk_att_employee_id FOREIGN KEY (employee_id) REFERENCES users (employee_id),
-        CONSTRAINT fk_att_leave_id FOREIGN KEY (leave_id) REFERENCES leave(leave_id),
         CONSTRAINT uq_att_attendance_results UNIQUE (employee_id, work_date)
     );
 
@@ -774,10 +773,6 @@ COMMENT ON COLUMN work_notifications.created_at      IS '발송일시';
 ALTER TABLE attendance_results
 ADD CONSTRAINT fk_att_leave_id
 FOREIGN KEY (leave_id) REFERENCES leave(leave_id);
-
-ALTER TABLE attendance_results
-ADD CONSTRAINT fk_att_holiday_id
-FOREIGN KEY (holiday_id) REFERENCES holidays(holiday_id);
 
 ALTER TABLE attendance_correction
 ADD CONSTRAINT correction_fk_correction_daily_log
