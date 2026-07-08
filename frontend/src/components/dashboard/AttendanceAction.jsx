@@ -33,17 +33,23 @@ export default function AttendanceAction({ userLocation }) {
         const timeString = `${now.getHours()}시 ${now.getMinutes()}분`;
         setAttendanceTime(`${type} 완료: ${timeString}`);
       } else {
-        // 400, 500 에러 등을 받아서 처리
-        const errorText = await response.text(); 
-        alert(`요청 실패: ${errorText || "서버 응답 오류"}`);
+        // apiRequest가 throw하지 않고 response만 반환하는 경우
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.message || "요청 처리에 실패했습니다.");
       }
     } catch (error) {
-      console.error(error);
-      alert("서버와 통신하는 중 문제가 발생했습니다.");
-    } finally {
+      console.log("서버 에러 내용:", error);
+      // 서버에서 에러 응답(JSON)을 보냈다면 그 안의 message를 표시
+      if (error.response) {
+        const errorData = await error.response.json().catch(() => ({}));
+        alert(errorData.message || "요청 처리에 실패했습니다.");
+      } else {
+        alert(error.message || "서버와 통신하는 중 문제가 발생했습니다.");
+      } 
+    }finally{
       setLoading(false);
-    }
   }
+}
 
   return (
     <div className="p-4 bg-white border border-slate-200 rounded-xl">

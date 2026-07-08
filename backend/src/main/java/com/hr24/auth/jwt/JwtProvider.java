@@ -23,6 +23,7 @@ public class JwtProvider {
 	private static final String CLAIM_EMPLOYEE_ID = "employeeId";
     private static final String CLAIM_ROLES = "roles";
     private static final String CLAIM_TOKEN_TYPE = "tokenType";
+    private static final String CLAIM_SESSION_ID = "sessionId";
 
     private static final String TOKEN_TYPE_ACCESS = "ACCESS";
     private static final String TOKEN_TYPE_REFRESH = "REFRESH";
@@ -69,18 +70,23 @@ public class JwtProvider {
                 .compact();
     }
 	
-	public String createRefreshToken(Long employeeId) {
+	public String createRefreshToken(Long employeeId, String sessionId) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + refreshTokenExpiration);
 
         return Jwts.builder()
                 .claim(CLAIM_EMPLOYEE_ID, employeeId)
+                .claim(CLAIM_SESSION_ID, sessionId)
                 .claim(CLAIM_TOKEN_TYPE, TOKEN_TYPE_REFRESH)
                 .issuedAt(now)
                 .expiration(expiration)
                 .signWith(getSigningKey())
                 .compact();
     }
+	
+	public String getSessionId(String token) {
+		return getClaims(token).get(CLAIM_SESSION_ID, String.class);
+	}
 	
 	public boolean validateToken(String token) {
         try {

@@ -117,7 +117,10 @@ export default function DepartmentCost() {
 
               <CartesianGrid strokeDasharray="3 3" />
 
-              <XAxis dataKey="departmentName" />
+              <XAxis
+                dataKey="departmentName"
+                interval={0}
+              />
 
               <YAxis
                 width={120}

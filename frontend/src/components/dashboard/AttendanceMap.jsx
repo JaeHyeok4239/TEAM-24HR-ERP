@@ -59,7 +59,6 @@ export default function AttendanceMap({ userLocation }) {
 
     // 내 위치 마커
     if (userLocation) {
-      console.log("마커 작성:", userLocation);
       const userIcon = L.divIcon({
         html: `<div style="background-color: #25d16d; border-radius: 50%; width: 16px; height: 16px; border: 2px solid white; "></div>`,
         className: 'user-icon',
