@@ -705,6 +705,7 @@ CREATE TABLE payrolls (
 	CONSTRAINT pk_payrolls PRIMARY KEY (payroll_id),
 	CONSTRAINT fk_payrolls FOREIGN KEY(employee_id)
 	REFERENCES users(employee_id),
+    CONSTRAINT uk_payroll_employee_month UNIQUE (employee_id, pay_month),
 	CONSTRAINT chk_pay_month CHECK (LENGTH(pay_month) = 7 AND REGEXP_LIKE(pay_month, '^[0-9]{4}-(0[1-9]|1[0-2])$'))
 );
 
