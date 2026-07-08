@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -86,7 +87,8 @@ public class AttendanceService{
 	        // 년도/월/일/시간/분
 	        return LocalDateTime.of(2026, 7, 2, 9, 0); 
 	    }
-	    return LocalDateTime.now();
+	    // 서울 시간대 고정
+	    return LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 	}
 	
 	// 모든 근무지 읽어오기
