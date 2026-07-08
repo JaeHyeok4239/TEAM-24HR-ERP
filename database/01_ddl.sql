@@ -312,8 +312,6 @@ CREATE TABLE
 CREATE TABLE
     attendance_results (
         attendance_result_id NUMBER NOT NULL, -- PK
-        attendance_threshold_id NUMBER NULL, -- FK 근태 판정 기준
-        holiday_id NUMBER NULL, -- FK 공휴일
         employee_id NUMBER NOT NULL, -- FK 유저 테이블
         attendance_correction_id NUMBER NULL, -- 정정 이력 테이블(FK는 정정 이력 쪽에서만 단방향 연결)
         leave_id NUMBER NULL, -- FK 연차/반차/조퇴 등 휴가 신청 데이터 테이블
@@ -335,7 +333,6 @@ CREATE TABLE
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
         CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE', 'OUT')),
         CONSTRAINT fk_att_workplace_id FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
-        CONSTRAINT fk_att_attendance_threshold_id FOREIGN KEY (attendance_threshold_id) REFERENCES attendance_thresholds (attendance_threshold_id),
         CONSTRAINT fk_att_employee_id FOREIGN KEY (employee_id) REFERENCES users (employee_id),
         CONSTRAINT uq_att_attendance_results UNIQUE (employee_id, work_date)
     );
