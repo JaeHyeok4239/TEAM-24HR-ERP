@@ -80,9 +80,6 @@ public class AttendanceResult {
 	@Column(name = "is_holiday_work")
 	private String isHolidayWork;
 
-	@Column(name = "is_missing_checkout")
-	private String isMissingCheckout;
-
 	@Column(name = "is_fixed")
 	private String isFixed;
 

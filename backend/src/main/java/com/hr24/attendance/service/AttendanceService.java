@@ -108,20 +108,21 @@ public class AttendanceService{
 	}
 	
 	// 매일 밤 오후 11시 배치 프로그램
-	// status WORK, LATE인 사람들 중 퇴근 안 찍힌 사람 missing 'Y'으로 변경
+	// status가 WORK인 직원들의 status를 MISSING_CHECKOUT으로 변경
 	@Transactional
 	public void processMissingCheckouts() {
 		List<AttendanceStatus> targetStatuses = List.of(AttendanceStatus.WORK, AttendanceStatus.LATE);
 	    LocalDate targetDate = getCurrentTime().toLocalDate();
 	    LocalDateTime now = getCurrentTime();
-	    log.info(">>> 디버깅: targetDate={}, targetStatuses={}, now={}", targetDate, targetStatuses, now);
+	    log.info(">>> 미퇴근 처리 배치 시작: targetDate={}, targetStatuses={}", targetDate, targetStatuses);
 	    
-	    int updatedCount = attendanceResultRepository.updateMissingCheckouts(targetDate, targetStatuses, now);
+	    int updatedCount = attendanceResultRepository.updateStatusForMissingCheckouts(
+	        targetDate, targetStatuses, AttendanceStatus.MISSING_CHECKOUT, now);
 	    
-	    log.info("미퇴근 배치 실행 결과 - {}.처리 건수: {}건", targetDate, updatedCount);
+	    log.info("미퇴근 배치 실행 결과 - {}. 처리 건수: {}건", targetDate, updatedCount);
 
 	    if (updatedCount == 0) {
-	        log.warn("경고: 조건에 맞는 미퇴근 데이터가 없습니다. (날짜: {}, 상태: {})", targetDate, targetStatuses);
+	        log.warn("조건에 맞는 미퇴근 데이터가 없습니다. (날짜: {}, 상태: {})", targetDate, targetStatuses);
 	    }
 	}
 	
@@ -162,8 +163,7 @@ public class AttendanceService{
 	            		.workDate(todayDate)
 	            		.attendanceStatus(AttendanceStatus.READY)
 	            		.isHolidayWork("N")
-	            		.isMissingCheckout("N")
-	            		.isFixed("N")
+						.isFixed("N")
 	            		.createdAt(todayTimeDate)
 	            		.build())
 	            .collect(Collectors.toList());
@@ -190,8 +190,7 @@ public class AttendanceService{
 	                    .workDate(todayDate)
 	                    .attendanceStatus(AttendanceStatus.READY)
 	                    .isHolidayWork("N")
-	                    .isMissingCheckout("N")
-	                    .isFixed("N")
+						.isFixed("N")
 	                    .createdAt(todayTimeDate)
 	                    .build())
 	            .collect(Collectors.toList());
@@ -605,7 +604,7 @@ public class AttendanceService{
 
 	    result.setCheckInTime(currentTime);
 	    result.setUpdatedAt(currentTime);
-	    result.setIsFixed("N");
+		result.setIsFixed("N");
 	    result.setWorkplace(matchedWorkplace);
 
 	    AttendanceLog log = AttendanceLog.builder()
@@ -889,11 +888,13 @@ public class AttendanceService{
 	                    .late(regularCounts.getOrDefault(AttendanceStatus.LATE, 0L))
 	                    .absent(regularCounts.getOrDefault(AttendanceStatus.ABSENT, 0L))
 	                    .leave(regularCounts.getOrDefault(AttendanceStatus.LEAVE, 0L))
+	                    .missing(regularCounts.getOrDefault(AttendanceStatus.MISSING_CHECKOUT, 0L))
 	                    .ready(regularCounts.getOrDefault(AttendanceStatus.READY, 0L))
 	                    .build())
 	            .daily(AttendanceSummaryDto.builder()
 	                    .work(dailyWorkCount)
 	                    .ready(dailyReadyCount)
+	                    .missing(0L) // 일용직은 미퇴근 개념이 없으므로 0으로 설정
 	                    .build())
 	            .build();
 	}
