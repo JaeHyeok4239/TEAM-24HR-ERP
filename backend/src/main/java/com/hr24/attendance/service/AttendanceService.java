@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.hr24.attendance.dto.AdminAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceCombinedSummaryDto;
@@ -48,12 +49,15 @@ import com.hr24.employee.enums.EmploymentType;
 import com.hr24.employee.enums.UserStatus;
 import com.hr24.employee.repository.UserRepository;
 import com.hr24.employee.service.HrEmployeeQueryService;
+import com.hr24.global.exception.BusinessException;
+import com.hr24.global.exception.ErrorCode;
 import com.hr24.work.schedule.repository.HolidayRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
 import com.hr24.attendance.entity.Workplace;
 import com.hr24.attendance.enums.AttendanceStatus;
+import com.hr24.attendance.enums.WorkplaceCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,7 +96,7 @@ public class AttendanceService{
 
 	    return workplaceList.stream()
 	            .map(wp -> WorkplaceDto.builder()
-	                    .name(wp.getWorkplaceCode())
+	                    .name(wp.getWorkplaceCode().name()) 
 	                    .latitude(wp.getLatitude())
 	                    .longitude(wp.getLongitude())
 	                    .build())
@@ -248,9 +252,9 @@ public class AttendanceService{
 	public AttendanceDetailResponseDto getAttendanceDetail(String loginId, Long targetEmployeeId, LocalDate date, boolean isAdmin) {
 	    // 요청자 + 조회 대상 확인
 	    User requester = userRepository.findByLoginId(loginId)
-	            .orElseThrow(() -> new RuntimeException("요청자를 찾을 수 없습니다."));
+	    		.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 	    User targetEmployee = userRepository.findById(targetEmployeeId)
-	    		.orElseThrow(() -> new IllegalArgumentException("대상 사원을 찾을 수 없습니다."));
+	    		.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 	    
 	    // 권한 체크
 	    if (!isAdmin && !requester.getEmployeeId().equals(targetEmployeeId)) {
@@ -273,7 +277,7 @@ public class AttendanceService{
 	    
 	    if (isDaily) {
 	        dailyLog = attendanceLogDailyRepository.findOneByEmployeeIdAndWorkDate(targetEmployeeId, date)
-	                .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 일용직 근태 기록이 없습니다."));
+	                .orElseThrow(() -> new BusinessException(ErrorCode.ATTENDANCE_RECORD_NOT_FOUND));
 	        checkIn = dailyLog.getCheckInTime();
 	        checkOut = dailyLog.getCheckOutTime();
 	        workplaceName = dailyLog.getWorkplace() != null ? dailyLog.getWorkplace().getWorkplaceName() : "미지정";
@@ -367,11 +371,11 @@ public class AttendanceService{
 	public void correctDaily(Long logId, DailyCorrectionDto dto) {
 	    // 로그 조회
 	    AttendanceLogsDaily log = attendanceLogDailyRepository.findById(logId)
-	            .orElseThrow(() -> new EntityNotFoundException("기록 없음"));
+	            .orElseThrow(() -> new BusinessException(ErrorCode.DATA_NOT_FOUND));
 
 	    // 유효성 검사
 	    if (dto.getAfterTime().isAfter(LocalDateTime.now())) {
-	        throw new IllegalArgumentException("미래 시간은 입력할 수 없습니다.");
+	        throw new BusinessException(ErrorCode.INVALID_REQUEST);
 	    }
 
 	    // 수정 전 시간 저장
@@ -384,7 +388,7 @@ public class AttendanceService{
 	        beforeTime = log.getCheckOutTime(); // 수정 전 OUT 시간
 	        log.setCheckOutTime(dto.getAfterTime()); // OUT 시간 변경
 	    } else {
-	        throw new IllegalArgumentException("올바르지 않은 정정 유형입니다.");
+	    	throw new BusinessException(ErrorCode.INVALID_CORRECTION_TYPE);
 	    }
 
 	    // 정정 테이블에 데이터 저장
@@ -445,6 +449,9 @@ public class AttendanceService{
 	    		.map(log -> log.getEmployee().getEmployeeId())
 	    		.collect(Collectors.toSet());
 	    
+	    // 신규 등록 데이터 필터링
+	    List<AttendanceLogsDaily> newLogs = new ArrayList<>();
+	    
 	    // DAILY인 모든 사원 Map
 	    Map<Long, User> userMap = foundUsers.stream()
 	        .filter(user -> user.getEmploymentType() == EmploymentType.DAILY)
@@ -453,15 +460,19 @@ public class AttendanceService{
 	    List<AttendanceLogsDaily> logs = new ArrayList<>();
 	    
 	    // workplace 필요한 코드 추출
-	    Set<String> workplaceCodes = attendanceList.stream()
-	        .map(AttendanceRequest::getWorkplaceCode)
+	    Set<WorkplaceCode> workplaceCodes = attendanceList.stream()
+    		.map(req -> WorkplaceCode.valueOf(req.getWorkplaceCode()))
 	        .collect(Collectors.toSet());
 
 	    // 조회+TEMP로 시작하는 것만 가져오기
-	    Map<String, Workplace> workplaceMap = workplaceRepository
-	        .findByWorkplaceCodeInAndWorkplaceCodeStartingWith(workplaceCodes, "TEMP")
-	        .stream()
-	        .collect(Collectors.toMap(Workplace::getWorkplaceCode, w -> w));
+	    Map<WorkplaceCode, Workplace> workplaceMap = workplaceRepository
+    	    .findByWorkplaceCodeIn(workplaceCodes)
+    	    .stream()
+    	    .collect(Collectors.toMap(Workplace::getWorkplaceCode, w -> w));
+	    
+	    // 수정용
+	    Map<Long, AttendanceLogsDaily> logMap = existingLogs.stream()
+	            .collect(Collectors.toMap(l -> l.getEmployee().getEmployeeId(), l -> l));
 	    
 	    // 성공/스킵 count
 	    int successCount = 0;
@@ -470,38 +481,31 @@ public class AttendanceService{
 	    for (AttendanceRequest req : attendanceList) {
 	    	Long empId = Long.valueOf(req.getEmployeeId());
 	    	
-	    	// 중복체크
 	    	if(existingEmpIds.contains(empId)) {
-	    		log.info(">>> 이미 등록된 사원입니다. ID {}", empId);
-	    		skippedCount++;
-	    		continue;
-	    	}
-	    	
-	        User user = userMap.get(empId);
-	        Workplace workplace = workplaceMap.get(req.getWorkplaceCode());
-	        
-	        if (user == null || workplace == null) {
-	        	log.warn(">>> 유효하지 않은 데이터입니다. ID {}", empId);
-	        	continue;
+	            log.warn(">>> 이미 데이터가 존재하여 건너뜁니다. ID {}", empId);
+	            continue; 
 	        }
-	        
-	        AttendanceLogsDaily log = AttendanceLogsDaily.builder()
-	            .employee(user)
-	            .workplace(workplace)
-	            .checkInTime(req.getCheckInDateTime())
-	            .checkOutTime(req.getCheckOutDateTime())
-	            .workDate(todayDate)
-	            .isAttended("Y")
-				.createdAt(todayDateTime)
-				.updatedAt(todayDateTime)
-	            .build();
-	            
-	        logs.add(log);
-	        successCount++;
+	    	
+	    	User user = userMap.get(empId);
+	        Workplace workplace = workplaceMap.get(req.getWorkplaceCode());
+	    	
+	        if (user != null && workplace != null) {
+	            AttendanceLogsDaily log = AttendanceLogsDaily.builder()
+	                .employee(user)
+	                .workplace(workplace)
+	                .checkInTime(req.getCheckInDateTime())
+	                .checkOutTime(req.getCheckOutDateTime())
+	                .workDate(todayDate)
+	                .isAttended("Y")
+	                .createdAt(todayDateTime)
+	                .updatedAt(todayDateTime)
+	                .build();
+	            newLogs.add(log);
+	    	}
 	    }
 	    
-	    attendanceLogDailyRepository.saveAll(logs);
-	    return String.format("총 %d건 처리 완료 - 성공 %d, 중복 %d", attendanceList.size(), successCount, skippedCount);
+	    attendanceLogDailyRepository.saveAll(newLogs);
+	    return String.format("총 %d건 처리 완료 ", attendanceList.size());
 	}
 	
 	// 시간 검증(오후 11시~오전 6시 출퇴근 막기)
@@ -511,7 +515,7 @@ public class AttendanceService{
 	    LocalTime endTime = LocalTime.of(23, 0);
 
 	    if (todayDate.isBefore(startTime) || todayDate.isAfter(endTime)) {
-	        throw new IllegalStateException("운영 시간이 아닙니다. (06:00 ~ 23:00)");
+	    	throw new BusinessException(ErrorCode.OUT_OF_OPERATING_HOURS);
 	    }
 	}
 	
@@ -533,8 +537,8 @@ public class AttendanceService{
 	// 위치 검증
 	public Workplace validateAndGetWorkplace(Double latitude, Double longitude) {
 		// 본사 값만 가져와 저장
-		Workplace wp = workplaceRepository.findByWorkplaceCode("HQ")
-				.orElseThrow(() -> new RuntimeException("본사 정보를 찾을 수 없습니다."));
+		Workplace wp = workplaceRepository.findByWorkplaceCode(WorkplaceCode.HQ)
+	            .orElseThrow(() -> new BusinessException(ErrorCode.DATA_NOT_FOUND));
 		
 		double distance = LocationUtils(latitude, longitude, wp.getLatitude(), wp.getLongitude());
 
@@ -542,7 +546,7 @@ public class AttendanceService{
 	    if (distance <= wp.getRadiusMeter()) {
 	        return wp;
 	    }
-		throw new RuntimeException("근무지 근처가 아닙니다.");
+	    throw new BusinessException(ErrorCode.INVALID_LOCATION);
 	}
 	
 	// 출근 버튼(직원ID, 위도, 경도)
@@ -552,17 +556,17 @@ public class AttendanceService{
 	    LocalDate today = currentTime.toLocalDate();
 
 	    User user = userRepository.findByLoginId(loginId)
-	            .orElseThrow(() -> new RuntimeException("직원을 찾을 수 없습니다."));
+	            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 	    // 위치+거리 검증
 	    Workplace matchedWorkplace = validateAndGetWorkplace(latitude, longitude);
 
 	    // 중복 체크
 	    AttendanceResult result = attendanceResultRepository.findByEmployeeAndWorkDate(user, today)
-	              .orElseThrow(() -> new RuntimeException("오늘 생성된 근태 결과가 없습니다."));
+	              .orElseThrow(() -> new BusinessException(ErrorCode.BATCH_NOT_RUN));
 
 	    if(result.getAttendanceStatus() != AttendanceStatus.READY) {
-	        throw new RuntimeException("이미 출근 처리되었습니다.");
+	        throw new BusinessException(ErrorCode.ALREADY_PROCESSED);
 	    }
 	    
 	    // 공휴일 체크
@@ -573,8 +577,8 @@ public class AttendanceService{
 	    	result.setIsHolidayWork("Y");
 	    }else {
 	    	// 출근 시간 판정 및 저장
-		    String resultStatus = attendanceCalculator.determineCheckInStatus(user, currentTime);
-		    result.setAttendanceStatus(AttendanceStatus.valueOf(resultStatus));
+	    	AttendanceStatus status = AttendanceStatus.valueOf(attendanceCalculator.determineCheckInStatus(user, currentTime));
+	    	result.setAttendanceStatus(status);
 	    }
 
 	    result.setCheckInTime(currentTime);
@@ -603,25 +607,25 @@ public class AttendanceService{
 	    LocalDate today = currentTime.toLocalDate();
 	
 	    User user = userRepository.findByLoginId(loginId)
-	            .orElseThrow(() -> new RuntimeException("직원을 찾을 수 없습니다."));
+	            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 	
 	    AttendanceResult result = attendanceResultRepository.findByEmployeeAndWorkDate(user, today)
-	            .orElseThrow(() -> new RuntimeException("오늘 출근 기록이 없습니다."));
+	            .orElseThrow(() -> new BusinessException(ErrorCode.CHECK_IN_RECORD_NOT_FOUND));
 	
 	    // 상태 검증
 	    AttendanceStatus status = result.getAttendanceStatus();
 	
 	    if (status == AttendanceStatus.READY) {
-	        throw new RuntimeException("출근 처리가 되지 않았습니다. 먼저 출근 버튼을 눌러주세요.");
+	    	throw new BusinessException(ErrorCode.CHECK_IN_REQUIRED);
 	    }
 	
 	    if (result.getCheckOutTime() != null) {
-	        throw new RuntimeException("이미 퇴근 처리가 되었습니다.");
+	        throw new BusinessException(ErrorCode.ALREADY_PROCESSED);
 	    }
 	
 	    // 근무 상태가 아니거나 지각이 아닌 경우(반차 제외)
 	    if (status != AttendanceStatus.WORK && status != AttendanceStatus.LATE && status != AttendanceStatus.LEAVE) {
-	        throw new RuntimeException("현재 퇴근 처리가 가능한 근무 상태가 아닙니다.");
+	    	throw new BusinessException(ErrorCode.INVALID_STATUS_FOR_CHECKOUT);
 	    }
 	
 	    // 반차 확인 로직(status가 LEAVE인 경우)
@@ -631,7 +635,7 @@ public class AttendanceService{
 	        
 	        // 반차가 아니면 퇴근 불가
 	        if (!isHalfLeave) {
-	            throw new RuntimeException("휴가 중에는 퇴근 처리를 할 수 없습니다.");
+	        	throw new BusinessException(ErrorCode.LEAVE_RESTRICTION);
 	        }
 	    }
 	
@@ -729,14 +733,14 @@ public class AttendanceService{
 	public AttendanceResponse getMonthlyAttendanceStats(String loginId, YearMonth yearMonth, Long targetEmployeeId, boolean isAdmin) {
 		// 요청자 정보 조회
 		User requester = userRepository.findByLoginId(loginId)
-	            .orElseThrow(() -> new RuntimeException("직원을 찾을 수 없습니다."));
+	            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 		
 		// 조회할 대상 ID 결정(관리자+target 넘어왔으면 해당 직원 조회, 아닐 시 본인 조회)
 		Long targetId = (isAdmin && targetEmployeeId != null) ? targetEmployeeId : requester.getEmployeeId();
 		
 		// 실제 조회할 유저 조회
 		User targetUser = userRepository.findById(targetId)
-	            .orElseThrow(() -> new RuntimeException("조회 대상 직원을 찾을 수 없습니다."));
+	            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 	
 		// 날짜 범위 설정(1일~말일)
 		LocalDateTime monthStart = yearMonth.atDay(1).atStartOfDay();
