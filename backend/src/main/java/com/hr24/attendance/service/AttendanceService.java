@@ -4,18 +4,20 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.hr24.attendance.dto.AdminAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.AttendanceCombinedSummaryDto;
@@ -28,6 +30,7 @@ import com.hr24.attendance.dto.CalendarBadgeDto;
 import com.hr24.attendance.dto.AttendanceCorrectionRecordDto;
 import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
+import com.hr24.attendance.dto.DailyAttendanceManageDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
 import com.hr24.attendance.dto.MonthlyAttendanceListResponseDto;
 import com.hr24.attendance.dto.WorkplaceDto;
@@ -77,16 +80,17 @@ public class AttendanceService{
 	private final AttendanceCalculator attendanceCalculator;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
 	private final HolidayRepository holidayRepository;
-	private List<AttendanceDetailResponseDto> attendanceList;
+
 	
 	// 시간 관련 API 테스트용 메서드
 	private final boolean IS_TEST_MODE = false; 
 	public LocalDateTime getCurrentTime() {
 	    if (IS_TEST_MODE) {
 	        // 년도/월/일/시간/분
-	        return LocalDateTime.of(2026, 7, 2, 9, 0); 
+	        return LocalDateTime.of(2026, 7, 7, 9, 0); 
 	    }
-	    return LocalDateTime.now();
+	    // 서울 시간대 고정
+	    return LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 	}
 	
 	// 모든 근무지 읽어오기
@@ -233,8 +237,18 @@ public class AttendanceService{
 	
     // 총 근무, 기본 근무, 초과 근무 시간 계산(공휴일 조건)
 	public AttendanceDetailResponseDto calculateAttendanceTimes(LocalDateTime checkIn, LocalDateTime checkOut, boolean isHoliday) {
-	    long total = TimeUtils.calculateTotalTime(checkIn, checkOut);
-	    
+		// 데이터 없을 때 
+		if (checkIn == null || checkOut == null) {
+	        return AttendanceDetailResponseDto.builder()
+	                .checkIn(checkIn)
+	                .checkOut(checkOut)
+	                .totalWorkTime(0L)
+	                .basicWorkTime(0L)
+	                .overtime(0L)
+	                .build();
+	    }
+		
+		long total = TimeUtils.calculateTotalTime(checkIn, checkOut);
 	    long basic = TimeUtils.calculateBasicTime(total, isHoliday);
 	    long overtime = TimeUtils.calculateOvertime(total, isHoliday);
 
@@ -256,6 +270,10 @@ public class AttendanceService{
 	    User targetEmployee = userRepository.findById(targetEmployeeId)
 	    		.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 	    
+	    // 부서/직급 null 방어
+	    String deptName = (targetEmployee.getDepartment() != null) ? targetEmployee.getDepartment().getDepartmentName() : "미지정";
+	    String posName = (targetEmployee.getPosition() != null) ? targetEmployee.getPosition().getPositionName() : "미지정";
+	    
 	    // 권한 체크
 	    if (!isAdmin && !requester.getEmployeeId().equals(targetEmployeeId)) {
             throw new AccessDeniedException("본인의 데이터만 조회할 수 있습니다.");
@@ -268,30 +286,36 @@ public class AttendanceService{
 	    boolean isDaily = (targetEmployee.getEmploymentType() == EmploymentType.DAILY);
 	    
 	    // 데이터 조회용
-	    LocalDateTime checkIn;
-	    LocalDateTime checkOut;
+	    LocalDateTime checkIn = null;
+	    LocalDateTime checkOut = null;
 	    AttendanceStatus status = null;
-	    List<AttendanceCorrectionRecordDto> correctionDtos;
-	    String workplaceName;
+	    List<AttendanceCorrectionRecordDto> correctionDtos= new ArrayList<>();
+	    String workplaceName = "미지정";
 	    boolean isHoliday = holidayRepository.findByHolidayDate(date).isPresent();
 	    
 	    if (isDaily) {
 	        dailyLog = attendanceLogDailyRepository.findOneByEmployeeIdAndWorkDate(targetEmployeeId, date)
-	                .orElseThrow(() -> new BusinessException(ErrorCode.ATTENDANCE_RECORD_NOT_FOUND));
-	        checkIn = dailyLog.getCheckInTime();
-	        checkOut = dailyLog.getCheckOutTime();
-	        workplaceName = dailyLog.getWorkplace() != null ? dailyLog.getWorkplace().getWorkplaceName() : "미지정";
-	        correctionDtos = attendanceCorrectionRepository.findByCorrectionDailyLog(dailyLog).stream()
-	                .map(this::convertToCorrectionDto).collect(Collectors.toList());
+	                .orElse(null);
+	        
+	        if(dailyLog != null) {
+	        	checkIn = dailyLog.getCheckInTime();
+	 	        checkOut = dailyLog.getCheckOutTime();
+	 	        workplaceName = dailyLog.getWorkplace() != null ? dailyLog.getWorkplace().getWorkplaceName() : "미지정";
+	 	        correctionDtos = attendanceCorrectionRepository.findByCorrectionDailyLog(dailyLog).stream()
+	 	                .map(this::convertToCorrectionDto).collect(Collectors.toList());
+	        }
+	       
 	    } else {
-	        result = attendanceResultRepository.findByEmployeeAndWorkDate(targetEmployee, date)
-	                .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 정규직 근태 기록이 없습니다."));
+	    	result = attendanceResultRepository.findByEmployeeAndWorkDate(targetEmployee, date).orElse(null);
+	    	
+	    	if (result != null) {
 	        checkIn = result.getCheckInTime();
 	        checkOut = result.getCheckOutTime();
 	        status = result.getAttendanceStatus();
 	        workplaceName = result.getWorkplace() != null ? result.getWorkplace().getWorkplaceName() : "미지정";
 	        correctionDtos = attendanceCorrectionRepository.findByCorrectionTarget(result).stream()
 	                .map(this::convertToCorrectionDto).collect(Collectors.toList());
+	    	}
 	    }
 	    
 	    // 계산 메서드
@@ -312,8 +336,8 @@ public class AttendanceService{
 	                    .overtime(timeDto.getOvertime())
 	                    .corrections(correctionDtos)
 	                    .userName(targetEmployee.getName())
-	                    .department(targetEmployee.getDepartment().getDepartmentName()) // 추가
-	                    .userPosition(targetEmployee.getPosition().getPositionName()) // 추가
+	                    .department(deptName)
+	                    .userPosition(posName)
 	                    .workplaceName(workplaceName)
 	                    .build();
 	    	}else {
@@ -328,8 +352,8 @@ public class AttendanceService{
 	                    .overtime(timeDto.getOvertime())
 	                    .corrections(correctionDtos)
 	                    .userName(targetEmployee.getName())
-	                    .department(targetEmployee.getDepartment().getDepartmentName())
-	                    .userPosition(targetEmployee.getPosition().getPositionName())
+	                    .department(deptName)
+	                    .userPosition(posName)
 	                    .workplaceName(workplaceName)
 	                    .build();
 	    	}
@@ -438,9 +462,10 @@ public class AttendanceService{
 		LocalDate todayDate = todayDateTime.toLocalDate();
 		
 	    // 모든 ID 추출
-	    List<Long> empIds = attendanceList.stream()
-	        .map(req -> Long.valueOf(req.getEmployeeId()))
-	        .collect(Collectors.toList());
+		List<Long> empIds = attendanceList.stream()
+		        .filter(req -> req.getEmployeeId() != null && !req.getEmployeeId().isEmpty())
+		        .map(req -> Long.valueOf(req.getEmployeeId()))
+		        .collect(Collectors.toList());
 	    List<User> foundUsers = userRepository.findAllById(empIds);
 	    
 	    List<AttendanceLogsDaily> existingLogs = attendanceLogDailyRepository.findByEmployeeIdAndWorkDate(empIds, todayDate);
@@ -456,8 +481,6 @@ public class AttendanceService{
 	    Map<Long, User> userMap = foundUsers.stream()
 	        .filter(user -> user.getEmploymentType() == EmploymentType.DAILY)
 	        .collect(Collectors.toMap(User::getEmployeeId, user -> user));
-
-	    List<AttendanceLogsDaily> logs = new ArrayList<>();
 	    
 	    // workplace 필요한 코드 추출
 	    Set<WorkplaceCode> workplaceCodes = attendanceList.stream()
@@ -469,16 +492,13 @@ public class AttendanceService{
     	    .findByWorkplaceCodeIn(workplaceCodes)
     	    .stream()
     	    .collect(Collectors.toMap(Workplace::getWorkplaceCode, w -> w));
-	    
-	    // 수정용
-	    Map<Long, AttendanceLogsDaily> logMap = existingLogs.stream()
-	            .collect(Collectors.toMap(l -> l.getEmployee().getEmployeeId(), l -> l));
-	    
-	    // 성공/스킵 count
-	    int successCount = 0;
-	    int skippedCount = 0;
-	    
+
 	    for (AttendanceRequest req : attendanceList) {
+	    	if (req.getEmployeeId() == null || req.getEmployeeId().trim().isEmpty()) {
+	            log.warn(">>> 유효하지 않은 EmployeeId 감지 건너뜁니다.");
+	            continue;
+	        }
+	    	
 	    	Long empId = Long.valueOf(req.getEmployeeId());
 	    	
 	    	if(existingEmpIds.contains(empId)) {
@@ -487,7 +507,7 @@ public class AttendanceService{
 	        }
 	    	
 	    	User user = userMap.get(empId);
-	        Workplace workplace = workplaceMap.get(req.getWorkplaceCode());
+	    	Workplace workplace = workplaceMap.get(WorkplaceCode.valueOf(req.getWorkplaceCode()));
 	    	
 	        if (user != null && workplace != null) {
 	            AttendanceLogsDaily log = AttendanceLogsDaily.builder()
@@ -501,6 +521,8 @@ public class AttendanceService{
 	                .updatedAt(todayDateTime)
 	                .build();
 	            newLogs.add(log);
+	    	}else {
+	    	    log.error(">>> 저장 실패: User({}) 또는 Workplace({})를 찾을 수 없음", empId, req.getWorkplaceCode());
 	    	}
 	    }
 	    
@@ -889,4 +911,33 @@ public class AttendanceService{
                 .build())
             .collect(Collectors.toList());
     }
+	
+	// 일용직 직원 목록 및 근태 로그 조회
+	@Transactional(readOnly = true)
+	public List<DailyAttendanceManageDto> getDailyManagementList(LocalDate date) {
+	    List<User> employees = userRepository.findAll().stream()
+	            .filter(u -> EmploymentType.DAILY.equals(u.getEmploymentType()))
+	            .collect(Collectors.toList()); 
+	    
+	    List<AttendanceLogsDaily> logs = attendanceLogDailyRepository.findByWorkDate(date);
+	    
+	    Map<Long, AttendanceLogsDaily> logMap = logs.stream()
+	            .collect(Collectors.toMap(
+	                log -> log.getEmployee().getEmployeeId(), 
+	                log -> log,
+	                (existing, replacement) -> existing // 중복 키 발생 시 기존 것 유지
+	            ));
+	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+	    return employees.stream().map((User emp) -> {
+	        AttendanceLogsDaily log = logMap.get(emp.getEmployeeId());
+	        return DailyAttendanceManageDto.builder()
+	                .employeeId(emp.getEmployeeId())
+	                .name(emp.getName())
+	                .logId(log != null ? log.getAttendanceLogsDailyId() : null)
+	                .workplaceCode(log != null && log.getWorkplace() != null ? log.getWorkplace().getWorkplaceCode().name() : "")
+	                .startTime(log != null && log.getCheckInTime() != null ? log.getCheckInTime().format(formatter) : "")
+	                .endTime(log != null && log.getCheckOutTime() != null ? log.getCheckOutTime().format(formatter) : "")
+	                .build();
+	    }).collect(Collectors.toList());
+	}
 }

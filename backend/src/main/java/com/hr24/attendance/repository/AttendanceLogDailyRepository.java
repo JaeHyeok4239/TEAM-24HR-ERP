@@ -12,6 +12,9 @@ import com.hr24.attendance.entity.AttendanceLogsDaily;
 
 
 public interface AttendanceLogDailyRepository extends JpaRepository<AttendanceLogsDaily, Long>{
+	
+	// 특정 날짜 전체 리스트 조회
+	List<AttendanceLogsDaily> findByWorkDate(LocalDate workDate);
 
 	// 리스트 조회
 	@Query("SELECT a FROM AttendanceLogsDaily a WHERE a.employee.employeeId IN :empIds AND a.workDate = :workDate")

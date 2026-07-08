@@ -53,12 +53,17 @@ public class AttendanceCorrectionService {
             LocalDateTime beforeTime = "IN".equals(dto.getCorrectionType()) ? dailyLog.getCheckInTime() : dailyLog.getCheckOutTime();
             
             // 데이터 수정
-            if ("IN".equals(dto.getCorrectionType())) dailyLog.setCheckInTime(dto.getAfterTime());
-            else dailyLog.setCheckOutTime(dto.getAfterTime());
+            if ("IN".equalsIgnoreCase(dto.getCorrectionType())) {
+                dailyLog.setCheckInTime(dto.getAfterTime());
+            } else if ("OUT".equalsIgnoreCase(dto.getCorrectionType())) {
+                dailyLog.setCheckOutTime(dto.getAfterTime());
+            }
             
             // 이력 저장
             saveCorrectionRecord(null, dailyLog, dto.getCorrectionType(), beforeTime, dto.getAfterTime(), dto.getCorrectionReason(), processor);
         }
+        dailyLog.setUpdatedAt(LocalDateTime.now()); 
+        attendanceLogsDailyRepository.save(dailyLog);
     }
 
     // 정규직 정정(문서 승인 후 호출)

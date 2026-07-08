@@ -47,13 +47,6 @@ public class AttendanceResult {
 	@Column(name = "attendance_status")
 	private AttendanceStatus attendanceStatus;
 
-	@Column(name = "attendance_threshold_id")
-	private Long attendanceThresholdId;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "holiday_id")
-	private Holiday holiday;
-
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "employee_id")
 	private User employee;
