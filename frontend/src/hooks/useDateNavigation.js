@@ -50,7 +50,16 @@ export const useDateNavigation = (calendarRef) => {
 
         const formatted = dayjs(newDateStr).format("YYYY.MM.DD");
         setCurrentDate(formatted);
-        calendarRef.current?.getApi().gotoDate(newDateStr);
+
+        // newDateStr이 유효한 문자열인지 확인
+        if (!newDateStr || typeof newDateStr !== 'string') {
+            console.warn("updateDate 함수에 유효하지 않은 날짜 문자열이 전달되었습니다:", newDateStr);
+            return;
+        }
+        // calendarRef와 getApi()가 유효한지 확인 후 gotoDate 호출
+        if (calendarRef.current && calendarRef.current.getApi()) {
+            calendarRef.current.getApi().gotoDate(newDateStr);
+        }
     };
 
     return { currentDate, handlePrev, handleNext, handleToday, handleDatesSet: () => {}, updateDate, isNextDisabled };

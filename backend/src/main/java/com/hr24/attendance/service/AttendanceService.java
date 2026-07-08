@@ -116,8 +116,8 @@ public class AttendanceService{
 	    LocalDateTime now = getCurrentTime();
 	    log.info(">>> 미퇴근 처리 배치 시작: targetDate={}, targetStatuses={}", targetDate, targetStatuses);
 	    
-	    int updatedCount = attendanceResultRepository.updateStatusForMissingCheckouts(
-	        targetDate, targetStatuses, AttendanceStatus.MISSING_CHECKOUT, now);
+	    int updatedCount = attendanceResultRepository.updateIsCheckoutMissing(
+	        targetDate, targetStatuses, now);
 	    
 	    log.info("미퇴근 배치 실행 결과 - {}. 처리 건수: {}건", targetDate, updatedCount);
 
@@ -163,6 +163,7 @@ public class AttendanceService{
 	            		.workDate(todayDate)
 	            		.attendanceStatus(AttendanceStatus.READY)
 	            		.isHolidayWork("N")
+						.isCheckoutMissing("N")
 						.isFixed("N")
 	            		.createdAt(todayTimeDate)
 	            		.build())
@@ -190,6 +191,7 @@ public class AttendanceService{
 	                    .workDate(todayDate)
 	                    .attendanceStatus(AttendanceStatus.READY)
 	                    .isHolidayWork("N")
+						.isCheckoutMissing("N")
 						.isFixed("N")
 	                    .createdAt(todayTimeDate)
 	                    .build())
@@ -769,8 +771,6 @@ public class AttendanceService{
 
 		// 일용직 조회
 	    if (targetUser.getEmploymentType() == EmploymentType.DAILY) {
-	        // 기존에 findAllWithEmployeeByWorkDateBetween 등을 사용하거나, 
-	        // repository에 해당 범위 조회 메서드가 없다면 추가하여 사용하세요.
 	        List<AttendanceLogsDaily> dailyLogs = attendanceLogDailyRepository.findAllWithEmployeeByWorkDateBetween(
 	                monthStart.toLocalDate(), monthEnd.toLocalDate())
 	                .stream()
@@ -875,12 +875,15 @@ public class AttendanceService{
 	                    Collectors.counting()
 	            ));
 	    
+	    // 정규직 미퇴근 카운트
+	    long regularMissingCount = regularResults.stream()
+	            .filter(result -> "Y".equals(result.getIsCheckoutMissing()))
+	            .count();
+	    
 	    // 일용직 카운트
 	    long dailyWorkCount = dailyLogs.stream().filter(log -> "Y".equals(log.getIsAttended())).count();
 	    long dailyReadyCount = dailyEmployeeIds.size() - dailyWorkCount; // 전체 일용직 중 출근 안 한 인원
 	    
-	    Map<String, Object> response = new HashMap<>();
-
 	 // 통합 DTO 빌드
 	    return AttendanceCombinedSummaryDto.builder()
 	            .regular(AttendanceSummaryDto.builder()
@@ -888,29 +891,47 @@ public class AttendanceService{
 	                    .late(regularCounts.getOrDefault(AttendanceStatus.LATE, 0L))
 	                    .absent(regularCounts.getOrDefault(AttendanceStatus.ABSENT, 0L))
 	                    .leave(regularCounts.getOrDefault(AttendanceStatus.LEAVE, 0L))
-	                    .missing(regularCounts.getOrDefault(AttendanceStatus.MISSING_CHECKOUT, 0L))
+	                    .missing(regularMissingCount)
 	                    .ready(regularCounts.getOrDefault(AttendanceStatus.READY, 0L))
 	                    .build())
 	            .daily(AttendanceSummaryDto.builder()
 	                    .work(dailyWorkCount)
 	                    .ready(dailyReadyCount)
-	                    .missing(0L) // 일용직은 미퇴근 개념이 없으므로 0으로 설정
+	                    .missing(0L)
 	                    .build())
 	            .build();
 	}
 	
 	// 근태 상태와 달력 뱃지 연결용
 	public List<CalendarBadgeDto> getMonthlyCalendar(Long employeeId, YearMonth yearMonth) {
-        String formattedMonth = yearMonth.toString();
-        
-        List<AttendanceResult> results = attendanceResultRepository.findByEmployeeIdAndMonth(employeeId, formattedMonth);
+        User user = userRepository.findById(employeeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        return results.stream()
-            .map(result -> CalendarBadgeDto.builder()
-                .date(result.getWorkDate().toString())
-                .status(result.getAttendanceStatus().name())
-                .build())
-            .collect(Collectors.toList());
+        String formattedMonth = yearMonth.toString();
+
+        if (user.getEmploymentType() == EmploymentType.DAILY) {
+            List<AttendanceLogsDaily> dailyLogs = attendanceLogDailyRepository.findByEmployeeIdAndMonth(employeeId, formattedMonth);
+            log.info(">>> 일용직 캘린더 데이터 조회 (EmployeeId: {}, Month: {}), {}건", employeeId, formattedMonth, dailyLogs.size());
+            return dailyLogs.stream()
+                .map(log -> CalendarBadgeDto.builder()
+                    .date(log.getWorkDate().toString())
+                    .status("Y".equals(log.getIsAttended()) ? AttendanceStatus.WORK.name() : null)
+                    .checkoutMissing(false)
+                    .build())
+                .filter(dto -> dto.getStatus() != null) // 출근한 날만 뱃지 표시
+                .collect(Collectors.toList());
+        } else {
+            // 정규직 직원의 경우 attendance_results 테이블에서 조회
+            List<AttendanceResult> results = attendanceResultRepository.findByEmployeeIdAndMonth(employeeId, formattedMonth);
+            log.info(">>> 정규직 캘린더 데이터 조회 (EmployeeId: {}, Month: {}), {}건", employeeId, formattedMonth, results.size());
+            return results.stream()
+                .map(result -> CalendarBadgeDto.builder()
+                    .date(result.getWorkDate().toString())
+                    .status(result.getAttendanceStatus().name())
+                    .checkoutMissing("Y".equals(result.getIsCheckoutMissing()))
+                    .build())
+                .collect(Collectors.toList());
+        }
     }
 	
 	// 일용직 직원 목록 및 근태 로그 조회

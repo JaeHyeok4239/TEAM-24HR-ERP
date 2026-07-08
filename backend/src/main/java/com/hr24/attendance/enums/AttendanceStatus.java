@@ -9,5 +9,4 @@ public enum AttendanceStatus {
     ABSENT, //결근
     LEAVE, //휴가
     OUT, //퇴근
-    MISSING_CHECKOUT //미퇴근
 }

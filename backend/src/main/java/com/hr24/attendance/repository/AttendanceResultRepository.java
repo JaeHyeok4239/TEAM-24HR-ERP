@@ -87,10 +87,9 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
     );
 
 	@Modifying
-	@Query("UPDATE AttendanceResult ar SET ar.attendanceStatus = :status, ar.updatedAt = :now WHERE ar.workDate = :date AND ar.attendanceStatus IN :targetStatuses AND ar.checkOutTime IS NULL")
-	int updateStatusForMissingCheckouts(@Param("date") LocalDate date, 
-										@Param("targetStatuses") List<AttendanceStatus> targetStatuses, 
-										@Param("status") AttendanceStatus status, 
-										@Param("now") LocalDateTime now);
+	@Query("UPDATE AttendanceResult ar SET ar.isCheckoutMissing = 'Y', ar.updatedAt = :now WHERE ar.workDate = :date AND ar.attendanceStatus IN :targetStatuses AND ar.checkOutTime IS NULL")
+	int updateIsCheckoutMissing(@Param("date") LocalDate date,
+	                            @Param("targetStatuses") List<AttendanceStatus> targetStatuses,
+	                            @Param("now") LocalDateTime now);
 
 }

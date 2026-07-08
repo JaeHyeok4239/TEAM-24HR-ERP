@@ -1,12 +1,23 @@
-import Calendar from '@/components/attendance/Calendar'; // 기존 Calendar 컴포넌트 재사용
-import DetailPanel from '../DetailPanel';
-import { useState } from 'react';
+"use client";
 
-export default function AttendanceCalendar({ selectedEmployee, currentDate, calendarRef, onDatesSet, type, events, stats, onDateSelect }) {
+import { useState, forwardRef } from 'react';
+import Calendar from '@/components/attendance/Calendar';
+import DetailPanel from '../DetailPanel';
+
+const AdminCalendar = forwardRef(({ 
+    selectedEmployee, 
+    currentDate, 
+    type, 
+    events, 
+    stats, 
+    onDatesSet, 
+    onDateSelect,
+    eventContent
+}, ref) => {
     const [panelOpen, setPanelOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedData, setSelectedData] = useState({});
-    
+
     const handleDateClick = (info) => {
         if (onDateSelect) {
             onDateSelect(info.dateStr);
@@ -18,7 +29,7 @@ export default function AttendanceCalendar({ selectedEmployee, currentDate, cale
         setSelectedDate(info.dateStr);
         setPanelOpen(true);
     };
-    
+
     // 직원 선택 하지 않았을 때
     if (!selectedEmployee) {
         return (
@@ -28,6 +39,7 @@ export default function AttendanceCalendar({ selectedEmployee, currentDate, cale
             </div>
         );
     }
+
     // 직원 선택 시
     return (
         <div className="flex flex-col h-full">
@@ -36,7 +48,7 @@ export default function AttendanceCalendar({ selectedEmployee, currentDate, cale
                 <h3 className="font-bold text-lg text-slate-800">
                     {selectedEmployee.name} · {currentDate.split('.')[0]}년 {currentDate.split('.')[1]}월 근태 현황
                 </h3>
-                
+
                 {/* 1명 월별 근태 조회 */}
                 {stats && (
                     <div className="flex gap-4 text-sm font-bold text-gray-700">
@@ -56,11 +68,12 @@ export default function AttendanceCalendar({ selectedEmployee, currentDate, cale
             {/* 달력 */}
             <div className="flex-1 overflow-hidden">
                 <Calendar 
-                    key={`${selectedEmployee.employeeId}`}
-                    ref={calendarRef} 
+                    key={selectedEmployee.employeeId}
+                    ref={ref} 
                     onDatesSet={onDatesSet}
                     events={events} 
                     dateClick={handleDateClick}
+                    eventContent={eventContent}
                 />
             </div>
 
@@ -73,4 +86,7 @@ export default function AttendanceCalendar({ selectedEmployee, currentDate, cale
             />
         </div>
     );
-}
+});
+
+AdminCalendar.displayName = "AdminCalendar";
+export default AdminCalendar;

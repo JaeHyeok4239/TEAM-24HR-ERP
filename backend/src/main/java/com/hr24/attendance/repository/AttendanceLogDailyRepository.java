@@ -33,4 +33,10 @@ public interface AttendanceLogDailyRepository extends JpaRepository<AttendanceLo
 	List<AttendanceLogsDaily> findAllWithEmployeeByWorkDateBetween(
 	        @Param("start") LocalDate start, 
 	        @Param("end") LocalDate end);
+	
+	@Query("SELECT a FROM AttendanceLogsDaily a " +
+	       "WHERE a.employee.employeeId = :employeeId " +
+	       "AND FUNCTION('TO_CHAR', a.workDate, 'YYYY-MM') = :yearMonth")
+	List<AttendanceLogsDaily> findByEmployeeIdAndMonth(@Param("employeeId") Long employeeId, 
+	                                                   @Param("yearMonth") String yearMonth);
 }
