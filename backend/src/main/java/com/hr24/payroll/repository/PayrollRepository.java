@@ -14,22 +14,7 @@ import com.hr24.payroll.dto.MonthlyCostDto;
 import com.hr24.payroll.entity.Payroll;
 
 public interface PayrollRepository extends JpaRepository<Payroll, Long> {
-
-	List<Payroll> findByPayMonth(String payMonth);
-
-    List<Payroll> findByUser_EmployeeId(Long employeeId);
-
-    List<Payroll> findByStatus(String status);
-    
-    @Query("""
-            SELECT p
-            FROM Payroll p
-            JOIN FETCH p.user u
-            JOIN FETCH u.department
-            """)
-    
-    List<Payroll> findAllWithEmployee();
-    
+        
     @Query("""
     	    SELECT p
     	    FROM Payroll p
@@ -46,6 +31,7 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     	        Pageable pageable
     	);
     
+    
     @Query("""
     	    SELECT p
     	    FROM Payroll p
@@ -54,6 +40,9 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     	    WHERE p.payrollId = :payrollId
     	""")
     	Optional<Payroll> findDetailById(@Param("payrollId") Long payrollId);
+    
+    
+    Optional<Payroll> findByUserEmployeeIdAndPayMonth(Long employeeId, String payMonth);
     
     
     @Query("""

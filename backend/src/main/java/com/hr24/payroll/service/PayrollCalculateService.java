@@ -43,6 +43,13 @@ public class PayrollCalculateService {
 	    User user = userRepository.findById(request.getEmployeeId())
 	    		.orElseThrow(() -> new RuntimeException("직원 없음"));
 
+	    
+	    payrollRepository.findByUserEmployeeIdAndPayMonth(
+	            request.getEmployeeId(),
+	            request.getPayMonth()
+	    ).ifPresent(p -> {throw new RuntimeException("이미 해당 월의 급여가 등록되어 있습니다.");});
+	    
+	    
 	    Salary salary = salaryRepository
 	            .findByEmployeeEmployeeId(request.getEmployeeId())
 	            .orElseThrow(() -> new RuntimeException("기본급 정보 없음"));
