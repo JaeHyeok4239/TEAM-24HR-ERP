@@ -47,7 +47,14 @@ public class PayrollController {
             @RequestParam(name = "size", defaultValue = "10")
             int size
     ) {
-    	Pageable pageable = PageRequest.of(page, size, Sort.by("payMonth").descending());
+    	Pageable pageable = PageRequest.of(
+    	                page,
+    	                size,
+    	                Sort.by(
+    	                        Sort.Order.desc("payMonth"),
+    	                        Sort.Order.desc("payrollId")
+    	                )
+    	        );
     	
         return ResponseEntity.ok(payrollService.searchPayrolls(
         		month, 

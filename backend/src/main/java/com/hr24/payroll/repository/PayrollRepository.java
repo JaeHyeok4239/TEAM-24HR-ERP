@@ -33,12 +33,11 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     @Query("""
     	    SELECT p
     	    FROM Payroll p
-    	    JOIN FETCH p.user u
-    	    JOIN FETCH u.department d
+    	    JOIN p.user u
+    	    JOIN u.department d
     	    WHERE (:month IS NULL OR p.payMonth = :month)
     	    AND (:employeeNo IS NULL OR u.employeeNo = :employeeNo)
-    	    AND (:departmentId IS NULL OR d.departmentId = :departmentId)
-    	    ORDER BY p.payMonth DESC
+    	    AND (:departmentId IS NULL OR d.departmentId = :departmentId)    	    
     	""")
     	Page<Payroll> searchPayrolls(
     	        @Param("month") String month,
