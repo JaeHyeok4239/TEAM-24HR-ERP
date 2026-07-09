@@ -113,7 +113,7 @@ export default function AttendanceDailyInputPanel({ isOpen, onClose, selectedDat
                 startTime: convertToDisplay(row.startTime),
                 endTime: convertToDisplay(row.endTime),
                 location: row.workplaceCode || "",
-                isPresent: !!row.isPresent 
+                isPresent: !!row.startTime
             })).sort((a, b) => a.name.localeCompare(b.name));
 
             setRows(processedRows);
@@ -151,13 +151,13 @@ export default function AttendanceDailyInputPanel({ isOpen, onClose, selectedDat
             const toSave = rows
                 .filter(row => !row.logId && (row.startTime || row.endTime))
                 .map(row => ({
-                    employeeId: row.id,
+                    employeeId: row.employeeId,
                     workplaceCode: row.location,
                     checkIn: convertTo24Hour(row.startTime),
                     checkOut: convertTo24Hour(row.endTime)
                 }));
 
-                console.log("서버로 보내는 최종 데이터:", { attendanceList: toSave });
+            console.log("서버로 보내는 최종 데이터:", { attendanceList: toSave });
 
             // 수정 데이터
             const toUpdate = rows.filter(row => row.logId);

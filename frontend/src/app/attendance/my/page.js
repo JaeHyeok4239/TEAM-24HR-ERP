@@ -64,11 +64,12 @@ export default function AttendanceUserPage(){
 
                 // 풀캘린더 형식에 맞게 데이터 변환
                 const formattedEvents = calendarData.map(item => ({
-                    title: getStatusLabel(item.status),
                     start: item.date,
-                    backgroundColor: getStatusColor(item.status),
-                    borderColor: getStatusColor(item.status),
-                    classNames: ['attendance-badge']
+                    classNames: ['custom-event-style'],
+                    extendedProps: {
+                        status: item.status,
+                        isCheckoutMissing: item.isCheckoutMissing
+                    }
                 }));
                 
                 setEvents(formattedEvents);
@@ -78,6 +79,27 @@ export default function AttendanceUserPage(){
         };
         fetchAttendanceStats();
     }, [currentDate]);
+
+    // FullCalendar 이벤트 렌더링 함수
+    const renderEventContent = (eventInfo) => {
+        const { status, checkoutMissing } = eventInfo.event.extendedProps; // 필드명 변경
+        console.log(`[My Page] Date: ${eventInfo.event.startStr}, Status: ${status}, checkoutMissing: ${checkoutMissing}`); // 디버깅용
+        const primaryLabel = getStatusLabel(status);
+        const primaryColor = getStatusColor(status);
+
+        return (
+            <div className="fc-event-main-custom">
+                <div style={{ backgroundColor: primaryColor }} className="primary-badge">
+                    {primaryLabel}
+                </div>
+                {checkoutMissing && ( // boolean 값 직접 사용
+                    <div className="secondary-badge">
+                        미퇴근
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return(
         <main className="h-[calc(100vh-2rem)] flex flex-col p-4 overflow-hidden">
@@ -106,6 +128,7 @@ export default function AttendanceUserPage(){
                 ref={calendarRef} 
                 onDatesSet={handleDatesSet}
                 events={events}
+                eventContent={renderEventContent}
                 dateClick={handleDateClick}
                 />
             </div>

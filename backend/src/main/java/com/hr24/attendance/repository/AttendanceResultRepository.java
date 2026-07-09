@@ -62,20 +62,6 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	    @Param("end") LocalDate end
 	);
 	
-	// 마감 배치 프로그램에서 쓰일 query문
-	@Modifying(clearAutomatically = true)
-	@Query("UPDATE AttendanceResult a " +
-	           "SET a.isMissingCheckout = 'Y', " +
-	           "    a.updatedAt = :now " +
-	           "WHERE a.checkOutTime IS NULL " +
-	           "AND a.workDate = :targetDate " +
-	           "AND a.attendanceStatus IN :attendanceStatus")
-	int updateMissingCheckouts(
-			@Param("targetDate") LocalDate targetDate,
-			@Param("attendanceStatus") List<AttendanceStatus> attendanceStatus,
-			@Param("now") LocalDateTime now
-			);
-	
 	// 중복 막기(직원별, 날짜별 존재 여부 확인)
 	boolean existsByEmployeeAndWorkDate(User employee, LocalDate workDate);
 
@@ -99,5 +85,11 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
             LocalDate startDate,
             LocalDate endDate
     );
-}
 
+	@Modifying
+	@Query("UPDATE AttendanceResult ar SET ar.isCheckoutMissing = 'Y', ar.updatedAt = :now WHERE ar.workDate = :date AND ar.attendanceStatus IN :targetStatuses AND ar.checkOutTime IS NULL")
+	int updateIsCheckoutMissing(@Param("date") LocalDate date,
+	                            @Param("targetStatuses") List<AttendanceStatus> targetStatuses,
+	                            @Param("now") LocalDateTime now);
+
+}
