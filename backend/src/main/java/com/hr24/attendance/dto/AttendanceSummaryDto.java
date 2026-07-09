@@ -12,4 +12,5 @@ public class AttendanceSummaryDto {
     private long absent;
     private long leave;
     private long ready;
+    private long missing;
 }

@@ -109,7 +109,6 @@ public class AttendanceProcessService {
 	                    .attendanceStatus(AttendanceStatus.LEAVE)
 	                    .leave(leave)
 	                    .isHolidayWork("N")
-	                    .isMissingCheckout("N")
 	                    .isFixed("N")
 	                    .createdAt(LocalDateTime.now())
 	                    .build())

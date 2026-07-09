@@ -19,6 +19,28 @@ export default function AttendanceRegularPage() {
     const [selectedStats, setSelectedStats] = useState(null);
     const { currentDate, handlePrev, handleNext, handleToday, handleDatesSet, updateDate, isNextDisabled } = useDateNavigation(calendarRef);
 
+    // FullCalendar 이벤트 렌더링 함수
+    const renderEventContent = (eventInfo) => {
+        const { status, checkoutMissing } = eventInfo.event.extendedProps; // 필드명 변경
+        console.log(`[Regular Page] Date: ${eventInfo.event.startStr}, Status: ${status}, checkoutMissing: ${checkoutMissing}`); // 디버깅용
+        const primaryLabel = getStatusLabel(status);
+        const primaryColor = getStatusColor(status);
+
+        return (
+            <div className="fc-event-main-custom">
+                <div style={{ backgroundColor: primaryColor }} className="primary-badge">
+                    {primaryLabel}
+                </div>
+                {checkoutMissing && ( // boolean 값 직접 사용
+                    <div className="secondary-badge">
+                        미퇴근
+                    </div>
+                )}
+            </div>
+        );
+    };
+    
+
     // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
         const fetchData = async () => {
@@ -73,12 +95,13 @@ export default function AttendanceRegularPage() {
 
                 const calendarData = await getMonthlyCalendarEvents(formattedDate, selectedEmployee.employeeId);
 
-                const formattedEvents = (calendarData || []).map(item => ({
-                    title: getStatusLabel(item.status),
+                const formattedEvents = calendarData.map(item => ({
                     start: item.date,
-                    backgroundColor: getStatusColor(item.status),
-                    borderColor: getStatusColor(item.status),
-                    classNames: ['attendance-badge']
+                    classNames: ['custom-event-style'],
+                    extendedProps: {
+                        status: item.status,
+                        isCheckoutMissing: item.isCheckoutMissing
+                    }
                 }));
 
                 setEvents(formattedEvents);
@@ -125,6 +148,8 @@ export default function AttendanceRegularPage() {
                     stats={selectedStats}
                     onDatesSet={handleDatesSet}
                     onDateSelect={(date) => updateDate(date.replaceAll('-', '.'))}
+                    eventContent={renderEventContent}
+                    ref={calendarRef}
                 />
             </div>
         </main>
