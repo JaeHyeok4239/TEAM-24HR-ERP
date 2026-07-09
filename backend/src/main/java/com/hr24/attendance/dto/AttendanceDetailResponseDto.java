@@ -38,4 +38,5 @@ public class AttendanceDetailResponseDto {
     private String userName;
     private String department;
     private String userPosition;
+    private String workplaceName;
 }

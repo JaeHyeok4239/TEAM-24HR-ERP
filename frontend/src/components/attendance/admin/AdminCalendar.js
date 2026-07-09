@@ -10,6 +10,7 @@ const AdminCalendar = forwardRef(({
     type, 
     events, 
     stats, 
+    dateClick,
     onDatesSet, 
     onDateSelect,
     eventContent
@@ -23,9 +24,15 @@ const AdminCalendar = forwardRef(({
             onDateSelect(info.dateStr);
         }
 
+        if (onDateSelect) {
+            onDateSelect(info.dateStr);
+        }
+
         setSelectedData({
             note: '까먹고 너무 늦게 눌렀다고 함'
         });
+
+        dateClick(info);
         setSelectedDate(info.dateStr);
         setPanelOpen(true);
     };
@@ -76,14 +83,6 @@ const AdminCalendar = forwardRef(({
                     eventContent={eventContent}
                 />
             </div>
-
-            <DetailPanel 
-                isOpen={panelOpen}
-                onClose={() => setPanelOpen(false)}
-                date={selectedDate}
-                userType={type}
-                data={selectedData}
-            />
         </div>
     );
 });

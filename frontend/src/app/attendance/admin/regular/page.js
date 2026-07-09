@@ -7,13 +7,20 @@ import { apiRequest } from "@/lib/api";
 import PageHeader from '@/components/attendance/PageHeader';
 import SummaryDaily from "@/components/attendance/admin/SummaryDaily";
 import AttendanceEmployeeList from "@/components/attendance/admin/AttendanceEmployeeList";
+import DetailPanel from "@/components/attendance/DetailPanel";
 import AdminCalendar from "@/components/attendance/admin/AdminCalendar";
-import { getMonthlyAttendanceStats, getMonthlyCalendarEvents, getStatusLabel, getStatusColor } from "@/services/attendanceService";
+import { getMonthlyAttendanceStats, getMonthlyCalendarEvents, getStatusLabel, getStatusColor, getAttendanceDetailRequest } from "@/services/attendanceService";
+import dayjs from 'dayjs';
 
 export default function AttendanceRegularPage() {
     const [employees, setEmployees] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const calendarRef = useRef(null);
+    // 패널용
+    const [panelOpen, setPanelOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedDetailData, setSelectedDetailData] = useState({});
+
     const [selectedEmployee, setSelectedEmployee] = useState(null); // 직원 선택
     const [events, setEvents] = useState([]); // events 상태 추가
     const [selectedStats, setSelectedStats] = useState(null);
@@ -21,17 +28,18 @@ export default function AttendanceRegularPage() {
 
     // FullCalendar 이벤트 렌더링 함수
     const renderEventContent = (eventInfo) => {
-        const { status, checkoutMissing } = eventInfo.event.extendedProps; // 필드명 변경
-        console.log(`[Regular Page] Date: ${eventInfo.event.startStr}, Status: ${status}, checkoutMissing: ${checkoutMissing}`); // 디버깅용
+        const { status, isCheckoutMissing } = eventInfo.event.extendedProps;
+        console.log(`[Regular Page] Date: ${eventInfo.event.startStr}, Status: ${status}, isCheckoutMissing: ${isCheckoutMissing}`); // 디버깅용
         const primaryLabel = getStatusLabel(status);
-        const primaryColor = getStatusColor(status);
+        const statusColor = getStatusColor(status);
+        const textColor = (status === 'READY' || !status) ? '#111827' : 'white';
 
         return (
             <div className="fc-event-main-custom">
-                <div style={{ backgroundColor: primaryColor }} className="primary-badge">
+                <div style={{ backgroundColor: statusColor, color: textColor }} className="primary-badge">
                     {primaryLabel}
                 </div>
-                {checkoutMissing && ( // boolean 값 직접 사용
+                {isCheckoutMissing && ( // boolean 값 직접 사용
                     <div className="secondary-badge">
                         미퇴근
                     </div>
@@ -40,6 +48,38 @@ export default function AttendanceRegularPage() {
         );
     };
     
+    const handleDateClick = async (info) => {
+        if (!selectedEmployee) {
+            alert("직원을 먼저 선택해주세요.");
+            return;
+        }
+
+        // 날짜 유효성 검사
+        if (dayjs(info.dateStr).isAfter(dayjs(), 'day')) {
+            return; 
+        }
+        setIsLoading(true);
+        try {
+            const detailData = await getAttendanceDetailRequest(info.dateStr, selectedEmployee.employeeId);
+            
+            console.log("확인용: 넘겨줄 데이터 값 ->", detailData);
+            console.log("확인용: 데이터 타입 ->", typeof detailData);
+
+            const processedData = {
+                ...detailData,
+                workplaceName: detailData.workplace_name || detailData.workplaceName || "미지정"
+            };
+
+            setSelectedDetailData(detailData);
+            setSelectedDate(info.dateStr);
+            setPanelOpen(true);
+                    
+        } catch (error) {
+            console.error("상세 정보 조회 실패:", error);
+        }finally {
+            setIsLoading(false);
+        }
+    };
 
     // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
@@ -85,6 +125,7 @@ export default function AttendanceRegularPage() {
                 setSelectedStats(null);
                 return;
             }
+            setPanelOpen(false); // 직원 변경 시 패널 닫기
 
             try {
                 const [y, m] = currentDate.split('.');
@@ -95,6 +136,7 @@ export default function AttendanceRegularPage() {
 
                 const calendarData = await getMonthlyCalendarEvents(formattedDate, selectedEmployee.employeeId);
 
+                console.log("원본 데이터 확인", calendarData);
                 const formattedEvents = calendarData.map(item => ({
                     start: item.date,
                     classNames: ['custom-event-style'],
@@ -121,7 +163,7 @@ export default function AttendanceRegularPage() {
                 onPrev={handlePrev}
                 onNext={handleNext}
                 onToday={handleToday}
-                onDateChange={(date) => updateDate(date.replaceAll('-', '.'))}
+                onDateChange={(date) => updateDate(date)}
                 isNextDisabled={isNextDisabled}
             />
             
@@ -147,11 +189,19 @@ export default function AttendanceRegularPage() {
                     events={events}
                     stats={selectedStats}
                     onDatesSet={handleDatesSet}
-                    onDateSelect={(date) => updateDate(date.replaceAll('-', '.'))}
+                    dateClick={handleDateClick}
                     eventContent={renderEventContent}
                     ref={calendarRef}
                 />
             </div>
+
+            <DetailPanel 
+                isOpen={panelOpen}
+                onClose={() => setPanelOpen(false)}
+                date={selectedDate}
+                userType="regular"
+                data={selectedDetailData}
+            />
         </main>
     );
 }
