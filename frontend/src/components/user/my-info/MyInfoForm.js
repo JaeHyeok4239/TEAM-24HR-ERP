@@ -81,6 +81,14 @@ const formatDate = (value) => {
   return String(value).split("T")[0];
 };
 
+const formatAnnualLeaveDays = (value) => {
+  if (value == null) {
+    return "-";
+  }
+
+  return `${Number(value).toLocaleString()}일`;
+};
+
 export default function MyInfoForm() {
   const userInfo = useAuthStore((state) => state.userInfo);
 
@@ -208,12 +216,16 @@ function MyInfoFormContent({ userInfo }) {
   return (
     <form onSubmit={handleSubmit} noValidate>
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div className="grid grid-cols-1 xl:grid-cols-[430px_minmax(0,1fr)]">
-          <aside className="border-b border-slate-200 bg-slate-50/70 p-5 sm:p-6 xl:border-b-0 xl:border-r">
+        <div className="grid grid-cols-1 xl:grid-cols-[550px_minmax(0,1fr)]">
+          <aside className="border-b border-slate-200 bg-slate-50/70 p-4 xl:border-b-0 xl:border-r">
             <ProfileSection userInfo={userInfo} />
 
-            <div className="mt-5">
+            <div className="mt-4">
               <BasicInfoSection userInfo={userInfo} />
+            </div>
+
+            <div className="mt-4">
+              <AnnualLeaveCard userInfo={userInfo} />
             </div>
           </aside>
 
@@ -238,7 +250,7 @@ function MyInfoFormContent({ userInfo }) {
           </section>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:px-6">
+        <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3 sm:px-6">
           <Button
             type="button"
             variant="outline"
@@ -265,28 +277,28 @@ function MyInfoFormContent({ userInfo }) {
 function ProfileSection({ userInfo }) {
   return (
     <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="h-24 bg-gradient-to-r from-[#1a2f4e] via-[#355983] to-[#6f92b5]" />
+      <div className="h-18 bg-gradient-to-r from-[#1a2f4e] via-[#355983] to-[#6f92b5]" />
 
-      <div className="-mt-9 px-5 pb-5">
+      <div className="-mt-7 px-4 pb-4">
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-18 w-18 items-center justify-center rounded-full border-4 border-white bg-[#1a2f4e] text-white shadow-sm">
-            <UserRound size={32} strokeWidth={1.8} />
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-[#1a2f4e] text-white shadow-sm">
+            <UserRound size={27} strokeWidth={1.8} />
           </div>
 
-          <p className="mt-3 max-w-full truncate text-xl font-bold text-slate-950">
+          <p className="mt-2 max-w-full truncate text-lg font-bold text-slate-950">
             {userInfo.name ?? "사용자"}
           </p>
 
-          <p className="mt-1 text-sm font-medium text-slate-500">
+          <p className="mt-0.5 text-xs font-medium text-slate-500">
             @{userInfo.loginId ?? "-"}
           </p>
 
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
               {userInfo.departmentName ?? "부서 없음"}
             </span>
 
-            <span className="rounded-full bg-[#eef7ff] px-3 py-1 text-xs font-semibold text-[#1a2f4e]">
+            <span className="rounded-full bg-[#eef7ff] px-2.5 py-1 text-xs font-semibold text-[#1a2f4e]">
               {userInfo.positionName ?? "직급 없음"}
             </span>
           </div>
@@ -298,38 +310,38 @@ function ProfileSection({ userInfo }) {
 
 function BasicInfoSection({ userInfo }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="text-base font-bold text-slate-950">기본 정보</h2>
-          <p className="mt-1 text-xs leading-5 text-slate-400">
+          <p className="mt-0.5 text-xs leading-4 text-slate-400">
             관리자만 변경할 수 있는 인사 정보입니다.
           </p>
         </div>
 
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#eef7ff] text-[#2563eb]">
-          <BadgeCheck size={19} strokeWidth={1.8} />
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#eef7ff] text-[#2563eb]">
+          <BadgeCheck size={18} strokeWidth={1.8} />
         </div>
       </div>
 
       <div className="space-y-3">
         <ReadOnlyField
-          icon={<IdCard size={16} />}
+          icon={<IdCard size={15} />}
           label="사번"
           value={userInfo.employeeNo}
         />
         <ReadOnlyField
-          icon={<Building2 size={16} />}
+          icon={<Building2 size={15} />}
           label="부서"
           value={userInfo.departmentName}
         />
         <ReadOnlyField
-          icon={<Briefcase size={16} />}
+          icon={<Briefcase size={15} />}
           label="직급"
           value={userInfo.positionName}
         />
         <ReadOnlyField
-          icon={<CalendarDays size={16} />}
+          icon={<CalendarDays size={15} />}
           label="입사일"
           value={formatDate(userInfo.hireDate)}
         />
@@ -338,10 +350,42 @@ function BasicInfoSection({ userInfo }) {
   );
 }
 
+function AnnualLeaveCard({ userInfo }) {
+  const remainingDays = userInfo.remainingAnnualLeaveDays;
+  const totalDays = userInfo.totalAnnualLeaveDays;
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base font-bold text-slate-950">잔여 연차</h2>
+          <p className="mt-0.5 text-xs leading-4 text-slate-400">
+            올해 사용 가능한 연차 현황입니다.
+          </p>
+        </div>
+
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#eef7ff] text-[#2563eb]">
+          <CalendarDays size={18} strokeWidth={1.8} />
+        </div>
+      </div>
+
+      <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-3">
+        <p className="text-xs font-semibold text-slate-500">잔여 / 총 연차</p>
+
+        <p className="mt-1.5 text-xl font-bold text-[#1a2f4e]">
+          {formatAnnualLeaveDays(remainingDays)}
+          <span className="mx-2 text-sm font-semibold text-slate-400">/</span>
+          {formatAnnualLeaveDays(totalDays)}
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function ReadOnlyField({ icon, label, value }) {
   return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
-      <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-slate-500">
+    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+      <div className="mb-0.5 flex items-center gap-2 text-xs font-semibold text-slate-500">
         <span className="text-slate-400">{icon}</span>
         {label}
       </div>
@@ -355,7 +399,7 @@ function ReadOnlyField({ icon, label, value }) {
 
 function ContactSection({ form, errors, onChange, disabled }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-11 shadow-sm">
+    <section className="min-h-[300px] rounded-lg border border-slate-200 bg-white p-10 shadow-sm">
       <SectionHeader
         title="연락처 정보"
         description="이메일과 전화번호를 수정할 수 있습니다."
@@ -363,7 +407,7 @@ function ContactSection({ form, errors, onChange, disabled }) {
         iconClassName="bg-[#e2fcff] text-[#1a2f4e]"
       />
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="space-y-6">
         <EditableField
           icon={<Mail size={15} />}
           label="이메일"
@@ -398,7 +442,7 @@ function ContactSection({ form, errors, onChange, disabled }) {
 
 function AddressSection({ form, onChange, onPostcodeComplete, disabled }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-14 shadow-sm">
+    <section className="min-h-[420px] rounded-lg border border-slate-200 bg-white p-10 shadow-sm">
       <SectionHeader
         title="주소 정보"
         description="우편번호와 주소는 검색으로 입력하고 상세주소는 직접 입력합니다."
@@ -406,58 +450,56 @@ function AddressSection({ form, onChange, onPostcodeComplete, disabled }) {
         iconClassName="bg-[#eef7ff] text-[#2563eb]"
       />
 
-      <div className="space-y-4">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label
-              htmlFor="zipcode"
-              className="flex items-center gap-2 text-sm font-semibold text-slate-700"
-            >
-              <span className="text-slate-400">
-                <MapPin size={15} />
-              </span>
-              우편번호
-            </Label>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Label
+            htmlFor="zipcode"
+            className="flex items-center gap-2 text-sm font-semibold text-slate-700"
+          >
+            <span className="text-slate-400">
+              <MapPin size={15} />
+            </span>
+            우편번호
+          </Label>
 
-            <div className="flex gap-2">
-              <Input
-                id="zipcode"
-                name="zipcode"
-                value={form.zipcode}
-                placeholder="우편번호"
-                readOnly
-                disabled={disabled}
-                className="h-9 max-w-[200px] bg-slate-50 text-sm text-slate-700"
-              />
-
-              <KakaoPostcodeButton
-                onComplete={onPostcodeComplete}
-                disabled={disabled}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label
-              htmlFor="address"
-              className="flex items-center gap-2 text-sm font-semibold text-slate-700"
-            >
-              <span className="text-slate-400">
-                <Home size={15} />
-              </span>
-              주소
-            </Label>
-
+          <div className="flex max-w-[320px] gap-2">
             <Input
-              id="address"
-              name="address"
-              value={form.address}
-              placeholder="주소 검색을 통해 입력해주세요."
+              id="zipcode"
+              name="zipcode"
+              value={form.zipcode}
+              placeholder="우편번호"
               readOnly
               disabled={disabled}
               className="h-9 bg-slate-50 text-sm text-slate-700"
             />
+
+            <KakaoPostcodeButton
+              onComplete={onPostcodeComplete}
+              disabled={disabled}
+            />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label
+            htmlFor="address"
+            className="flex items-center gap-2 text-sm font-semibold text-slate-700"
+          >
+            <span className="text-slate-400">
+              <Home size={15} />
+            </span>
+            주소
+          </Label>
+
+          <Input
+            id="address"
+            name="address"
+            value={form.address}
+            placeholder="주소 검색을 통해 입력해주세요."
+            readOnly
+            disabled={disabled}
+            className="h-9 bg-slate-50 text-sm text-slate-700"
+          />
         </div>
 
         <div className="space-y-2">
@@ -487,10 +529,12 @@ function AddressSection({ form, onChange, onPostcodeComplete, disabled }) {
 
 function SectionHeader({ title, description, icon, iconClassName }) {
   return (
-    <div className="mb-5 flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+    <div className="mb-6 flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
       <div className="min-w-0">
         <h2 className="text-base font-bold text-slate-950">{title}</h2>
-        <p className="mt-1 text-xs leading-5 text-slate-400">{description}</p>
+        <p className="mt-1 text-xs leading-5 text-slate-400">
+          {description}
+        </p>
       </div>
 
       <div

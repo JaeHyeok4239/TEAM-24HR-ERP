@@ -1,5 +1,6 @@
 package com.hr24.employee.dto.user;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -19,6 +20,9 @@ public class MyInfoResponseDto {
     private String positionName;
     
     private LocalDate hireDate;
+    
+    private BigDecimal remainingAnnualLeaveDays;
+    private BigDecimal totalAnnualLeaveDays;
     
     private String email;
     private String phone;
