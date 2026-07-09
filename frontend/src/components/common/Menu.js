@@ -73,9 +73,21 @@ const NAV_ITEMS = [
     icon: DollarSign,
     label: "급여 관리",
     children: [
-      { href: "/payroll", label: "급여 대장" },
-      { href: "/payroll/calculate", label: "급여 계산" },
-      { href: "/payroll/salary", label: "기본급 관리" },
+      {
+        href: "/payroll",
+        label: "급여 대장",
+        allowedRoles: [ROLES.ADMIN, ROLES.PAYROLL],
+      },
+      {
+        href: "/payroll/calculate",
+        label: "급여 계산",
+        allowedRoles: [ROLES.ADMIN, ROLES.PAYROLL],
+      },
+      {
+        href: "/payroll/salary",
+        label: "기본급 관리",
+        allowedRoles: [ROLES.ADMIN, ROLES.PAYROLL],
+      },
     ],
   },
   {
