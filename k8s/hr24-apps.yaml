@@ -24,13 +24,30 @@ spec:
                 name: hr24-config
             - secretRef:
                 name: hr24-secret
+          env:
+            - name: LOGGING_FILE_NAME
+              value: /logs/backend.log
+            - name: LOGGING_LOGBACK_ROLLINGPOLICY_FILE_NAME_PATTERN
+              value: /logs/backend.%d{yyyy-MM-dd}.%i.log
+            - name: LOGGING_LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE
+              value: 10MB
+            - name: LOGGING_LOGBACK_ROLLINGPOLICY_MAX_HISTORY
+              value: "14"
+            - name: LOGGING_LOGBACK_ROLLINGPOLICY_TOTAL_SIZE_CAP
+              value: 200MB
           volumeMounts:
             - name: uploads
               mountPath: /app/uploads
+            - name: backend-logs
+              mountPath: /logs
       volumes:
         - name: uploads
           hostPath:
             path: /home/sykim/apps/TEAM-24HR-ERP/uploads
+            type: DirectoryOrCreate
+        - name: backend-logs
+          hostPath:
+            path: /home/sykim/logs/hr24/backend
             type: DirectoryOrCreate
 ---
 apiVersion: v1
