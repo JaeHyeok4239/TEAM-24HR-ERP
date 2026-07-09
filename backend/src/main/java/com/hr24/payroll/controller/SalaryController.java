@@ -3,6 +3,7 @@ package com.hr24.payroll.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/salaries")
+@PreAuthorize("hasAnyRole('ADMIN','PAYROLL')")
 public class SalaryController {
 
     private final SalaryService salaryService;

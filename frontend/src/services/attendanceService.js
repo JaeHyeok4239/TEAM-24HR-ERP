@@ -1,9 +1,11 @@
 import { apiRequest } from "@/lib/api";
 
 export const getMonthlyAttendanceStats = async (yearMonth, employeeId) => {
-  const response = await apiRequest(`/api/attendance/monthly/summary?yearMonth=${yearMonth}&targetEmployeeId=${employeeId}`, {
-    method: "GET",
-  });
+  let url = `/api/attendance/monthly/summary?yearMonth=${yearMonth}`;
+  if (employeeId) {
+    url += `&targetEmployeeId=${employeeId}`;
+  }
+  const response = await apiRequest(url);
 
   return response.json();
 };
@@ -38,6 +40,29 @@ export const getMonthlyCalendarEvents = async (yearMonth, employeeId) => {
     : `/api/attendance/monthly/calendar/me?yearMonth=${yearMonth}`;
       
   const response = await apiRequest(url);
+  return response.json();
+};
+
+// 특정 직원 특정 날짜 근태 상세 정보 조회
+export const getAttendanceDetailRequest = async (date, employeeId) => {
+  const url = `/api/attendance/daily/${employeeId}?date=${date}`;
+  const response = await apiRequest(url);
+  return response.json();
+};
+
+// 본인 특정 날짜 근태 상세 정보 조회
+export const getMyAttendanceDetailRequest = async (date) => {
+  // 내 정보 가져와서 employeeId를 얻음
+  const meResponse = await apiRequest('/api/users/me');
+  const meData = await meResponse.json();
+  const employeeId = meData.employeeId;
+  // 얻어온 employeeId로 상세 정보 요청
+  return getAttendanceDetailRequest(date, employeeId);
+};
+
+// 본인 정보 가져옴
+export const getMeRequest = async () => {
+  const response = await apiRequest('/api/users/me');
   return response.json();
 };
 

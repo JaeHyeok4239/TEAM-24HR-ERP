@@ -1,11 +1,11 @@
 "use client";
 
 import { useRef, useState, useEffect} from "react";
+import { apiRequest } from "@/lib/api";
 import { useDateNavigation } from "@/hooks/useDateNavigation";
 import Calendar from '@/components/attendance/Calendar';
 import PageHeader from '@/components/attendance/PageHeader';
-import { apiRequest } from "@/lib/api";
-import { getStatusLabel, getStatusColor } from "@/services/attendanceService";
+import { getMeRequest, getAttendanceDetailRequest, getStatusLabel, getStatusColor } from "@/services/attendanceService";
 import DetailPanel from "@/components/attendance/DetailPanel";
 import dayjs from 'dayjs';
 
@@ -13,6 +13,20 @@ export default function AttendanceUserPage(){
     const calendarRef = useRef(null);
     const [stats, setStats] = useState(null); // 월별 근태 조회
     const [events, setEvents] = useState([]); // 달력 이벤트 상태 추가
+    const [myEmployeeId, setMyEmployeeId] = useState(null);
+
+    // 내 정보 가져오기
+    useEffect(() => {
+        const fetchMyInfo = async () => {
+            try {
+                const meData = await getMeRequest();
+                setMyEmployeeId(meData.employeeId);
+            } catch (error) {
+                console.error("내 정보 불러오기 실패:", error);
+            }
+        };
+        fetchMyInfo();
+    }, []);
 
     // 패널용
     const [panelOpen, setPanelOpen] = useState(false);
@@ -21,23 +35,28 @@ export default function AttendanceUserPage(){
 
     const { currentDate, handlePrev, handleNext, handleToday, handleDatesSet, updateDate, isNextDisabled } = useDateNavigation(calendarRef);
 
-    const handleDateClick = (info) => {
+    const handleDateClick = async (info) => {
+        if (!myEmployeeId) return;
+        
         // 날짜 유효성 검사
         if (dayjs(info.dateStr).isAfter(dayjs(), 'day')) {
             console.log("오늘 이후 날짜는 선택할 수 없습니다.");
             return; 
         }   
 
-        updateDate(info.dateStr);
-        setSelectedData({
-            status: '출근',
-            time: '09:00 - 18:00',
-            baseTime: '8시간',
-            overTime: '1시간',
-            totalTime: '9시간',
-        });
-        setSelectedDate(info.dateStr);
-        setPanelOpen(true);
+        try {
+            const detailData = await getAttendanceDetailRequest(info.dateStr, myEmployeeId);
+            
+            setSelectedData(detailData);
+            setSelectedDate(info.dateStr);
+            setPanelOpen(true);
+            
+            if (calendarRef.current) {
+                calendarRef.current.getApi().gotoDate(info.dateStr);
+            }
+        } catch (error) {
+            console.error("상세 정보 조회 실패:", error);
+        }
     };
 
     // stats 없을 시 0
@@ -45,15 +64,13 @@ export default function AttendanceUserPage(){
 
     // 월별 통계 및 달력 뱃지 데이터 가져오기
     useEffect(() => {
-        if (!currentDate) return;
-
-        const fetchAttendanceStats = async () => {
+        const fetchMyInfoAndAttendance = async () => {
             try {
                 // 날짜 포맷 맞추기
                 const [y, m] = currentDate.split('.'); 
                 const formattedDate = `${y}-${m.padStart(2, '0')}`;
                 
-                // 월별 통계 데이터
+                // 월별 통계 데이터(employeeId 없이 호출)
                 const statsResponse = await apiRequest(`/api/attendance/monthly/summary?yearMonth=${formattedDate}`);
                 const statsData = await statsResponse.json();
                 setStats(statsData);
@@ -63,21 +80,25 @@ export default function AttendanceUserPage(){
                 const calendarData = await calendarResponse.json();
 
                 // 풀캘린더 형식에 맞게 데이터 변환
-                const formattedEvents = calendarData.map(item => ({
+                const formattedEvents = Array.isArray(calendarData) 
+                  ? calendarData.map(item => ({
                     start: item.date,
                     classNames: ['custom-event-style'],
                     extendedProps: {
                         status: item.status,
                         isCheckoutMissing: item.isCheckoutMissing
                     }
-                }));
-                
+                })) 
+                : [];
                 setEvents(formattedEvents);
             } catch (error) {
                 console.error("통계 조회 실패:", error);
             }
         };
-        fetchAttendanceStats();
+
+        if (currentDate) {
+            fetchMyInfoAndAttendance();
+        }
     }, [currentDate]);
 
     // FullCalendar 이벤트 렌더링 함수
@@ -85,11 +106,12 @@ export default function AttendanceUserPage(){
         const { status, checkoutMissing } = eventInfo.event.extendedProps; // 필드명 변경
         console.log(`[My Page] Date: ${eventInfo.event.startStr}, Status: ${status}, checkoutMissing: ${checkoutMissing}`); // 디버깅용
         const primaryLabel = getStatusLabel(status);
-        const primaryColor = getStatusColor(status);
+        const statusColor = getStatusColor(status);
+        const textColor = (status === 'READY' || !status) ? '#111827' : 'white';
 
         return (
             <div className="fc-event-main-custom">
-                <div style={{ backgroundColor: primaryColor }} className="primary-badge">
+                <div style={{ backgroundColor: statusColor, color: textColor }} className="primary-badge">
                     {primaryLabel}
                 </div>
                 {checkoutMissing && ( // boolean 값 직접 사용
@@ -137,7 +159,7 @@ export default function AttendanceUserPage(){
                 isOpen={panelOpen}
                 onClose={() => setPanelOpen(false)}
                 date={selectedDate}
-                userType="regular"
+                userType="me"
                 data={selectedData}
             />
         </main>

@@ -8,7 +8,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,8 +54,6 @@ import com.hr24.employee.service.HrEmployeeQueryService;
 import com.hr24.global.exception.BusinessException;
 import com.hr24.global.exception.ErrorCode;
 import com.hr24.work.schedule.repository.HolidayRepository;
-
-import jakarta.persistence.EntityNotFoundException;
 
 import com.hr24.attendance.entity.Workplace;
 import com.hr24.attendance.enums.AttendanceStatus;
@@ -265,7 +262,8 @@ public class AttendanceService{
 	// 일별 근태 상세 조회(상세 패널)
 	@Transactional(readOnly = true)
 	public AttendanceDetailResponseDto getAttendanceDetail(String loginId, Long targetEmployeeId, LocalDate date, boolean isAdmin) {
-	    // 요청자 + 조회 대상 확인
+		
+		// 요청자 + 조회 대상 확인
 	    User requester = userRepository.findByLoginId(loginId)
 	    		.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 	    User targetEmployee = userRepository.findById(targetEmployeeId)
@@ -304,6 +302,9 @@ public class AttendanceService{
 	 	        workplaceName = dailyLog.getWorkplace() != null ? dailyLog.getWorkplace().getWorkplaceName() : "미지정";
 	 	        correctionDtos = attendanceCorrectionRepository.findByCorrectionDailyLog(dailyLog).stream()
 	 	                .map(this::convertToCorrectionDto).collect(Collectors.toList());
+	 	        status = "Y".equals(dailyLog.getIsAttended()) ? AttendanceStatus.WORK : AttendanceStatus.READY;
+	        } else {
+	        	status = AttendanceStatus.READY; // 데이터가 없으면 미출근
 	        }
 	       
 	    } else {
@@ -325,11 +326,10 @@ public class AttendanceService{
 	    // 근태 결과 조회(정규직/일용직 구별)
 	    if (isAdmin) {
 	    	if(isDaily) {
-	    		AttendanceStatus dailyStatus = "Y".equals(dailyLog.getIsAttended()) ? AttendanceStatus.WORK : null;
 	    		// 일용직
 	    		// 수정한 담당자 부서/직급 추가
 	    		return DailyAttendanceDetailResponseDto.builder()
-	                    .status(dailyStatus)
+	                    .status(status)
 	                    .checkIn(checkIn)
 	                    .checkOut(checkOut)
 	                    .totalWorkTime(timeDto.getTotalWorkTime())
@@ -367,18 +367,22 @@ public class AttendanceService{
 	            .totalWorkTime(timeDto.getTotalWorkTime())
 	            .basicWorkTime(timeDto.getBasicWorkTime())
 	            .overtime(timeDto.getOvertime())
+	            .corrections(correctionDtos)
+	            .workplaceName(workplaceName)
 	            .build();
 	}
 
 	// CorrectionDto 변환 로직
 	private AttendanceCorrectionRecordDto convertToCorrectionDto(AttendanceCorrection c) {
 		Document doc = c.getDocument();
-		User processor = doc.getProcessor();
+		User processor = Optional.ofNullable(doc)
+                .map(Document::getProcessor)
+                .orElse(null);
 		
 	    return AttendanceCorrectionRecordDto.builder()
 	            .correctionType(c.getCorrectionType())
-	            .processStatus(convertStatusToLabel(c.getDocument().getStatus()))
-	            .requestedAt(c.getDocument().getRequestedAt())
+	            .processStatus(doc != null ? convertStatusToLabel(doc.getStatus()) : "문서 없음")
+	            .requestedAt(doc != null ? doc.getRequestedAt() : null)
 	            .beforeTime(c.getBeforeTime())
 	            .afterTime(c.getAfterTime())
 	            .managerTeam(processor != null && processor.getDepartment() != null 
@@ -386,8 +390,8 @@ public class AttendanceService{
 	            .managerPosition(processor != null && processor.getPosition() != null 
 	             ? processor.getPosition().getPositionName() : "미정")
 	            .correctionReason(c.getCorrectionReason())
-	            .documentId(doc.getDocumentId())
-	            .documentTitle(doc.getDocumentTitle())
+	            .documentId(doc != null ? doc.getDocumentId() : null)
+	            .documentTitle(doc != null ? doc.getDocumentTitle() : "존재하지 않는 문서")
 	            .build();
 	}
 	

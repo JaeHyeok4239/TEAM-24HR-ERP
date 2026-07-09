@@ -22,13 +22,13 @@ public class AttendanceScheduler {
     private final AttendanceResultRepository attendanceResultRepository;
 
     // [1] 매일 밤 11시에 마감 로직 실행
-    @Scheduled(cron = "0 0 23 * * *")
+    @Scheduled(cron = "0 0 23 * * *", zone = "Asia/Seoul")
     public void scheduleMissingCheckoutUpdate() {
         attendanceService.processMissingCheckouts(); 
     }
 
     // [2] 매일 오전 6시에 데이터 생성 로직 실행
-    @Scheduled(cron = "0 0 6 * * *")
+    @Scheduled(cron = "0 0 6 * * *", zone = "Asia/Seoul")
     public void scheduleDailyAttendanceCreation() {
         attendanceService.createDailyAttendanceResults();
     }
