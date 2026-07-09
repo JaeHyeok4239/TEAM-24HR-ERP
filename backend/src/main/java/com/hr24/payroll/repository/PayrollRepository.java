@@ -14,31 +14,15 @@ import com.hr24.payroll.dto.MonthlyCostDto;
 import com.hr24.payroll.entity.Payroll;
 
 public interface PayrollRepository extends JpaRepository<Payroll, Long> {
-
-	List<Payroll> findByPayMonth(String payMonth);
-
-    List<Payroll> findByUser_EmployeeId(Long employeeId);
-
-    List<Payroll> findByStatus(String status);
-    
-    @Query("""
-            SELECT p
-            FROM Payroll p
-            JOIN FETCH p.user u
-            JOIN FETCH u.department
-            """)
-    
-    List<Payroll> findAllWithEmployee();
-    
+        
     @Query("""
     	    SELECT p
     	    FROM Payroll p
-    	    JOIN FETCH p.user u
-    	    JOIN FETCH u.department d
+    	    JOIN p.user u
+    	    JOIN u.department d
     	    WHERE (:month IS NULL OR p.payMonth = :month)
     	    AND (:employeeNo IS NULL OR u.employeeNo = :employeeNo)
-    	    AND (:departmentId IS NULL OR d.departmentId = :departmentId)
-    	    ORDER BY p.payMonth DESC
+    	    AND (:departmentId IS NULL OR d.departmentId = :departmentId)    	    
     	""")
     	Page<Payroll> searchPayrolls(
     	        @Param("month") String month,
@@ -46,6 +30,7 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     	        @Param("departmentId") Long departmentId,
     	        Pageable pageable
     	);
+    
     
     @Query("""
     	    SELECT p
@@ -55,6 +40,9 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
     	    WHERE p.payrollId = :payrollId
     	""")
     	Optional<Payroll> findDetailById(@Param("payrollId") Long payrollId);
+    
+    
+    Optional<Payroll> findByUserEmployeeIdAndPayMonth(Long employeeId, String payMonth);
     
     
     @Query("""

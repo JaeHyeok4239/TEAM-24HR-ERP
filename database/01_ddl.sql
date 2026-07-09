@@ -312,8 +312,6 @@ CREATE TABLE
 CREATE TABLE
     attendance_results (
         attendance_result_id NUMBER NOT NULL, -- PK
-        attendance_threshold_id NUMBER NULL, -- FK 근태 판정 기준
-        holiday_id NUMBER NULL, -- FK 공휴일
         employee_id NUMBER NOT NULL, -- FK 유저 테이블
         attendance_correction_id NUMBER NULL, -- 정정 이력 테이블(FK는 정정 이력 쪽에서만 단방향 연결)
         leave_id NUMBER NULL, -- FK 연차/반차/조퇴 등 휴가 신청 데이터 테이블
@@ -327,7 +325,7 @@ CREATE TABLE
         overtime_minutes NUMBER NULL, -- 초과 근무 시간(분)
         attendance_status VARCHAR2(20) NOT NULL, -- 근태 상태(대기/근무/지각/조퇴/결근/휴가)
         is_holiday_work CHAR(1) DEFAULT 'N' NOT NULL, -- 휴일 근무 여부(Y/N)
-        is_missing_checkout CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
+        is_checkout_missing CHAR(1) DEFAULT 'N' NOT NULL, -- 미퇴근 여부(Y/N)
         is_fixed CHAR(1) DEFAULT 'N' NOT NULL, --(Y/N) 정정 여부
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP NULL,
@@ -335,7 +333,6 @@ CREATE TABLE
         CONSTRAINT pk_att_attendance_results PRIMARY KEY (attendance_result_id),
         CONSTRAINT ck_att_attendance_status CHECK (attendance_status IN ('READY', 'WORK', 'LATE', 'EARLY_LEAVE', 'ABSENT', 'LEAVE', 'OUT')),
         CONSTRAINT fk_att_workplace_id FOREIGN KEY (workplace_id) REFERENCES workplaces (workplace_id),
-        CONSTRAINT fk_att_attendance_threshold_id FOREIGN KEY (attendance_threshold_id) REFERENCES attendance_thresholds (attendance_threshold_id),
         CONSTRAINT fk_att_employee_id FOREIGN KEY (employee_id) REFERENCES users (employee_id),
         CONSTRAINT uq_att_attendance_results UNIQUE (employee_id, work_date)
     );
@@ -708,6 +705,7 @@ CREATE TABLE payrolls (
 	CONSTRAINT pk_payrolls PRIMARY KEY (payroll_id),
 	CONSTRAINT fk_payrolls FOREIGN KEY(employee_id)
 	REFERENCES users(employee_id),
+    CONSTRAINT uk_payroll_employee_month UNIQUE (employee_id, pay_month),
 	CONSTRAINT chk_pay_month CHECK (LENGTH(pay_month) = 7 AND REGEXP_LIKE(pay_month, '^[0-9]{4}-(0[1-9]|1[0-2])$'))
 );
 
@@ -776,10 +774,6 @@ COMMENT ON COLUMN work_notifications.created_at      IS '발송일시';
 ALTER TABLE attendance_results
 ADD CONSTRAINT fk_att_leave_id
 FOREIGN KEY (leave_id) REFERENCES leave(leave_id);
-
-ALTER TABLE attendance_results
-ADD CONSTRAINT fk_att_holiday_id
-FOREIGN KEY (holiday_id) REFERENCES holidays(holiday_id);
 
 ALTER TABLE attendance_correction
 ADD CONSTRAINT correction_fk_correction_daily_log

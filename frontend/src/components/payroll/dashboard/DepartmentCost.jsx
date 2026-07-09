@@ -119,7 +119,10 @@ export default function DepartmentCost() {
 
               <XAxis
                 dataKey="departmentName"
+                angle={-45}
+                textAnchor="end"
                 interval={0}
+                height={80}
               />
 
               <YAxis

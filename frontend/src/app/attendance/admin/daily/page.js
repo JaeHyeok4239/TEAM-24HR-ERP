@@ -8,7 +8,7 @@ import PageHeader from '@/components/attendance/PageHeader';
 import SummaryDaily from "@/components/attendance/admin/SummaryDaily";
 import AttendanceEmployeeList from "@/components/attendance/admin/AttendanceEmployeeList";
 import AdminCalendar from "@/components/attendance/admin/AdminCalendar";
-import {getMonthlyCalendarEvents } from "@/services/attendanceService";
+import { getMonthlyCalendarEvents, getStatusLabel, getStatusColor } from "@/services/attendanceService";
 import AttendanceDailyInputPanel from "@/components/attendance/AttendanceDailyInputPanel";
 import dayjs from 'dayjs';
 
@@ -25,7 +25,25 @@ export default function AttendanceDailyPage() {
     const handleDateClick = (info) => {
         updateDate(info.dateStr); 
     };
-    
+
+    // 일용직용 뱃지 렌더링 함수
+    const renderEventContent = (eventInfo) => {
+        const { status } = eventInfo.event.extendedProps;
+
+        // 일용직은 '출근' 상태만 뱃지로 표시
+        if (status !== 'WORK' && status !== 'OUT') {
+            return null;
+        }
+
+        return (
+            <div className="fc-event-main-custom">
+                <div style={{ backgroundColor: getStatusColor(status) }} className="primary-badge">
+                    {getStatusLabel(status)}
+                </div>
+            </div>
+        );
+    };
+
     // getHrEmployeesRequest API, active monthly 근태 조회 호출
     useEffect(() => {
         const fetchData = async () => {
@@ -73,18 +91,14 @@ export default function AttendanceDailyPage() {
                 const formattedDate = `${y}-${m.padStart(2, '0')}`;
 
                 const calendarData = await getMonthlyCalendarEvents(formattedDate, selectedEmployee.employeeId);
-                console.log("서버에서 받은 원본 데이터:", calendarData);
 
-                const formattedEvents = (calendarData || [])
-                    .filter(item => item.status === 'WORK' || item.status === 'OUT')
-                    .map(item => ({
-                        title: '출근',
-                        start: item.date,
-                        backgroundColor: '#10b981',
-                        borderColor: '#10b981',
-                        classNames: ['attendance-badge']
-                    }));
-                console.log("최종 전달할 events 데이터:", formattedEvents);
+                const formattedEvents = (calendarData || []).map(item => ({
+                    start: item.date,
+                    classNames: ['custom-event-style'],
+                    extendedProps: {
+                        status: item.status
+                    }
+                }));
                 setEvents(formattedEvents);
             } catch (error) {
                 console.error("데이터 로딩 실패:", error);
@@ -135,12 +149,15 @@ export default function AttendanceDailyPage() {
                     events={events}
                     stats={selectedStats}
                     dateClick={handleDateClick}
+                    eventContent={renderEventContent}
+                    ref={calendarRef}
                 />
             </div>
 
             <AttendanceDailyInputPanel 
                 isOpen={isInputOpen} 
                 onClose={() => setIsInputOpen(false)} 
+                selectedDate={currentDate.replaceAll('.', '-')}
             />
         </main>
     );

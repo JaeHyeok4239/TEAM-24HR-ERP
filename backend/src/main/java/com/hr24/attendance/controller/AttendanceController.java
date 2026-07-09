@@ -3,12 +3,15 @@ package com.hr24.attendance.controller;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +29,7 @@ import com.hr24.attendance.dto.AttendanceResponse;
 import com.hr24.attendance.dto.CalendarBadgeDto;
 import com.hr24.attendance.dto.CheckInOutRequestDto;
 import com.hr24.attendance.dto.DailyAttendanceInputDto;
+import com.hr24.attendance.dto.DailyAttendanceManageDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
 import com.hr24.attendance.dto.MonthlyAttendanceListResponseDto;
 import com.hr24.attendance.dto.WorkplaceDto;
@@ -42,6 +46,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
 @Tag(name = "근태 관리 API", description = "근태 관리 관련 API")
@@ -94,10 +99,12 @@ public class AttendanceController {
 	@PatchMapping("/daily/{logId}")
 	@Operation(summary = "일용직 근태 기록 수정", description = "관리자가 일용직 근태 기록을 직접 수정합니다. 출퇴근 한번에 수정 가능")
 	public ResponseEntity<Void> applyDailyCorrection(@PathVariable("logId") Long logId,
-			@RequestBody List<DailyCorrectionDto> dtoList, @AuthenticationPrincipal String loginId) {
-
-		attendanceCorrectionService.applyDailyCorrection(logId, dtoList, loginId);
-		return ResponseEntity.ok().build();
+	        @RequestBody List<DailyCorrectionDto> dtoList) {
+	    
+	    String loginId = SecurityContextHolder.getContext().getAuthentication().getName();
+	    
+	    attendanceCorrectionService.applyDailyCorrection(logId, dtoList, loginId);
+	    return ResponseEntity.ok().build();
 	}
 
 	// 정규직 근태 기록 정정
@@ -105,10 +112,12 @@ public class AttendanceController {
 	@Operation(summary = "정규직 근태 기록 수정", description = "정규직 근태 기록이 정정됩니다.")
 	@PostMapping("/regular/{logId}/correction")
 	public ResponseEntity<Void> applyDocumentCorrection(@PathVariable("logId") Long logId,
-			@RequestBody AttendanceCorrectionRequestDto.CorrectionDto dto, @AuthenticationPrincipal String loginId) {
-
-		attendanceCorrectionService.applyRegularCorrection(logId, dto, loginId);
-		return ResponseEntity.ok().build();
+	        @RequestBody AttendanceCorrectionRequestDto.CorrectionDto dto) {
+	    
+	    String loginId = SecurityContextHolder.getContext().getAuthentication().getName();
+	    
+	    attendanceCorrectionService.applyRegularCorrection(logId, dto, loginId);
+	    return ResponseEntity.ok().build();
 	}
 
 	// 1명 일별 RESULT 조회
@@ -150,10 +159,9 @@ public class AttendanceController {
 	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
 	@Operation(summary = "일용직 근태 기록 일괄 저장", description = "관리자가 화면에서 입력한 일용직 근태 명단을 저장합니다.")
 	@PostMapping("/batch/daily-batch")
-	public ResponseEntity<String> dailyBatch(@RequestBody List<AttendanceRequest> attendanceList) { // Map > DTO 리스트로 변경
-
+	public ResponseEntity<String> dailyBatch(@RequestBody List<AttendanceRequest> attendanceList) {
 		String resultMessage = attendanceService.saveDailyAttendanceLogs(attendanceList);
-		return ResponseEntity.ok(resultMessage);
+	    return ResponseEntity.ok(resultMessage);
 	}
 
 	// 출근
@@ -231,5 +239,14 @@ public class AttendanceController {
                 .getEmployeeId(); 
         
         return ResponseEntity.ok(attendanceService.getMonthlyCalendar(myEmployeeId, yearMonth));
+    }
+    
+    // 일용직 직원 목록 및 근태 로그 조회
+    @PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
+    @GetMapping("/daily-management")
+    @Operation(summary = "일용직 근태 관리용 데이터", description = "화면 렌더링을 위해 직원 명단과 당일 근태를 결합하여 반환")
+    public ResponseEntity<List<DailyAttendanceManageDto>> getDailyManagementList(
+    		@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(attendanceService.getDailyManagementList(date));
     }
 }
