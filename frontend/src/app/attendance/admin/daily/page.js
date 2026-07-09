@@ -8,7 +8,8 @@ import PageHeader from '@/components/attendance/PageHeader';
 import SummaryDaily from "@/components/attendance/admin/SummaryDaily";
 import AttendanceEmployeeList from "@/components/attendance/admin/AttendanceEmployeeList";
 import AdminCalendar from "@/components/attendance/admin/AdminCalendar";
-import { getMonthlyCalendarEvents, getStatusLabel, getStatusColor } from "@/services/attendanceService";
+import DetailPanel from "@/components/attendance/DetailPanel";
+import { getMonthlyCalendarEvents, getStatusLabel, getStatusColor, getAttendanceDetailRequest } from "@/services/attendanceService";
 import AttendanceDailyInputPanel from "@/components/attendance/AttendanceDailyInputPanel";
 import dayjs from 'dayjs';
 
@@ -16,14 +17,34 @@ export default function AttendanceDailyPage() {
     const [employees, setEmployees] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+    // 패널용
+    const [panelOpen, setPanelOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedDetailData, setSelectedDetailData] = useState({});
+
     const calendarRef = useRef(null);
     const { currentDate, handlePrev, handleNext, handleToday, updateDate, isNextDisabled } = useDateNavigation(calendarRef);
     const [events, setEvents] = useState([]);
     const [selectedStats, setSelectedStats] = useState(null);
     const [isInputOpen, setIsInputOpen] = useState(false);
 
-    const handleDateClick = (info) => {
-        updateDate(info.dateStr); 
+    const handleDateClick = async (info) => {
+        if (!selectedEmployee) {
+            alert("직원을 먼저 선택해주세요.");
+            return;
+        }
+        if (dayjs(info.dateStr).isAfter(dayjs(), 'day')) {
+            return; 
+        }
+        try {
+            const detailData = await getAttendanceDetailRequest(info.dateStr, selectedEmployee.employeeId);
+            setSelectedDetailData(detailData);
+            setSelectedDate(info.dateStr);
+            setPanelOpen(true);
+        } catch (error) {
+            console.error("상세 정보 조회 실패:", error);
+        }
     };
 
     // 일용직용 뱃지 렌더링 함수
@@ -85,6 +106,7 @@ export default function AttendanceDailyPage() {
                 setSelectedStats(null);
                 return;
             }
+            setPanelOpen(false); // 직원 변경 시 패널 닫기
 
             try {
                 const [y, m] = currentDate.split('.');
@@ -120,17 +142,17 @@ export default function AttendanceDailyPage() {
                 isNextDisabled={isNextDisabled}
             />
 
-            <button 
-                onClick={() => setIsInputOpen(true)} 
-                className="bg-blue-600 text-white px-5 py-2 rounded-lg font-bold"
-            >
-                근태 기록 관리
-            </button>
-            
             {/* 일별 근태 조회 */}
-            <div className="mt-4">
+            <div className="mt-4 justify-between items-center">
                 <SummaryDaily date={currentDate} type="daily" />
             </div>
+
+            <button 
+                    onClick={() => setIsInputOpen(true)} 
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold transition-colors cursor-pointer"
+                >
+                    근태 기록 관리
+                </button>
 
             {/* 필터링 버튼 */}
             
@@ -158,6 +180,14 @@ export default function AttendanceDailyPage() {
                 isOpen={isInputOpen} 
                 onClose={() => setIsInputOpen(false)} 
                 selectedDate={currentDate.replaceAll('.', '-')}
+            />
+
+            <DetailPanel 
+                isOpen={panelOpen}
+                onClose={() => setPanelOpen(false)}
+                date={selectedDate}
+                userType="daily"
+                data={selectedDetailData}
             />
         </main>
     );
