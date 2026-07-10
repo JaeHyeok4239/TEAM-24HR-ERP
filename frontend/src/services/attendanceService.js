@@ -73,6 +73,7 @@ export const getStatusLabel = (status) => {
         case 'LATE': return '지각';
         case 'ABSENT': return '결근';
         case 'LEAVE': return '휴가';
+        case 'EARLY_LEAVE': return '조퇴';
         default: return '미출근';
     }
 };
@@ -83,6 +84,7 @@ export const getStatusColor = (status) => {
         case 'LATE': return '#eab308';
         case 'ABSENT': return '#ef4444';
         case 'LEAVE': return '#a855f7';
+        case 'EARLY_LEAVE': return '#2094f3';
         default: return '#e5e7eb';
     }
 };
