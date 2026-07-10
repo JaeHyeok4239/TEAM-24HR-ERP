@@ -17,7 +17,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.hr24.attendance.dto.AdminAttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyAttendanceSummaryResponseDto;
 import com.hr24.attendance.dto.AttendanceDetailResponseDto;
 import com.hr24.attendance.dto.DailyWorkerAttendanceRequestDto;
@@ -341,9 +340,8 @@ public class AttendanceService{
 	                    .workplaceName(workplaceName)
 	                    .build();
 	    	}else {
-	    		// 정규직 
-	    		// 수정한 담당자 부서/직급 추가
-	    		return AdminAttendanceDetailResponseDto.builder()
+	    		// 정규직(일반 사용자와 동일)
+	    		return AttendanceDetailResponseDto.builder()
 	                    .status(status)
 	                    .checkIn(checkIn)
 	                    .checkOut(checkOut)
