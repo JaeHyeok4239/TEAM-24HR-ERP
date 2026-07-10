@@ -1,14 +1,11 @@
 package com.hr24.attendance.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hr24.attendance.entity.AttendanceResult;
 
 import lombok.Getter;
-import lombok.Setter;
-
 @Getter
 public class AttendanceResultDto extends AttendanceDetailResponseDto{
     private Long attendanceResultId;

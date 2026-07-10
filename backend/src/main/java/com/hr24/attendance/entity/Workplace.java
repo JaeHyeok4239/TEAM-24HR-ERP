@@ -1,6 +1,5 @@
 package com.hr24.attendance.entity;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.hr24.attendance.enums.WorkplaceCode;

@@ -1,8 +1,6 @@
 package com.hr24.attendance.dto;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -15,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-// 정정 이력 조회용(추후 빌더로 값 설정)
+// 정정 이력 조회용
 public class AttendanceCorrectionRecordDto {
 		private String correctionType; // 정정 종류 IN/OUT
 	    private String processStatus; // 승인완료/반려/대기

@@ -5,8 +5,8 @@ import lombok.Getter;
 
 @Getter
 @Builder
-// active 모든 직원 일별 통계
-public class AttendanceSummaryDto {
+// active 모든 직원 일별 근태 상태 카운트
+public class AttendanceSummaryCountDto {
     private long work;
     private long late;
     private long absent;

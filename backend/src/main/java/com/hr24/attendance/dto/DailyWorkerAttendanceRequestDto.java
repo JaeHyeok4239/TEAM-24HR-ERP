@@ -6,7 +6,6 @@ import java.time.LocalTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hr24.attendance.entity.AttendanceResult;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -18,8 +17,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-// 일용직 일괄 저장
-public class AttendanceRequest {
+// 일용직 근태 일괄 입력 요청
+public class DailyWorkerAttendanceRequestDto {
 
     private String employeeId;
     
