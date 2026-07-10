@@ -54,10 +54,6 @@ export default function AttendanceRegularPage() {
             return;
         }
 
-        // 날짜 유효성 검사
-        if (dayjs(info.dateStr).isAfter(dayjs(), 'day')) {
-            return; 
-        }
         setIsLoading(true);
         try {
             const detailData = await getAttendanceDetailRequest(info.dateStr, selectedEmployee.employeeId);

@@ -37,12 +37,6 @@ export default function AttendanceUserPage(){
 
     const handleDateClick = async (info) => {
         if (!myEmployeeId) return;
-        
-        // 날짜 유효성 검사
-        if (dayjs(info.dateStr).isAfter(dayjs(), 'day')) {
-            console.log("오늘 이후 날짜는 선택할 수 없습니다.");
-            return; 
-        }   
 
         try {
             const detailData = await getAttendanceDetailRequest(info.dateStr, myEmployeeId);
