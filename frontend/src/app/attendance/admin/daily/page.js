@@ -34,9 +34,7 @@ export default function AttendanceDailyPage() {
             alert("직원을 먼저 선택해주세요.");
             return;
         }
-        if (dayjs(info.dateStr).isAfter(dayjs(), 'day')) {
-            return; 
-        }
+        
         try {
             const detailData = await getAttendanceDetailRequest(info.dateStr, selectedEmployee.employeeId);
             setSelectedDetailData(detailData);
