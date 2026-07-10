@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,6 +54,7 @@ public class ScheduleController {
 
     // 공공 API에서 공휴일 데이터 가져와 DB 저장 (관리자용)
     @Operation(summary = "공휴일 갱신", description = "공공데이터 API에서 해당 연도의 공휴일을 가져와 DB에 저장합니다.")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/holidays/fetch")
     public ResponseEntity<String> fetchHolidays(@RequestParam("year") Integer year) {
         int count = holidayFetchService.fetchAndSave(year);
@@ -63,18 +65,22 @@ public class ScheduleController {
     @Operation(summary = "일정 등록", description = "새 일정을 등록합니다. DEPT 타입이면 deptId 필수.")
     @PostMapping
     public ResponseEntity<ScheduleResponse> createSchedule(
-            @RequestParam("userId") Long userId,
-            @RequestBody ScheduleRequest request) {
-        return ResponseEntity.ok(scheduleService.createSchedule(userId, request));
+            @RequestBody ScheduleRequest request,
+            Authentication authentication) {
+        return ResponseEntity.ok(scheduleService.createSchedule(authentication.getName(), request));
     }
 
-    // 일정 수정 - 제목, 날짜, 장소, 메모 변경
-    @Operation(summary = "일정 수정", description = "일정 내용을 수정합니다.")
+    // 일정 수정 - 작성자 본인 또는 ADMIN만 가능
+    @Operation(summary = "일정 수정", description = "작성자 본인 또는 ADMIN만 수정할 수 있습니다.")
     @PutMapping("/{scheduleId}")
     public ResponseEntity<ScheduleResponse> updateSchedule(
             @PathVariable Long scheduleId,
-            @RequestBody ScheduleRequest request) {
-        return ResponseEntity.ok(scheduleService.updateSchedule(scheduleId, request));
+            @RequestBody ScheduleRequest request,
+            Authentication authentication) {
+        String loginId = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        return ResponseEntity.ok(scheduleService.updateSchedule(scheduleId, request, loginId, isAdmin));
     }
 
     // 일정 삭제 - 작성자 본인 또는 ADMIN만 가능
