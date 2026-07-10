@@ -222,7 +222,8 @@ export default function ScheduleCalendar() {
           height="100%"
           dayMaxEvents={3}
           dayCellDidMount={(arg) => {
-            const dateStr = arg.date.toISOString().slice(0, 10);
+            const d = arg.date;
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
             if (holidays.has(dateStr)) {
               const el = arg.el.querySelector(".fc-daygrid-day-number");
               if (el) el.style.color = "#e53e3e";

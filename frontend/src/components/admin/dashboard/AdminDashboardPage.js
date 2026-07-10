@@ -1,8 +1,6 @@
-import EmptyDashboardSlot from "./EmptyDashboardSlot";
 import HrEmployeeFlowCard from "./HrEmployeeFlowCard";
 import MonthlyCost from "../../payroll/dashboard/MonthlyCost";
 import DepartmentCost from "../../payroll/dashboard/DepartmentCost";
-import MonthlyAttendanceCard from "./MonthlyAttendanceCard";
 
 export default function AdminDashboardPage() {
   return (
