@@ -24,24 +24,11 @@ export default function ScheduleCalendar() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [form, setForm] = useState(INIT_FORM);
   const [events, setEvents] = useState([]);
-  const [userId, setUserId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [holidays, setHolidays] = useState(new Set());
-
-  // JWT 토큰에서 employeeId 직접 추출 (API 호출 불필요)
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      if (payload?.employeeId) setUserId(payload.employeeId);
-    } catch {
-      console.error("로그인 정보를 불러올 수 없습니다. 다시 로그인해주세요.");
-    }
-  }, []);
 
   // 일정 목록 불러오기 (현재 월 기준)
   const fetchSchedules = async (startDt, endDt) => {
@@ -156,12 +143,11 @@ export default function ScheduleCalendar() {
   const handleSave = async () => {
     if (!form.title.trim()) { setError("제목을 입력해주세요."); return; }
     if (!form.date)          { setError("날짜를 선택해주세요."); return; }
-    if (!userId)             { setError("사용자 정보를 불러오는 중입니다."); return; }
 
     setSaving(true);
     setError("");
     try {
-      await apiRequest(`/api/schedule?userId=${userId}`, {
+      await apiRequest(`/api/schedule`, {
         method: "POST",
         body: JSON.stringify({
           title:        form.title,

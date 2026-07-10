@@ -35,8 +35,6 @@ public class HolidayFetchService {
 
     @Transactional
     public int fetchAndSave(int year) {
-        holidayRepository.deleteByHolidayYear(year);
-
         List<Holiday> holidays = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
@@ -85,6 +83,11 @@ public class HolidayFetchService {
             }
         }
 
+        if (holidays.isEmpty()) {
+            throw new RuntimeException(year + "년 공휴일 데이터를 가져오지 못했습니다. 기존 데이터를 유지합니다.");
+        }
+
+        holidayRepository.deleteByHolidayYear(year);
         holidayRepository.saveAll(holidays);
         log.info("{}년 공휴일 {}건 저장 완료", year, holidays.size());
         return holidays.size();

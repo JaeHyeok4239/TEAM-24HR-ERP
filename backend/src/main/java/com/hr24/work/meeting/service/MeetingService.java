@@ -107,7 +107,8 @@ public class MeetingService {
             throw new BusinessException(ErrorCode.MEETING_COMPANY_ACCESS_DENIED);
         }
 
-        MeetingRoom room = meetingRoomRepository.findById(request.getRoomId())
+        // 회의실 로우 자체를 락 - 같은 회의실에 대한 동시 예약 시도를 이 시점에 직렬화 (더블부킹 방지)
+        MeetingRoom room = meetingRoomRepository.findByIdForUpdate(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회의실입니다."));
 
         // 비관적 락으로 조회 - 트랜잭션 종료 전까지 동일 회의실/날짜 접근 차단
