@@ -107,19 +107,6 @@ public class AttendanceController {
 	    return ResponseEntity.ok().build();
 	}
 
-	// 정규직 근태 기록 정정
-	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
-	@Operation(summary = "정규직 근태 기록 수정", description = "정규직 근태 기록이 정정됩니다.")
-	@PostMapping("/regular/{logId}/correction")
-	public ResponseEntity<Void> applyDocumentCorrection(@PathVariable("logId") Long logId,
-	        @RequestBody AttendanceCorrectionRequestDto.CorrectionDto dto) {
-	    
-	    String loginId = SecurityContextHolder.getContext().getAuthentication().getName();
-	    
-	    attendanceCorrectionService.applyRegularCorrection(logId, dto, loginId);
-	    return ResponseEntity.ok().build();
-	}
-
 	// 1명 일별 RESULT 조회
 	@PreAuthorize("isAuthenticated()")
 	@Operation(summary = "일별 근태 상세 조회", description = "관리자(정규직, 일용직) 혹은 본인 것만 조회 가능")
