@@ -1,5 +1,8 @@
 package com.hr24.employee.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.security.core.Authentication;
@@ -20,6 +23,8 @@ import com.hr24.employee.repository.UserRoleRepository;
 import com.hr24.global.exception.BusinessException;
 import com.hr24.global.exception.ErrorCode;
 import com.hr24.global.redis.RedisService;
+import com.hr24.attendance.entity.AnnualLeaveBalances;
+import com.hr24.attendance.repository.AnnualLeaveBalancesRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +36,7 @@ public class UserService {
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisService redisService;
+    private final AnnualLeaveBalancesRepository annualLeaveBalancesRepository;
 
     @Transactional(readOnly = true)
     public MyInfoResponseDto getMyInfo() {
@@ -110,52 +116,52 @@ public class UserService {
     	
     	user.changePassword(encodedPassword);
     	
-    	redisService.delete("RT:" + user.getEmployeeId());
+    	redisService.deleteByPattern("RT:" + user.getEmployeeId() + ":*");
     }
 
     private MyInfoResponseDto createMyInfoResponse(User user) {
-
         Department department = user.getDepartment();
         Position position = user.getPosition();
 
-        List<UserRole> userRoles =
-                userRoleRepository.findAllWithRoleByEmployeeId(
-                        user.getEmployeeId()
-                );
+        List<UserRole> userRoles = userRoleRepository.findAllWithRoleByEmployeeId(
+                user.getEmployeeId()
+        );
 
         List<String> roles = userRoles.stream()
-                .map(userRole ->
-                        userRole.getRole().getRoleCode()
-                )
+                .map(userRole -> userRole.getRole().getRoleCode())
                 .toList();
 
+        Integer currentYear = LocalDate.now(ZoneId.of("Asia/Seoul")).getYear();
+
+        AnnualLeaveBalances annualLeaveBalance = annualLeaveBalancesRepository
+                .findByEmployeeAndLeaveYear(user, currentYear)
+                .orElse(null);
+
+        BigDecimal remainingAnnualLeaveDays = annualLeaveBalance != null
+                ? annualLeaveBalance.getRemainingDays()
+                : BigDecimal.ZERO;
+
+        BigDecimal totalAnnualLeaveDays = annualLeaveBalance != null
+                ? annualLeaveBalance.getTotalDays()
+                : BigDecimal.ZERO;
+
         return new MyInfoResponseDto(
-        		user.getEmployeeId(),
+                user.getEmployeeId(),
                 user.getEmployeeNo(),
                 user.getLoginId(),
                 user.getName(),
-
-                department != null
-                        ? department.getDepartmentName()
-                        : null,
-
-                position != null
-                        ? position.getPositionName()
-                        : null,
-
-                user.getHireDate() != null
-                        ? user.getHireDate().toLocalDate()
-                        : null,
-
+                department != null ? department.getDepartmentName() : null,
+                position != null ? position.getPositionName() : null,
+                user.getHireDate() != null ? user.getHireDate().toLocalDate() : null,
+                remainingAnnualLeaveDays,
+                totalAnnualLeaveDays,
                 user.getEmail(),
                 user.getPhone(),
                 user.getZipcode(),
                 user.getAddress(),
                 user.getAddressDetail(),
-
                 roles,
-                
                 user.getIsFirstLogin()
         );
-    } 
+    }
 }

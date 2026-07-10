@@ -372,17 +372,15 @@ public class AttendanceService{
 	            .build();
 	}
 
-	// CorrectionDto 변환 로직
+	   // CorrectionDto 변환 로직
 	private AttendanceCorrectionRecordDto convertToCorrectionDto(AttendanceCorrection c) {
-		Document doc = c.getDocument();
-		User processor = Optional.ofNullable(doc)
-                .map(Document::getProcessor)
-                .orElse(null);
-		
+	    User processor = c.getProcessedBy();
+	    Document document = c.getDocument();
+
 	    return AttendanceCorrectionRecordDto.builder()
 	            .correctionType(c.getCorrectionType())
-	            .processStatus(doc != null ? convertStatusToLabel(doc.getStatus()) : "문서 없음")
-	            .requestedAt(doc != null ? doc.getRequestedAt() : null)
+	            .processStatus(document != null ? convertStatusToLabel(document.getStatus()) : null)
+	            .requestedAt(document != null ? document.getRequestedAt() : null)
 	            .beforeTime(c.getBeforeTime())
 	            .afterTime(c.getAfterTime())
 	            .managerTeam(processor != null && processor.getDepartment() != null 
@@ -390,8 +388,8 @@ public class AttendanceService{
 	            .managerPosition(processor != null && processor.getPosition() != null 
 	             ? processor.getPosition().getPositionName() : "미정")
 	            .correctionReason(c.getCorrectionReason())
-	            .documentId(doc != null ? doc.getDocumentId() : null)
-	            .documentTitle(doc != null ? doc.getDocumentTitle() : "존재하지 않는 문서")
+	            .documentId(document != null ? document.getDocumentId() : null)
+	            .documentTitle(document != null ? document.getDocumentTitle() : null)
 	            .build();
 	}
 	
