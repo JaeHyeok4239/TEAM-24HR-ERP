@@ -78,29 +78,6 @@ export default function ApprovalBox() {
 
   const documentList = data;
 
-    if (documentList.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 p-20 text-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center gap-3 py-10">
-            <ClipboardCheck size={48} className="text-gray-300" />
-            <h2 className="text-lg font-semibold text-[#1a2f4e]">
-              확인할 결재 이력이 없습니다
-            </h2>
-            <p className="text-sm text-gray-400">
-              작성한 문서를 확인하려면 버튼을 클릭하세요
-            </p>
-            <Link href="/approval/document">
-              <Button className="mt-2 bg-[#1a2f4e] hover:bg-[#2a4a6e] gap-1">
-                <FolderOpen size={16} />
-                내 문서함으로 이동
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="h-full flex flex-col gap-4 p-5">
