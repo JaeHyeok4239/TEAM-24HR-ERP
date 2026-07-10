@@ -2,10 +2,7 @@ package com.hr24.attendance.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Map;
 
-import com.hr24.document.entity.Document;
-import com.hr24.document.entity.DocumentType;
 import com.hr24.employee.entity.User;
 
 import jakarta.persistence.Column;

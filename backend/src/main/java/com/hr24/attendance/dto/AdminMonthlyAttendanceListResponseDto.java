@@ -8,7 +8,7 @@ import java.util.List;
 @Getter
 @Builder
 // active 전체 직원 월별 근태 조회
-public class MonthlyAttendanceListResponseDto {
+public class AdminMonthlyAttendanceListResponseDto {
     private YearMonth yearMonth;
     private int totalActiveEmployees;
     private List<EmployeeStats> employeeStatsList; // 아래 정의한 inner class 사용

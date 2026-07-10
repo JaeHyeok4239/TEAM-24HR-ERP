@@ -8,35 +8,35 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.hr24.attendance.entity.AttendanceLogsDaily;
+import com.hr24.attendance.entity.AttendanceLogDaily;
 
 
-public interface AttendanceLogDailyRepository extends JpaRepository<AttendanceLogsDaily, Long>{
+public interface AttendanceLogDailyRepository extends JpaRepository<AttendanceLogDaily, Long>{
 	
 	// 특정 날짜 전체 리스트 조회
-	List<AttendanceLogsDaily> findByWorkDate(LocalDate workDate);
+	List<AttendanceLogDaily> findByWorkDate(LocalDate workDate);
 
 	// 리스트 조회
-	@Query("SELECT a FROM AttendanceLogsDaily a WHERE a.employee.employeeId IN :empIds AND a.workDate = :workDate")
-	List<AttendanceLogsDaily> findByEmployeeIdAndWorkDate(
+	@Query("SELECT a FROM AttendanceLogDaily a WHERE a.employee.employeeId IN :empIds AND a.workDate = :workDate")
+	List<AttendanceLogDaily> findByEmployeeIdAndWorkDate(
 			@Param("empIds") List<Long> empIds, 
 			@Param("workDate") LocalDate workDate);
 	
 	// 1명 조회
-	@Query("SELECT a FROM AttendanceLogsDaily a WHERE a.employee.employeeId = :employeeId AND a.workDate = :workDate")
-    Optional<AttendanceLogsDaily> findOneByEmployeeIdAndWorkDate(
+	@Query("SELECT a FROM AttendanceLogDaily a WHERE a.employee.employeeId = :employeeId AND a.workDate = :workDate")
+    Optional<AttendanceLogDaily> findOneByEmployeeIdAndWorkDate(
             @Param("employeeId") Long employeeId, 
             @Param("workDate") LocalDate workDate);
 	
 	// 날짜 범위 리스트 조회
-	@Query("SELECT a FROM AttendanceLogsDaily a JOIN FETCH a.employee WHERE a.workDate BETWEEN :start AND :end")
-	List<AttendanceLogsDaily> findAllWithEmployeeByWorkDateBetween(
+	@Query("SELECT a FROM AttendanceLogDaily a JOIN FETCH a.employee WHERE a.workDate BETWEEN :start AND :end")
+	List<AttendanceLogDaily> findAllWithEmployeeByWorkDateBetween(
 	        @Param("start") LocalDate start, 
 	        @Param("end") LocalDate end);
 	
-	@Query("SELECT a FROM AttendanceLogsDaily a " +
+	@Query("SELECT a FROM AttendanceLogDaily a " +
 	       "WHERE a.employee.employeeId = :employeeId " +
 	       "AND FUNCTION('TO_CHAR', a.workDate, 'YYYY-MM') = :yearMonth")
-	List<AttendanceLogsDaily> findByEmployeeIdAndMonth(@Param("employeeId") Long employeeId, 
+	List<AttendanceLogDaily> findByEmployeeIdAndMonth(@Param("employeeId") Long employeeId, 
 	                                                   @Param("yearMonth") String yearMonth);
 }

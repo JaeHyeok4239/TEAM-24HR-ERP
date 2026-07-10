@@ -1,7 +1,5 @@
 package com.hr24.attendance.utils;
 
-import com.hr24.attendance.entity.AttendanceLogsDaily;
-import com.hr24.attendance.entity.AttendanceResult;
 import java.time.Duration;
 import java.time.LocalDateTime;
 

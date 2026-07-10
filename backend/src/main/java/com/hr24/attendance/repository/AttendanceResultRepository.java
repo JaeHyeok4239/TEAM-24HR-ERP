@@ -2,7 +2,6 @@ package com.hr24.attendance.repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,18 +10,12 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.hr24.attendance.entity.AttendanceLog;
 import com.hr24.attendance.entity.AttendanceResult;
-import com.hr24.attendance.entity.Workplace;
 import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.employee.entity.User;
-import com.hr24.employee.enums.UserStatus;
 
 public interface AttendanceResultRepository extends JpaRepository<AttendanceResult, Long>{
-	
-	// 스케줄러
-	boolean existsByWorkDate(LocalDate workDate);
-	
+
 	// 한 명 조회
 	Optional<AttendanceResult> findByEmployeeAndWorkDate(User employee, LocalDate workDate);
 	
@@ -34,15 +27,6 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	    @Param("workDate") LocalDate workDate, 
 	    @Param("status") AttendanceStatus status
 	);	
-
-	// 특정 직원의 특정 날짜 근태 정보+그 직원의 상세 정보
-	@Query("select ar from AttendanceResult ar join fetch ar.employee " +
-	           "where ar.employee.employeeId = :employeeId " +
-	           "and ar.workDate = :workDate")
-	    Optional<AttendanceResult> findByEmployeeIdWithUser(
-	        @Param("employeeId") Long employeeId, 
-	        @Param("workDate") LocalDate workDate
-	    );
 	
 	// 특정 기간 직원 한 명의 근태 조회
 	@Query("select ar from AttendanceResult ar join fetch ar.employee " +
@@ -61,10 +45,6 @@ public interface AttendanceResultRepository extends JpaRepository<AttendanceResu
 	    @Param("start") LocalDate start, 
 	    @Param("end") LocalDate end
 	);
-	
-	// 중복 막기(직원별, 날짜별 존재 여부 확인)
-	boolean existsByEmployeeAndWorkDate(User employee, LocalDate workDate);
-
 
 	@Query("SELECT ar FROM AttendanceResult ar WHERE ar.employee.employeeId = :employeeId AND ar.workDate = :workDate")
 	Optional<AttendanceResult> findByEmployeeIdAndWorkDate(@Param("employeeId") Long employeeId, @Param("workDate") LocalDate workDate);

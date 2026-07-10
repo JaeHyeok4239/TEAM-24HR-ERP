@@ -21,8 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-//출퇴근 시간 판정
-public class AttendanceCalculator{
+//출퇴근 시간 기준으로 상태 판정
+public class AttendanceStatusCalculator{
 	private final AttendanceTimePolicyRepository attendanceTimePolicyRepository;
     private final AttendanceThresholdRepository attendanceThresholdRepository;
     
