@@ -160,6 +160,11 @@ a {
   color: #3182ce !important;
 }
 
+/* 공휴일 - 빨간색 (일/토요일 색보다 우선 적용되도록 이후에 선언) */
+.fc-holiday .fc-daygrid-day-number {
+  color: #e53e3e !important;
+}
+
 /* 마커 툴팁의 기본 말풍선 모양을 제거 */
 .text-label {
   border: none !important;
