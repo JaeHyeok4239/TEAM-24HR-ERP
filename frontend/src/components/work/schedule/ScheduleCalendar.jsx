@@ -20,6 +20,7 @@ const INIT_FORM = {
 
 export default function ScheduleCalendar() {
   const calendarRef = useRef(null);
+  const calendarWrapRef = useRef(null);
   const [currentView, setCurrentView] = useState("dayGridMonth");
   const [showAddModal, setShowAddModal] = useState(false);
   const [form, setForm] = useState(INIT_FORM);
@@ -72,6 +73,18 @@ export default function ScheduleCalendar() {
       console.error("공휴일 조회 실패");
     }
   };
+
+  // dayCellDidMount는 날짜칸이 처음 그려질 때 1회만 실행되어 비동기로 늦게 도착하는
+  // holidays 데이터를 반영하지 못하므로, holidays/events가 바뀔 때마다 현재 렌더링된
+  // 날짜칸들을 DOM에서 직접 찾아 색을 다시 적용한다.
+  useEffect(() => {
+    const container = calendarWrapRef.current;
+    if (!container) return;
+    container.querySelectorAll(".fc-daygrid-day").forEach((cell) => {
+      const dateStr = cell.getAttribute("data-date");
+      cell.classList.toggle("fc-holiday", holidays.has(dateStr));
+    });
+  }, [holidays, events]);
 
   // 캘린더 날짜 범위 변경 시 일정 재조회 + 연도 바뀌면 공휴일 재조회
   const handleDatesSet = (info) => {
@@ -199,7 +212,7 @@ export default function ScheduleCalendar() {
       </div>
 
       {/* 캘린더 */}
-      <div className="bg-white rounded-lg shadow p-4 flex-1">
+      <div className="bg-white rounded-lg shadow p-4 flex-1" ref={calendarWrapRef}>
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -221,14 +234,6 @@ export default function ScheduleCalendar() {
           allDayText="종일"
           height="100%"
           dayMaxEvents={3}
-          dayCellDidMount={(arg) => {
-            const d = arg.date;
-            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-            if (holidays.has(dateStr)) {
-              const el = arg.el.querySelector(".fc-daygrid-day-number");
-              if (el) el.style.color = "#e53e3e";
-            }
-          }}
         />
       </div>
 
