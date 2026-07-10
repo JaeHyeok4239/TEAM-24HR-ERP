@@ -80,6 +80,7 @@ jobs:
             --from-literal=MAIL_PASSWORD="${MAIL_PASSWORD}" \
             --from-literal=JWT_SECRET="${JWT_SECRET}" \
             --from-literal=HR24_CRYPTO_SECRET_KEY="${HR24_CRYPTO_SECRET_KEY}" \
+            --from-literal=HOLIDAY_API_KEY="${HOLIDAY_API_KEY}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
           echo "Kubernetes manifest 적용"
