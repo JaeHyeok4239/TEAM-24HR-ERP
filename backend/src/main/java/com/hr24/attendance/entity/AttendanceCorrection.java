@@ -71,7 +71,7 @@ public class AttendanceCorrection{
 	
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="correction_daily_log")
-	private AttendanceLogsDaily correctionDailyLog;
+	private AttendanceLogDaily correctionDailyLog;
 
 	@Column(name="after_time")
 	private LocalDateTime afterTime;

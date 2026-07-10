@@ -1,14 +1,9 @@
 package com.hr24.attendance.scheduler;
 
-import java.time.LocalDate;
-
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.hr24.attendance.repository.AttendanceResultRepository;
 import com.hr24.attendance.service.AttendanceService;
 
 import lombok.RequiredArgsConstructor;
@@ -16,18 +11,18 @@ import lombok.RequiredArgsConstructor;
 @Component
 @EnableScheduling
 @RequiredArgsConstructor
+// 오전 6시, 오후 11시 배치 프로그램
 public class AttendanceScheduler {
 
     private final AttendanceService attendanceService;
-    private final AttendanceResultRepository attendanceResultRepository;
 
-    // [1] 매일 밤 11시에 마감 로직 실행
+    // 매일 밤 11시에 실행
     @Scheduled(cron = "0 0 23 * * *", zone = "Asia/Seoul")
     public void scheduleMissingCheckoutUpdate() {
         attendanceService.processMissingCheckouts(); 
     }
 
-    // [2] 매일 오전 6시에 데이터 생성 로직 실행
+    // 매일 오전 6시에 실행
     @Scheduled(cron = "0 0 6 * * *", zone = "Asia/Seoul")
     public void scheduleDailyAttendanceCreation() {
         attendanceService.createDailyAttendanceResults();

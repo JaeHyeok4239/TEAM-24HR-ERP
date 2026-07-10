@@ -5,8 +5,8 @@ import lombok.Getter;
 
 @Getter
 @Builder
-// 일용직 근태 기록 저장 유지용
-public class DailyAttendanceManageDto {
+// 일용직 직원 목록+근태 로그 합쳐 반환
+public class DailyWorkerAttendanceManageDto {
     private Long employeeId;
     private String name;
     private Long logId;

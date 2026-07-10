@@ -21,7 +21,8 @@ import lombok.experimental.SuperBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL) // null은 응답에서 제외
 // 일별 근태 상세 조회 - 공통 응답 DTO
 public class AttendanceDetailResponseDto {
-	private AttendanceStatus status; // 상태 코드
+	private AttendanceStatus status; // 상태 뱃지
+    private String workplaceName; // 근무지 뱃지
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
     private LocalDateTime checkIn; 
@@ -38,5 +39,5 @@ public class AttendanceDetailResponseDto {
     private String userName;
     private String department;
     private String userPosition;
-    private String workplaceName;
+
 }

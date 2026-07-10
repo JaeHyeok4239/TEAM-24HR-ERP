@@ -3,13 +3,11 @@ package com.hr24.attendance.controller;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,18 +19,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hr24.attendance.dto.AttendanceCombinedSummaryDto;
-import com.hr24.attendance.dto.AttendanceCorrectionRequestDto;
+import com.hr24.attendance.dto.DailyAttendanceSummaryResponseDto;
 import com.hr24.attendance.dto.AttendanceDetailResponseDto;
-import com.hr24.attendance.dto.AttendanceRequest;
-import com.hr24.attendance.dto.AttendanceResponse;
+import com.hr24.attendance.dto.DailyWorkerAttendanceRequestDto;
+import com.hr24.attendance.dto.MonthlyAttendanceSummaryResponseDto;
 import com.hr24.attendance.dto.CalendarBadgeDto;
 import com.hr24.attendance.dto.CheckInOutRequestDto;
-import com.hr24.attendance.dto.DailyAttendanceInputDto;
-import com.hr24.attendance.dto.DailyAttendanceManageDto;
+import com.hr24.attendance.dto.DailyWorkerDto;
+import com.hr24.attendance.dto.DailyWorkerAttendanceManageDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
-import com.hr24.attendance.dto.MonthlyAttendanceListResponseDto;
-import com.hr24.attendance.dto.WorkplaceDto;
+import com.hr24.attendance.dto.AdminMonthlyAttendanceListResponseDto;
+import com.hr24.attendance.dto.WorkplaceResponseDto;
 import com.hr24.attendance.enums.AttendanceStatus;
 import com.hr24.attendance.service.AttendanceCorrectionService;
 import com.hr24.attendance.service.AttendanceService;
@@ -57,7 +54,7 @@ public class AttendanceController {
 	
 	// DB에 있는 근무지를 리스트로 반환
 	@GetMapping("/workplaces")
-	public ResponseEntity<List<WorkplaceDto>> getWorkplaces() {
+	public ResponseEntity<List<WorkplaceResponseDto>> getWorkplaces() {
 	    return ResponseEntity.ok(attendanceService.getWorkplaces());
 	}
 
@@ -126,7 +123,7 @@ public class AttendanceController {
 	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
 	@Operation(summary = "모든 직원 일별 근태 조회", description = "type에 따라 active인 직원들 일별 근태 횟수 조회 가능")
 	@GetMapping("/summary-daily-all")
-	public ResponseEntity<AttendanceCombinedSummaryDto> getDailyAttendanceSummary(
+	public ResponseEntity<DailyAttendanceSummaryResponseDto> getDailyAttendanceSummary(
 	        @RequestParam(name = "date", required = false) @DateTimeFormat(pattern = "yyyy.MM.dd") LocalDate date) {
 	    // date가 null이면 오늘 날짜를 기본값으로 사용
 	    LocalDate targetDate = (date != null) ? date : LocalDate.now();
@@ -137,7 +134,7 @@ public class AttendanceController {
 	// 일용직 명단 조회
 	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
 	@GetMapping("/daily-workers")
-	public List<DailyAttendanceInputDto> getDailyWorkers() {
+	public List<DailyWorkerDto> getDailyWorkers() {
 		// userService를 통해 가져오되 본인이 만든 DTO로 변환해서 반환
 		return attendanceService.getDailyWorkerList();
 	}
@@ -146,7 +143,7 @@ public class AttendanceController {
 	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
 	@Operation(summary = "일용직 근태 기록 일괄 저장", description = "관리자가 화면에서 입력한 일용직 근태 명단을 저장합니다.")
 	@PostMapping("/batch/daily-batch")
-	public ResponseEntity<String> dailyBatch(@RequestBody List<AttendanceRequest> attendanceList) {
+	public ResponseEntity<String> dailyBatch(@RequestBody List<DailyWorkerAttendanceRequestDto> attendanceList) {
 		String resultMessage = attendanceService.saveDailyAttendanceLogs(attendanceList);
 	    return ResponseEntity.ok(resultMessage);
 	}
@@ -178,7 +175,7 @@ public class AttendanceController {
 	@PreAuthorize("isAuthenticated()")
 	@Operation(summary = "월별 근태 횟수 조회", description = "본인 또는 관리자가 사원의 월별 근태 횟수를 조회합니다. 관리자는 targetEmployeeId를 입력해 조회 가능합니다.")
 	@GetMapping("/monthly/summary")
-	public ResponseEntity<AttendanceResponse> getMonthlyAttendanceStats(Authentication authentication,
+	public ResponseEntity<MonthlyAttendanceSummaryResponseDto> getMonthlyAttendanceStats(Authentication authentication,
 			@RequestParam(name = "yearMonth") @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth,
 			@RequestParam(name = "targetEmployeeId", required = false) Long targetEmployeeId) {
 
@@ -187,7 +184,7 @@ public class AttendanceController {
 		// 관리자 여부 확인
 		boolean isAdmin = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-		AttendanceResponse response = attendanceService.getMonthlyAttendanceStats(loginId, yearMonth, targetEmployeeId,
+		MonthlyAttendanceSummaryResponseDto response = attendanceService.getMonthlyAttendanceStats(loginId, yearMonth, targetEmployeeId,
 				isAdmin);
 
 		return ResponseEntity.ok(response);
@@ -197,7 +194,7 @@ public class AttendanceController {
 	@PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
 	@Operation(summary = "모든 직원 월별 근태 통계 조회", description = "Active 상태인 전체 직원의 월별 근태 횟수를 조회합니다.")
 	@GetMapping("/summary-monthly-all")
-	public ResponseEntity<MonthlyAttendanceListResponseDto> getMonthlyAttendanceSummary(
+	public ResponseEntity<AdminMonthlyAttendanceListResponseDto> getMonthlyAttendanceSummary(
 	        @RequestParam(name = "yearMonth") @DateTimeFormat(pattern = "yyyy.MM") YearMonth yearMonth) {
 	    
 	    return ResponseEntity.ok(attendanceService.getMonthlyAttendanceSummary(yearMonth));
@@ -232,7 +229,7 @@ public class AttendanceController {
     @PreAuthorize("hasAnyRole('ADMIN', 'ATTENDANCE')")
     @GetMapping("/daily-management")
     @Operation(summary = "일용직 근태 관리용 데이터", description = "화면 렌더링을 위해 직원 명단과 당일 근태를 결합하여 반환")
-    public ResponseEntity<List<DailyAttendanceManageDto>> getDailyManagementList(
+    public ResponseEntity<List<DailyWorkerAttendanceManageDto>> getDailyManagementList(
     		@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(attendanceService.getDailyManagementList(date));
     }

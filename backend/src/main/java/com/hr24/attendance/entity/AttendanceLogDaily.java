@@ -36,7 +36,7 @@ import lombok.Setter;
 		allocationSize = 1
 		)
 
-public class AttendanceLogsDaily{
+public class AttendanceLogDaily{
 	@Id
 	@Column(name="attendance_logs_daily_id")
 	@GeneratedValue(

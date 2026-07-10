@@ -4,8 +4,6 @@ import com.hr24.document.repository.LeaveDateRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,7 +26,6 @@ import com.hr24.document.repository.LeaveRepository;
 import com.hr24.document.repository.LeaveTypeRepository;
 import com.hr24.document.service.DocumentProcessService;
 import com.hr24.employee.entity.User;
-import com.hr24.employee.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -40,7 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class AttendanceProcessService {
 
 	private final LeaveDateRepository leaveDateRepository;
-	private final AttendanceCalculator calculator;
+	private final AttendanceStatusCalculator calculator;
 	// 문서 처리 service에서 데이터 변환
 	private final DocumentProcessService documentProcessService;
 	private final AttendanceResultRepository attendanceResultRepository;

@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,24 +17,23 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.hr24.attendance.dto.AdminAttendanceDetailResponseDto;
-import com.hr24.attendance.dto.AttendanceCombinedSummaryDto;
+import com.hr24.attendance.dto.DailyAttendanceSummaryResponseDto;
 import com.hr24.attendance.dto.AttendanceDetailResponseDto;
-import com.hr24.attendance.dto.AttendanceRequest;
-import com.hr24.attendance.dto.AttendanceResponse;
+import com.hr24.attendance.dto.DailyWorkerAttendanceRequestDto;
+import com.hr24.attendance.dto.MonthlyAttendanceSummaryResponseDto;
 import com.hr24.attendance.dto.AttendanceResultDto;
-import com.hr24.attendance.dto.AttendanceSummaryDto;
+import com.hr24.attendance.dto.AttendanceSummaryCountDto;
 import com.hr24.attendance.dto.CalendarBadgeDto;
 import com.hr24.attendance.dto.AttendanceCorrectionRecordDto;
 import com.hr24.attendance.dto.DailyAttendanceDetailResponseDto;
-import com.hr24.attendance.dto.DailyAttendanceInputDto;
-import com.hr24.attendance.dto.DailyAttendanceManageDto;
+import com.hr24.attendance.dto.DailyWorkerDto;
+import com.hr24.attendance.dto.DailyWorkerAttendanceManageDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
-import com.hr24.attendance.dto.MonthlyAttendanceListResponseDto;
-import com.hr24.attendance.dto.WorkplaceDto;
+import com.hr24.attendance.dto.AdminMonthlyAttendanceListResponseDto;
+import com.hr24.attendance.dto.WorkplaceResponseDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
 import com.hr24.attendance.entity.AttendanceLog;
-import com.hr24.attendance.entity.AttendanceLogsDaily;
+import com.hr24.attendance.entity.AttendanceLogDaily;
 import com.hr24.attendance.entity.AttendanceResult;
 import com.hr24.attendance.repository.AttendanceCorrectionRepository;
 import com.hr24.attendance.repository.AttendanceLogDailyRepository;
@@ -74,7 +72,7 @@ public class AttendanceService{
 	private final LeaveDateRepository leaveDateRepository;
 	private final AttendanceLogDailyRepository attendanceLogDailyRepository;
 	private final AttendanceCorrectionRepository attendanceCorrectionRepository;
-	private final AttendanceCalculator attendanceCalculator;
+	private final AttendanceStatusCalculator attendanceStatusCalculator;
 	private final HrEmployeeQueryService hrEmployeeQueryService;
 	private final HolidayRepository holidayRepository;
 
@@ -92,11 +90,11 @@ public class AttendanceService{
 	
 	// 모든 근무지 읽어오기
 	@Transactional(readOnly = true)
-	public List<WorkplaceDto> getWorkplaces() {
+	public List<WorkplaceResponseDto> getWorkplaces() {
 	    List<Workplace> workplaceList = workplaceRepository.findAll();
 
 	    return workplaceList.stream()
-	            .map(wp -> WorkplaceDto.builder()
+	            .map(wp -> WorkplaceResponseDto.builder()
 	                    .name(wp.getWorkplaceCode().name()) 
 	                    .latitude(wp.getLatitude())
 	                    .longitude(wp.getLongitude())
@@ -278,7 +276,7 @@ public class AttendanceService{
             throw new AccessDeniedException("본인의 데이터만 조회할 수 있습니다.");
         }
 	    
-	    AttendanceLogsDaily dailyLog = null;
+	    AttendanceLogDaily dailyLog = null;
 	    AttendanceResult result = null;
 	    
 	    // 일용직 체크용
@@ -342,9 +340,8 @@ public class AttendanceService{
 	                    .workplaceName(workplaceName)
 	                    .build();
 	    	}else {
-	    		// 정규직 
-	    		// 수정한 담당자 부서/직급 추가
-	    		return AdminAttendanceDetailResponseDto.builder()
+	    		// 정규직(일반 사용자와 동일)
+	    		return AttendanceDetailResponseDto.builder()
 	                    .status(status)
 	                    .checkIn(checkIn)
 	                    .checkOut(checkOut)
@@ -372,7 +369,7 @@ public class AttendanceService{
 	            .build();
 	}
 
-	   // CorrectionDto 변환 로직
+   // CorrectionDto 변환 로직
 	private AttendanceCorrectionRecordDto convertToCorrectionDto(AttendanceCorrection c) {
 	    User processor = c.getProcessedBy();
 	    Document document = c.getDocument();
@@ -393,44 +390,6 @@ public class AttendanceService{
 	            .build();
 	}
 	
-	// 일용직 정정 이력 저장
-	@Transactional
-	public void correctDaily(Long logId, DailyCorrectionDto dto) {
-	    // 로그 조회
-	    AttendanceLogsDaily log = attendanceLogDailyRepository.findById(logId)
-	            .orElseThrow(() -> new BusinessException(ErrorCode.DATA_NOT_FOUND));
-
-	    // 유효성 검사
-	    if (dto.getAfterTime().isAfter(LocalDateTime.now())) {
-	        throw new BusinessException(ErrorCode.INVALID_REQUEST);
-	    }
-
-	    // 수정 전 시간 저장
-	    LocalDateTime beforeTime;
-	    
-	    if ("IN".equals(dto.getCorrectionType())) {
-	        beforeTime = log.getCheckInTime(); // 수정 전 IN 시간
-	        log.setCheckInTime(dto.getAfterTime()); // IN 시간 변경
-	    } else if ("OUT".equals(dto.getCorrectionType())) {
-	        beforeTime = log.getCheckOutTime(); // 수정 전 OUT 시간
-	        log.setCheckOutTime(dto.getAfterTime()); // OUT 시간 변경
-	    } else {
-	    	throw new BusinessException(ErrorCode.INVALID_CORRECTION_TYPE);
-	    }
-
-	    // 정정 테이블에 데이터 저장
-	    AttendanceCorrection correction = AttendanceCorrection.builder()
-	            .correctionDailyLog(log) // 이 엔티티 타입이 AttendanceLogsDaily이므로 이제 일치함
-	            .correctionType(dto.getCorrectionType()) // IN 또는 OUT
-	            .beforeTime(beforeTime)
-	            .afterTime(dto.getAfterTime())
-	            .correctionReason(dto.getCorrectionReason())
-	            .isProcessed("Y")
-	            .build();
-	            
-	    attendanceCorrectionRepository.save(correction);
-	}
-	
     // 상태 코드 변환 메서드
 	private String convertStatusToLabel(String status) {
 	    if (status == null) return "알 수 없음";
@@ -447,10 +406,10 @@ public class AttendanceService{
 	}
 	
 	// 일용직 명단 조회
-	public List<DailyAttendanceInputDto> getDailyWorkerList() {
+	public List<DailyWorkerDto> getDailyWorkerList() {
 	    return userRepository.findAll().stream()
 	        .filter(u -> u.getEmploymentType() == EmploymentType.DAILY)
-	        .map(u -> DailyAttendanceInputDto.builder()
+	        .map(u -> DailyWorkerDto.builder()
 	            .employeeId(u.getEmployeeId())
 	            .name(u.getName())
 	            .employeeNo(u.getEmployeeNo())
@@ -460,7 +419,7 @@ public class AttendanceService{
 	
 	// 일용직 근태 기록 일괄 저장
 	@Transactional
-	public String saveDailyAttendanceLogs(List<AttendanceRequest> attendanceList) {
+	public String saveDailyAttendanceLogs(List<DailyWorkerAttendanceRequestDto> attendanceList) {
 		LocalDateTime todayDateTime = getCurrentTime(); // 오늘 날짜, 시간 구하기
 		LocalDate todayDate = todayDateTime.toLocalDate();
 		
@@ -471,14 +430,14 @@ public class AttendanceService{
 		        .collect(Collectors.toList());
 	    List<User> foundUsers = userRepository.findAllById(empIds);
 	    
-	    List<AttendanceLogsDaily> existingLogs = attendanceLogDailyRepository.findByEmployeeIdAndWorkDate(empIds, todayDate);
+	    List<AttendanceLogDaily> existingLogs = attendanceLogDailyRepository.findByEmployeeIdAndWorkDate(empIds, todayDate);
 	    
 	    Set<Long> existingEmpIds = existingLogs.stream()
 	    		.map(log -> log.getEmployee().getEmployeeId())
 	    		.collect(Collectors.toSet());
 	    
 	    // 신규 등록 데이터 필터링
-	    List<AttendanceLogsDaily> newLogs = new ArrayList<>();
+	    List<AttendanceLogDaily> newLogs = new ArrayList<>();
 	    
 	    // DAILY인 모든 사원 Map
 	    Map<Long, User> userMap = foundUsers.stream()
@@ -496,7 +455,7 @@ public class AttendanceService{
     	    .stream()
     	    .collect(Collectors.toMap(Workplace::getWorkplaceCode, w -> w));
 
-	    for (AttendanceRequest req : attendanceList) {
+	    for (DailyWorkerAttendanceRequestDto req : attendanceList) {
 	    	if (req.getEmployeeId() == null || req.getEmployeeId().trim().isEmpty()) {
 	            log.warn(">>> 유효하지 않은 EmployeeId 감지 건너뜁니다.");
 	            continue;
@@ -513,7 +472,7 @@ public class AttendanceService{
 	    	Workplace workplace = workplaceMap.get(WorkplaceCode.valueOf(req.getWorkplaceCode()));
 	    	
 	        if (user != null && workplace != null) {
-	            AttendanceLogsDaily log = AttendanceLogsDaily.builder()
+	            AttendanceLogDaily log = AttendanceLogDaily.builder()
 	                .employee(user)
 	                .workplace(workplace)
 	                .checkInTime(req.getCheckInDateTime())
@@ -602,7 +561,7 @@ public class AttendanceService{
 	    	result.setIsHolidayWork("Y");
 	    }else {
 	    	// 출근 시간 판정 및 저장
-	    	AttendanceStatus status = AttendanceStatus.valueOf(attendanceCalculator.determineCheckInStatus(user, currentTime));
+	    	AttendanceStatus status = AttendanceStatus.valueOf(attendanceStatusCalculator.determineCheckInStatus(user, currentTime));
 	    	result.setAttendanceStatus(status);
 	    }
 
@@ -674,7 +633,7 @@ public class AttendanceService{
 	    if(isHoliday) {
 	    	result.setAttendanceStatus(AttendanceStatus.OUT);
 	    }else {
-	    	String resultStatus = attendanceCalculator.determineCheckoutStatus(user, currentTime);
+	    	String resultStatus = attendanceStatusCalculator.determineCheckoutStatus(user, currentTime);
 	    	result.setAttendanceStatus(AttendanceStatus.valueOf(resultStatus));
 		    
 	    }
@@ -703,7 +662,7 @@ public class AttendanceService{
 	}
 
 	// 정규직 1명의 월별 통계 - 근태 상태 횟수 체크
-	private AttendanceResponse createGeneralResponse(List<AttendanceResult> monthList) {
+	private MonthlyAttendanceSummaryResponseDto createGeneralResponse(List<AttendanceResult> monthList) {
         // 카운트 계산
 		Map<String, Long> counts = monthList.stream()
 			    .collect(Collectors.groupingBy(
@@ -716,7 +675,7 @@ public class AttendanceService{
             .collect(Collectors.toList());
         
         // 응답 객체 생성 및 반환
-        AttendanceResponse response = new AttendanceResponse();
+        MonthlyAttendanceSummaryResponseDto response = new MonthlyAttendanceSummaryResponseDto();
         
         // work+out 둘 다 출근 처리
         Long workCount = counts.getOrDefault(AttendanceStatus.WORK.name(), 0L);
@@ -733,7 +692,7 @@ public class AttendanceService{
     }
 	
 	// 일용직 1명의 월별 통계 - 근태 상태 횟수 체크
-	public AttendanceResponse createDailyWorkerResponse(List<AttendanceLogsDaily> logList) {
+	public MonthlyAttendanceSummaryResponseDto createDailyWorkerResponse(List<AttendanceLogDaily> logList) {
 		// 카운트 계산
 		long workCount = logList.stream()
 	            .filter(log -> "Y".equals(log.getIsAttended()))
@@ -747,7 +706,7 @@ public class AttendanceService{
 		        .collect(Collectors.toList());
         
         // 응답 객체 생성 및 반환
-		AttendanceResponse response = new AttendanceResponse();
+		MonthlyAttendanceSummaryResponseDto response = new MonthlyAttendanceSummaryResponseDto();
 	    response.setWorkCount((int) workCount);
 	    response.setAttendanceList(dtoList);
 		
@@ -755,7 +714,7 @@ public class AttendanceService{
 	}
 	
 	// 1명의 월별 통계 - 일반 사용자/관리자
-	public AttendanceResponse getMonthlyAttendanceStats(String loginId, YearMonth yearMonth, Long targetEmployeeId, boolean isAdmin) {
+	public MonthlyAttendanceSummaryResponseDto getMonthlyAttendanceStats(String loginId, YearMonth yearMonth, Long targetEmployeeId, boolean isAdmin) {
 		// 요청자 정보 조회
 		User requester = userRepository.findByLoginId(loginId)
 	            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -773,7 +732,7 @@ public class AttendanceService{
 
 		// 일용직 조회
 	    if (targetUser.getEmploymentType() == EmploymentType.DAILY) {
-	        List<AttendanceLogsDaily> dailyLogs = attendanceLogDailyRepository.findAllWithEmployeeByWorkDateBetween(
+	        List<AttendanceLogDaily> dailyLogs = attendanceLogDailyRepository.findAllWithEmployeeByWorkDateBetween(
 	                monthStart.toLocalDate(), monthEnd.toLocalDate())
 	                .stream()
 	                .filter(log -> log.getEmployee().getEmployeeId().equals(targetId))
@@ -791,7 +750,7 @@ public class AttendanceService{
 	
 	// active 모든 직원 monthly 통계
 	@Transactional(readOnly = true)
-	public MonthlyAttendanceListResponseDto getMonthlyAttendanceSummary(YearMonth yearMonth) {
+	public AdminMonthlyAttendanceListResponseDto getMonthlyAttendanceSummary(YearMonth yearMonth) {
 	    LocalDate start = yearMonth.atDay(1);
 	    LocalDate end = yearMonth.atEndOfMonth();
 
@@ -805,13 +764,13 @@ public class AttendanceService{
 	            .findAllWithEmployeeByWorkDateBetween(start, end)
 	            .stream()
 	            .collect(Collectors.groupingBy(r -> r.getEmployee().getEmployeeId()));
-	    Map<Long, List<AttendanceLogsDaily>> dailyMap = attendanceLogDailyRepository
+	    Map<Long, List<AttendanceLogDaily>> dailyMap = attendanceLogDailyRepository
 	            .findAllWithEmployeeByWorkDateBetween(start, end)
 	            .stream()
 	            .collect(Collectors.groupingBy(log -> log.getEmployee().getEmployeeId()));
 	    
 	    // DTO 빌드
-	    List<MonthlyAttendanceListResponseDto.EmployeeStats> statsList = activeUsers.stream()
+	    List<AdminMonthlyAttendanceListResponseDto.EmployeeStats> statsList = activeUsers.stream()
 	            .map(user -> {
 	                if (user.getEmploymentType() == EmploymentType.DAILY) {
 	                    // 일용직 계산(Work count만 집계)
@@ -833,7 +792,7 @@ public class AttendanceService{
 	            })
 	            .collect(Collectors.toList());
 
-	    return MonthlyAttendanceListResponseDto.builder()
+	    return AdminMonthlyAttendanceListResponseDto.builder()
 	            .yearMonth(yearMonth)
 	            .totalActiveEmployees(activeUsers.size())
 	            .employeeStatsList(statsList)
@@ -841,8 +800,8 @@ public class AttendanceService{
 	}
 
 	// 빌더 코드 중복 방지용 헬퍼 메서드
-	private MonthlyAttendanceListResponseDto.EmployeeStats buildStats(User user, int work, int late, int absent, int leave) {
-	    return MonthlyAttendanceListResponseDto.EmployeeStats.builder()
+	private AdminMonthlyAttendanceListResponseDto.EmployeeStats buildStats(User user, int work, int late, int absent, int leave) {
+	    return AdminMonthlyAttendanceListResponseDto.EmployeeStats.builder()
 	            .employeeId(user.getEmployeeId())
 	            .name(user.getName())
 	            .departmentName(user.getDepartment() != null ? user.getDepartment().getDepartmentName() : "미정")
@@ -855,7 +814,7 @@ public class AttendanceService{
 	
 	// active 모든 직원 day 통계
 	@Transactional(readOnly = true)
-	public AttendanceCombinedSummaryDto getDailyAttendanceSummary(LocalDate date) {
+	public DailyAttendanceSummaryResponseDto getDailyAttendanceSummary(LocalDate date) {
 	    // 정규직 근태 결과 조회
 	    List<AttendanceResult> regularResults = attendanceResultRepository.findAllByWorkDate(date);
 	    
@@ -866,7 +825,7 @@ public class AttendanceService{
 	            .collect(Collectors.toList());
 	            
 	    // ID 리스트 사용해 일용직 근태 기록 조회
-	    List<AttendanceLogsDaily> dailyLogs = !dailyEmployeeIds.isEmpty() 
+	    List<AttendanceLogDaily> dailyLogs = !dailyEmployeeIds.isEmpty() 
 	            ? attendanceLogDailyRepository.findByEmployeeIdAndWorkDate(dailyEmployeeIds, date)
 	            : Collections.emptyList();
 
@@ -887,8 +846,8 @@ public class AttendanceService{
 	    long dailyReadyCount = dailyEmployeeIds.size() - dailyWorkCount; // 전체 일용직 중 출근 안 한 인원
 	    
 	 // 통합 DTO 빌드
-	    return AttendanceCombinedSummaryDto.builder()
-	            .regular(AttendanceSummaryDto.builder()
+	    return DailyAttendanceSummaryResponseDto.builder()
+	            .regular(AttendanceSummaryCountDto.builder()
 	                    .work(regularCounts.getOrDefault(AttendanceStatus.WORK, 0L) + regularCounts.getOrDefault(AttendanceStatus.OUT, 0L))
 	                    .late(regularCounts.getOrDefault(AttendanceStatus.LATE, 0L))
 	                    .absent(regularCounts.getOrDefault(AttendanceStatus.ABSENT, 0L))
@@ -896,7 +855,7 @@ public class AttendanceService{
 	                    .missing(regularMissingCount)
 	                    .ready(regularCounts.getOrDefault(AttendanceStatus.READY, 0L))
 	                    .build())
-	            .daily(AttendanceSummaryDto.builder()
+	            .daily(AttendanceSummaryCountDto.builder()
 	                    .work(dailyWorkCount)
 	                    .ready(dailyReadyCount)
 	                    .missing(0L)
@@ -912,7 +871,7 @@ public class AttendanceService{
         String formattedMonth = yearMonth.toString();
 
         if (user.getEmploymentType() == EmploymentType.DAILY) {
-            List<AttendanceLogsDaily> dailyLogs = attendanceLogDailyRepository.findByEmployeeIdAndMonth(employeeId, formattedMonth);
+            List<AttendanceLogDaily> dailyLogs = attendanceLogDailyRepository.findByEmployeeIdAndMonth(employeeId, formattedMonth);
             log.info(">>> 일용직 캘린더 데이터 조회 (EmployeeId: {}, Month: {}), {}건", employeeId, formattedMonth, dailyLogs.size());
             return dailyLogs.stream()
                 .map(log -> CalendarBadgeDto.builder()
@@ -938,14 +897,14 @@ public class AttendanceService{
 	
 	// 일용직 직원 목록 및 근태 로그 조회
 	@Transactional(readOnly = true)
-	public List<DailyAttendanceManageDto> getDailyManagementList(LocalDate date) {
+	public List<DailyWorkerAttendanceManageDto> getDailyManagementList(LocalDate date) {
 	    List<User> employees = userRepository.findAll().stream()
 	            .filter(u -> EmploymentType.DAILY.equals(u.getEmploymentType()))
 	            .collect(Collectors.toList()); 
 	    
-	    List<AttendanceLogsDaily> logs = attendanceLogDailyRepository.findByWorkDate(date);
+	    List<AttendanceLogDaily> logs = attendanceLogDailyRepository.findByWorkDate(date);
 	    
-	    Map<Long, AttendanceLogsDaily> logMap = logs.stream()
+	    Map<Long, AttendanceLogDaily> logMap = logs.stream()
 	            .collect(Collectors.toMap(
 	                log -> log.getEmployee().getEmployeeId(), 
 	                log -> log,
@@ -953,8 +912,8 @@ public class AttendanceService{
 	            ));
 	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
 	    return employees.stream().map((User emp) -> {
-	        AttendanceLogsDaily log = logMap.get(emp.getEmployeeId());
-	        return DailyAttendanceManageDto.builder()
+	        AttendanceLogDaily log = logMap.get(emp.getEmployeeId());
+	        return DailyWorkerAttendanceManageDto.builder()
 	                .employeeId(emp.getEmployeeId())
 	                .name(emp.getName())
 	                .logId(log != null ? log.getAttendanceLogsDailyId() : null)

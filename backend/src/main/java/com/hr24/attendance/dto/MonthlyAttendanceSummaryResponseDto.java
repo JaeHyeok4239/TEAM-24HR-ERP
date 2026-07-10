@@ -1,16 +1,14 @@
 package com.hr24.attendance.dto;
 
-import java.time.LocalDateTime;
 import java.util.List;
-
-import com.hr24.attendance.entity.AttendanceResult;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class AttendanceResponse {
+// 특정 직원 1명의 월간 근태 카운트 및 목록 응답
+public class MonthlyAttendanceSummaryResponseDto {
 
 	// (출근/지각/조퇴/결근/휴가) 선언 및 초기화
 	private int workCount = 0;

@@ -5,16 +5,12 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.hr24.attendance.dto.AttendanceCorrectionRequestDto;
 import com.hr24.attendance.dto.DailyCorrectionDto;
 import com.hr24.attendance.entity.AttendanceCorrection;
-import com.hr24.attendance.entity.AttendanceLog;
-import com.hr24.attendance.entity.AttendanceLogsDaily;
+import com.hr24.attendance.entity.AttendanceLogDaily;
 import com.hr24.attendance.entity.AttendanceResult;
 import com.hr24.attendance.repository.AttendanceCorrectionRepository;
 import com.hr24.attendance.repository.AttendanceLogDailyRepository;
-import com.hr24.attendance.repository.AttendanceLogRepository;
-import com.hr24.attendance.repository.AttendanceResultRepository;
 import com.hr24.employee.entity.User;
 import com.hr24.employee.repository.UserRepository;
 
@@ -27,19 +23,17 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Transactional
-// 근태 정정(관리자만 변경 가능)
+// 일용직 근태 수정
 public class AttendanceCorrectionService {
-
     private final AttendanceCorrectionRepository attendanceCorrectionRepository;
     private final UserRepository userRepository;
-    private final AttendanceLogDailyRepository attendanceLogsDailyRepository; //일용직
-    
-    // 일용직 수정
+    private final AttendanceLogDailyRepository attendanceLogsDailyRepository;
+   
     @Transactional
     public void applyDailyCorrection(Long logId, List<DailyCorrectionDto> dtoList, String loginId) {
         User processor = userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
-        AttendanceLogsDaily dailyLog = attendanceLogsDailyRepository.findById(logId)
+        AttendanceLogDaily dailyLog = attendanceLogsDailyRepository.findById(logId)
                 .orElseThrow(() -> new EntityNotFoundException("일용직 기록을 찾을 수 없습니다."));
 
         // 출퇴근 한번에 수정할 시 List로 받아옴
@@ -65,7 +59,7 @@ public class AttendanceCorrectionService {
 
     // 근태 정정 이력 저장
     private void saveCorrectionRecord(
-    		AttendanceResult result, AttendanceLogsDaily dailyLog, 
+    		AttendanceResult result, AttendanceLogDaily dailyLog, 
     		String corrType, 
             LocalDateTime beforeTime, LocalDateTime afterTime, 
             String reason, User processor) {
