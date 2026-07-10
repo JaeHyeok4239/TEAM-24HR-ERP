@@ -110,6 +110,7 @@ public class AttendanceProcessService {
 	                    .leave(leave)
 	                    .isHolidayWork("N")
 	                    .isFixed("N")
+	                    .isCheckoutMissing("N")
 	                    .createdAt(LocalDateTime.now())
 	                    .build())
 	            .collect(Collectors.toList());
