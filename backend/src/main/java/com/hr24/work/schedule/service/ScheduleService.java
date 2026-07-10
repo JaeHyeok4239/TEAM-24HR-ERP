@@ -75,7 +75,7 @@ public class ScheduleService {
 
     // 일정 등록 - DEPT 타입일 때만 부서 연결
     @Transactional
-    public ScheduleResponse createSchedule(Long userId, ScheduleRequest request) {
+    public ScheduleResponse createSchedule(String loginId, ScheduleRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
@@ -85,8 +85,8 @@ public class ScheduleService {
             throw new BusinessException(ErrorCode.SCHEDULE_ACCESS_DENIED);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+        User user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         Department department = null;
         if ("DEPT".equals(request.getScheduleType())) {
@@ -140,11 +140,16 @@ public class ScheduleService {
         return response;
     }
 
-    // 일정 수정
+    // 일정 수정 - 작성자 본인 또는 ADMIN만 가능
     @Transactional
-    public ScheduleResponse updateSchedule(Long scheduleId, ScheduleRequest request) {
+    public ScheduleResponse updateSchedule(Long scheduleId, ScheduleRequest request, String loginId, boolean isAdmin) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 일정입니다."));
+
+        boolean isOwner = schedule.getUser().getLoginId().equals(loginId);
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("본인이 등록한 일정만 수정할 수 있습니다.");
+        }
 
         schedule.setTitle(request.getTitle());
         schedule.setStartDt(request.getStartDt());
